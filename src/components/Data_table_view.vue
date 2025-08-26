@@ -163,9 +163,7 @@ async function fetchData(url, listRef, storeKey) {
 
  
 
-watch(usePopupStore().selected_date, (val) => { 
- 
-    
+watch(usePopupStore().selected_date, (val) => {  
   tabs.value[0].liste=[] 
   tabs.value[1].liste=[]  
 
