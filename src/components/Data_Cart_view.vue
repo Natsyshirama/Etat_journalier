@@ -23,9 +23,10 @@
         <v-list-item
           v-for="date in historyDates"
           :key="date.label"
-          @click="selectDate(date.label)"
-          clickable
-        > 
+          @click="() => selectDate(date.label)"
+          role="button"
+        >
+
         <div class="flex" :title="date.stat_of!='init'? 'Base non initialisé':''">
           
           <v-icon v-if="date.stat_of !== 'init'"   class=" mr-2 text-red-700">mdi-database-alert</v-icon> 
@@ -40,16 +41,16 @@
       <div   v-for="(item) in charts" key="item.id" class=" w-full h-full flex justify-between"> 
          
         <div   class=" flex flex-col">
-           <doughnut 
-          :key="item.id"
-          :id="item.id"
-          :title="item.title"
-          :data="item.data"
-          :labels="item.labels"
-          :colors="item.colors"
-          :circumference="item.circumference"
-          :heigth="item.heigths"
-        />
+          <doughnut 
+            :key="item.id"
+            :id="item.id"
+            :title="item.title"
+            :data="item.data"
+            :labels="item.labels"
+            :colors="item.colors"
+            :circumference="item.circumference"
+            :heigth="item.heigths"
+          />
         </div> 
       </div>
     </div> 
@@ -59,36 +60,9 @@
 <script setup>
 import { onMounted, ref, watch } from 'vue'
 import doughnut from './doughnut/Dougnut.vue'
+import { usePopupStore } from '../stores'
 
-const charts = ref([
-  // {
-  //   id: 'pa_chart',
-  //   title: 'Répartition des PA',
-  //   data: [15, 50, 20, 15],
-  //   labels: ['PA1', 'PA2', 'PA3', 'PA4'],
-  //   colors: ['#FF0031', '#00c62b', '#ffffff', '#00FFFF'],
-  //   circumference: 180,
-  //   heigth:'200px'
-  // },
-  // {
-  //   id: 'pa_chart_tree',
-  //   title: 'Répartition des PA',
-  //   data: [15, 50, 20, 15],
-  //   labels: ['PA1', 'PA2', 'PA3', 'PA4'],
-  //   colors: ['#FF0031', '#00c62b', '#ffffff', '#00FFFF'],
-  //   circumference: 180,
-  //   heigth:'200px'
-  // }
-  // ,
-  // {
-  //   id: 'second_chart',
-  //   title: 'Autre graphique',
-  //   data: [25, 25, 25, 25],
-  //   labels: ['Q1', 'Q2', 'Q3', 'Q4'],
-  //   colors: ['#eab308', '#3b82f6', '#f43f5e', '#10b981'],
-  //   circumference: 360
-  // }
-])
+const charts = ref([])
 
 const menu = ref(false)
 const selectedDate = ref('Chargement en cours...')
@@ -98,9 +72,19 @@ const historyDates  = ref([])
 const stat_local_ref  = ref([])
 const stat_PA  = ref([])
 
-function selectDate(date) {
+async function selectDate(date) {
+  
+ charts.value = []
   selectedDate.value = date
-  menu.value = false // ferme le menu après sélection
+  usePopupStore().selected_date.value = date
+  menu.value = false
+   
+  stat_PA.value = await fetchData('http://192.168.1.212:8000/api/get_pa_class',date) 
+  updateSecondChartFromData(stat_PA.value,'theard_chart',180,['#FF0031',  '#FF00FF','#00FFFF','#00c62b','#ffffff'], '300px') 
+   
+  stat_local_ref.value = await fetchData('http://192.168.1.212:8000/api/get_local_ref',date,'1000px') 
+  updateSecondChartFromData(stat_local_ref.value,'second_chart',360)
+ 
 }
 
 // history_insert
@@ -125,8 +109,7 @@ function updateSecondChartFromData(dataArray,name, circumference,color = null,he
 
   const labels = []
   const data = []
-  const colors = []
-  const heigths = []
+  const colors = [] 
 
   dataArray.forEach((item) => {
     labels.push(item.initial || 'Inconnu')
@@ -144,13 +127,9 @@ function updateSecondChartFromData(dataArray,name, circumference,color = null,he
                   }
   chart_Data.data=data
   chart_Data.labels=labels
-  chart_Data.colors=color===null?colors:   color
-  chart_Data.heigths=color===null?'400px':   height
-
-  charts.value.push(chart_Data)
- 
- 
-  
+  chart_Data.colors=color===null?colors: color
+  chart_Data.heigths=color===null?'400px': height 
+  charts.value.push(chart_Data) 
 }
 
 function generateRandomColor() {
@@ -173,21 +152,21 @@ watch(historyDates, (val) => {
 
 onMounted(() => {
   
- ;(async () => {
+ (async () => {
     historyDates.value = await fetchData('http://192.168.1.212:8000/api/history_insert')
-  })()
+  })();
 
- ;(async () => {
+ (async () => {
     stat_PA.value = await fetchData('http://192.168.1.212:8000/api/get_pa_class','20250731') 
     updateSecondChartFromData(stat_PA.value,'theard_chart',180,['#FF0031',  '#FF00FF','#00FFFF','#00c62b','#ffffff'], '300px') 
-  })()
+  })();
 
   
- ;(async () => {
+ (async () => {
     stat_local_ref.value = await fetchData('http://192.168.1.212:8000/api/get_local_ref','20250731','1000px') 
     updateSecondChartFromData(stat_local_ref.value,'second_chart',360)
     
-  })()
+  })();
 })
 
 </script>
