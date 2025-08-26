@@ -273,6 +273,10 @@ class Credit_outstanding_report:
                     row_dict["Status_du_client"] = "PA4"
                 else:
                     row_dict["Status_du_client"] = ""
+                    
+                if row_dict["Status_du_client"] == "" and row_dict["capital_appele"]!=0:
+                    row_dict["capital_appele"]=0
+                    row_dict["capital_total"]=row_dict["capital_non_appele"]
 
                 data.append(row_dict)
 
