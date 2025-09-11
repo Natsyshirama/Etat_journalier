@@ -167,16 +167,19 @@ watch(usePopupStore().selected_date, (val) => {
   tabs.value[0].liste=[] 
   tabs.value[1].liste=[]  
 
+
   fetchData(`http://192.168.1.212:8000/api/get_encours_credits?date=${val.value}`, listes.encours, 'encours_actual_data');
   fetchData(`http://192.168.1.212:8000/api/encours_remboursement?date=${val.value}`, listes.remboursement, 'remboursement_actual_data');
- 
+  
+  
+
 });
 
 
 onMounted(() => {
   // console.log(usePopupStore().selected_date);
   
-  const date = '20250731';
+  const date = '20250829';
   fetchData(`http://192.168.1.212:8000/api/get_encours_credits?date=${date}`, listes.encours, 'encours_actual_data');
   fetchData(`http://192.168.1.212:8000/api/encours_remboursement?date=${date}`, listes.remboursement, 'remboursement_actual_data');
   fetchData(`http://192.168.1.212:8000/api/encours_limit?limit_type=8400`, listes.avm, 'limit_avm_actual_data');

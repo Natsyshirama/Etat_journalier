@@ -1244,9 +1244,10 @@ class Credits:
                             "name": "Creation de la Table temp_payment_date ",
                             "sql": f"""   
                                     CREATE TABLE temp_payment_date AS
-                                    SELECT  arrangement_id, 
-                                                MIN(bill.payment_date) as payment_date 
+                                    SELECT  bill.arrangement_id, 
+                                            MIN(bill.payment_date) AS payment_date 
                                             FROM aa_bill_details_mcbc_live_full  AS bill
+                                            where bill.settle_status = 'UNPAID'
                                             GROUP BY bill.arrangement_id """
                         },
                         {
@@ -1759,20 +1760,20 @@ class Credits:
                             "name": """ Création de la TABLE etat_remboursement IF EXISTS """,
                             "sql": """CREATE TABLE IF NOT EXISTS etat_remboursement AS
                                         SELECT
-                                        arrangement_id,
-                                        Date_pret,
-                                        product,
-                                        co_code,
-                                        linked_appl_id,
-                                        Nom_client,
-                                        customer,
-                                        echeance,
-                                        date_echeance,
-                                        payment_date,
-                                        SUM(Capital) AS Capital,
-                                        SUM(principal_int) AS principal_int,
-                                        SUM(penality_int) AS penality_int,
-                                        SUM(TOTAL) AS TOTAL
+                                            arrangement_id,
+                                            Date_pret,
+                                            product,
+                                            co_code,
+                                            linked_appl_id,
+                                            Nom_client,
+                                            customer,
+                                            echeance,
+                                            date_echeance,
+                                            payment_date,
+                                            Capital AS Capital,
+                                            principal_int  AS principal_int,
+                                            penality_int AS penality_int,
+                                            SUM(TOTAL) AS TOTAL
                                         FROM temp_etat_remb   GROUP BY arrangement_id;"""
                         }, 
                         {
