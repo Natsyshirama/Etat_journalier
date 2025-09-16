@@ -39,39 +39,38 @@ class DbGet:
         """
         conn = None
         try:
+            # recuperation historydate
             # Récupération du label dynamique
-            label = self.getHistoryDate()
-            if not label:
-                raise ValueError("Aucun label trouvé dans history_mcbd avec used=1")
-
-            table_name = f"DAT_{label}"
+            
+            table_name = f"dat"
 
             query = f"""
             CREATE TABLE IF NOT EXISTS {table_name} AS
-            SELECT 
-                arrangement.co_code AS Agence, 
-                arrangement.customer AS code_client,
-                arrangement.linked_appl_id AS Numero_compte,
-                arrangement.product AS Produits,
-                customer.name_1 AS Nom_compte,
-                customer.street AS Adresse,
-                customer.sms_1 AS Contact,
-                cb.open_balance,
-                cb.debit_mvmt,
-                cb.credit_mvmt,
-                cb.open_balance + cb.debit_mvmt - cb.credit_mvmt AS solde_calcule
-            FROM 
-                aa_arrangement_mcbc_live_full AS arrangement
-            INNER JOIN aa_account_details_mcbc_live_full AS account_details
-                ON account_details.id = arrangement.id
-            LEFT JOIN customer_mcbc_live_full_partie_1 AS customer
-                ON arrangement.customer = customer.id
-            LEFT JOIN eb_cont_bal_mcbc_live_full AS cb
-                ON cb.id = arrangement.linked_appl_id
-            WHERE 
-                arrangement.product_line = 'DEPOSITS'
-                AND arrangement.arr_status IN ('AUTH', 'CURRENT')
-                AND arrangement.product_group = 'DAT.SP.MG';
+             SELECT 
+            arrangement.co_code AS Agence, 
+            arrangement.customer AS code_client,
+            arrangement.linked_appl_id AS Numero_compte,
+            arrangement.product AS Produits,
+            customer.name_1 AS Nom_compte,
+            customer.street AS Adresse,
+            customer.sms_1 AS Contact,
+            cb.open_balance,
+            cb.debit_mvmt,
+            cb.credit_mvmt,
+            cb.open_balance + cb.debit_mvmt - cb.credit_mvmt AS solde_calcule
+        FROM 
+            aa_arrangement_mcbc_live_full AS arrangement
+        INNER JOIN aa_account_details_mcbc_live_full AS account_details
+            ON account_details.id = arrangement.id
+        LEFT JOIN customer_mcbc_live_full_partie_1 AS customer
+            ON arrangement.customer = customer.id
+        LEFT JOIN eb_cont_bal_mcbc_live_full AS cb
+            ON cb.id = arrangement.linked_appl_id
+        WHERE 
+            arrangement.product_line = 'DEPOSITS'
+            AND arrangement.arr_status IN ('AUTH', 'CURRENT')
+            AND arrangement.product_group = 'DAT.SP.MG';
+           
             """
 
             conn = self.db.connect()

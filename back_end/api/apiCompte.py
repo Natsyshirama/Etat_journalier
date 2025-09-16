@@ -38,21 +38,7 @@ def get_dat_by_client(code_client: str):
         return JSONResponse(content={"status": "error", "message": str(e)}, status_code=500)
 
 
-@router.get("/dat/history")
-def get_dat_history():
-    """
-    Récupère le dernier label actif dans history_mcbd
-    """
-    try:
-        label = db_get.getHistory()
-        if not label:
-            return JSONResponse(content={"status": "warning", "message": "Aucun label actif trouvé"})
-        return JSONResponse(content={"status": "success", "label": label})
-    except Exception as e:
-        return JSONResponse(content={"status": "error", "message": str(e)}, status_code=500)
-
-
-@router.post("/dat/create_precompute")
+@router.post("/dat/create_dat_precompute")
 def create_dat_precompute():
     """
     Crée une table DAT pré-calculée (DAT_<label>)

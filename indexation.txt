@@ -1,0 +1,43 @@
+-- Table aa_arrangement_mcbc_live_full
+
+CREATE INDEX idx_arrangement_id ON aa_arrangement_mcbc_live_full(id(255));
+CREATE INDEX idx_co_code ON aa_arrangement_mcbc_live_full (co_code(255));  -- Si co_code est de type TEXT
+CREATE INDEX idx_customer ON aa_arrangement_mcbc_live_full (customer(255));  -- Si customer est de type TEXT
+CREATE INDEX idx_linked_appl_id ON aa_arrangement_mcbc_live_full (linked_appl_id(255));  -- Si linked_appl_id est de type TEXT
+CREATE INDEX idx_product_line ON aa_arrangement_mcbc_live_full (product_line(255));  -- Ajout de (255)
+CREATE INDEX idx_arr_status ON aa_arrangement_mcbc_live_full (arr_status(255));  -- Ajout de (255)
+CREATE INDEX idx_product_group ON aa_arrangement_mcbc_live_full (product_group(255));  -- Ajout de (255)
+CREATE INDEX idx_start_date ON aa_arrangement_mcbc_live_full (start_date(255));  -- Ajout de (255)
+
+-- Table customer_mcbc_live_full_partie_1
+CREATE INDEX idx_customer_id ON customer_mcbc_live_full_partie_1 (id(255));  -- Ajout de (255)
+CREATE INDEX idx_customer_sector ON customer_mcbc_live_full_partie_1 (sector(255));  -- Ajout de (255)
+CREATE INDEX idx_customer_short_name_name_1 ON customer_mcbc_live_full_partie_1 (short_name(255), name_1(255));  -- Si short_name et name_1 sont de type TEXT
+CREATE INDEX idx_customer_street ON customer_mcbc_live_full_partie_1 (street(255));  -- Si street est de type TEXT
+CREATE INDEX idx_customer_sms_1 ON customer_mcbc_live_full_partie_1 (sms_1(255));  -- Si sms_1 est de type TEXT
+CREATE INDEX idx_customer_gender ON customer_mcbc_live_full_partie_1 (gender(255));  -- Ajout de (255)
+CREATE INDEX idx_customer_industry ON customer_mcbc_live_full_partie_1 (industry(255));  -- Ajout de (255)
+CREATE INDEX idx_customer_target ON customer_mcbc_live_full_partie_1 (target(255));  -- Ajout de (255)
+CREATE INDEX idx_customer_legal_id ON customer_mcbc_live_full_partie_1 (legal_id(255));  -- Si legal_id est de type TEXT
+CREATE INDEX idx_customer_account_officer ON customer_mcbc_live_full_partie_1 (account_officer(255));  -- Ajout de (255)
+
+-- Table aa_account_details_mcbc_live_full
+CREATE INDEX idx_account_details_id ON aa_account_details_mcbc_live_full (id(255));  -- Ajout de (255)
+CREATE INDEX idx_account_details_maturity_date ON aa_account_details_mcbc_live_full (maturity_date(255));  -- Ajout de (255)
+
+-- Table eb_cont_bal_mcbc_live_full
+CREATE INDEX idx_contract_balance_id ON eb_cont_bal_mcbc_live_full (id(255));  -- Ajout de (255)
+CREATE INDEX idx_balance_columns ON eb_cont_bal_mcbc_live_full (open_balance(255));  -- Ajout de (255)
+CREATE INDEX idx_debit_mvmt ON eb_cont_bal_mcbc_live_full (debit_mvmt(255));  -- Ajout de (255)
+CREATE INDEX idx_credit_mvmt ON eb_cont_bal_mcbc_live_full (credit_mvmt(255));  -- Ajout de (255)
+CREATE INDEX idx_contract_balance_type_sysdate ON eb_cont_bal_mcbc_live_full (type_sysdate(255));  -- Ajout de (255)
+
+-- Table aa_arr_interest_mcbc_live_full
+CREATE INDEX idx_interest_id_comp_1 ON aa_arr_interest_mcbc_live_full (id_comp_1(255));  -- Ajout de (255)
+CREATE INDEX idx_interest_id_comp_2 ON aa_arr_interest_mcbc_live_full (id_comp_2(255));  -- Ajout de (255)
+CREATE INDEX idx_interest_effective_rate ON aa_arr_interest_mcbc_live_full (effective_rate(255));  -- Ajout de (255)
+
+-- Table account_mcbc_live_full
+CREATE INDEX idx_account_id ON account_mcbc_live_full (id(255));  -- Ajout de (255)
+CREATE INDEX idx_account_opening_date ON account_mcbc_live_full (opening_date(255));  -- Ajout de (255)
+CREATE INDEX idx_em_proc_status ON em_lo_application_mcbc_live_full(proc_status(255));  
