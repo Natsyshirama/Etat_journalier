@@ -1,6 +1,6 @@
 from fastapi import FastAPI
 from controller.Credits import Credits
-from api.api import api_router   
+from api.apiCompte import api_router   
 from fastapi.middleware.cors import CORSMiddleware
 
 app = FastAPI()
