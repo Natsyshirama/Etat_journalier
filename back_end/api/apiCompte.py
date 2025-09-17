@@ -6,10 +6,12 @@ from db.db import DB
 from sqlalchemy import text
 from controller.DatReport import DATReport 
 from controller.DbGet import DbGet
+from controller.Operation import Operation
 
 router = APIRouter()
 dat_report = DATReport()
 db_get = DbGet()
+operation = Operation()
 
 
 @router.get("/dat/all")
@@ -45,9 +47,23 @@ def create_dat_precompute():
     """
     try:
         table_name = db_get.create_tableDatPreCompute()
-        return JSONResponse(content={"status": "success", "message": f"Table créée : {table_name}", "table_name": table_name})
+        
+        if not table_name:
+            raise Exception("Erreur lors de la création de la table DAT")
+        
+        db_get.traitement_dat(table_name)
+        operation.calculeAmtCap(table_name)
+
+        return JSONResponse(content={
+                    "status": "success",
+                    "message": f"Table créée et nettoyée et calculer : {table_name} ✅",
+                    "table_name": table_name
+        })
+        
     except Exception as e:
         return JSONResponse(content={"status": "error", "message": str(e)}, status_code=500)
+
+
 
 
 api_router = router
