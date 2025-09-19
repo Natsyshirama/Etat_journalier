@@ -207,6 +207,8 @@ class DbGet:
                 except Exception as close_err:
                     print(f"[ERREUR] Fermeture connexion (create_tableDatPreCompute) : {close_err}")
 
+
+
     def traitement_dat(self, table_name: str):
         """
         Nettoie les données dans la table dat_<label>
@@ -245,7 +247,16 @@ class DbGet:
                 """
             conn.execute(text(query_dedup))
 
-
+            # Supprimer colonnes inutiles
+            query_drop_cols = f"""
+            ALTER TABLE {table_name}
+            DROP COLUMN type_sysdate,
+            DROP COLUMN id_comp_2,
+            DROP COLUMN debit_mvmt,
+            DROP COLUMN open_balance,
+            DROP COLUMN credit_mvmt;
+            """
+            conn.execute(text(query_drop_cols))
             conn.commit()
             print(f"[INFO] Nettoyage terminé pour {table_name} ✅")
 

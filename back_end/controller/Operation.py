@@ -31,8 +31,7 @@ class Operation:
                
                 
                 for index, entry in enumerate(type_sysdate_values):
-                    if entry in ["CURACCOUNT", "CURACCOUNT-202411", "CURACCOUNT-202412",
-                                "CURACCOUNT-202501", "CURACCOUNT-202502", "CURACCOUNT-202503"]:
+                    if entry == "CURACCOUNT" or entry.startswith("CURACCOUNT-202411") or entry.startswith("CURACCOUNT-202412") or entry.startswith("CURACCOUNT-202501") or entry.startswith("CURACCOUNT-202502") or entry.startswith("CURACCOUNT-202503"):
                         debit_mvmt = row['debit_mvmt'].split('|')[index] if index < len(row['debit_mvmt'].split('|')) else '0'
                         credit_mvmt = row['credit_mvmt'].split('|')[index] if index < len(row['credit_mvmt'].split('|')) else '0'
                         open_balance = row['open_balance'].split('|')[index] if index < len(row['open_balance'].split('|')) else '0'
@@ -115,3 +114,41 @@ class Operation:
                     conn.close()
                 except Exception as close_err:
                     print(f"[ERREUR] Fermeture connexion (calculeAmtCap) : {close_err}")
+
+    def exportExcel(self, table_name: str, output_file: str = None):
+        """
+        Exporte une table MySQL (dat_<label>) dans un fichier Excel.
+        """
+        if not table_name.startswith("dat_") or table_name.startswith("dav_"):
+            print(f"[ERREUR] Table '{table_name}' non autorisée à l'export ❌")
+            return None
+        conn = None
+        try:
+            conn = self.db.connect()
+
+            # Lire la table dans un DataFrame
+            df = pd.read_sql(f"SELECT * FROM {table_name}", conn)
+
+            # Nom de fichier par défaut si non fourni
+            if not output_file:
+                output_file = f"{table_name}.xlsx"
+
+            # Exporter en Excel
+            df.to_excel(output_file, index=False, engine="openpyxl")
+
+            print(f"[INFO] Export terminé ✅ Fichier : {output_file}")
+            return output_file
+
+        except Exception as e:
+            print(f"[ERREUR] exportExcel : {e}")
+            return None
+        finally:
+            if conn:
+                try:
+                    conn.close()
+                except Exception as close_err:
+                    print(f"[ERREUR] Fermeture connexion (exportExcel) : {close_err}")
+                    
+                    
+                    
+            
