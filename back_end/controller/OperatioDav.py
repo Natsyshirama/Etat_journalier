@@ -2,11 +2,12 @@ import pandas as pd
 from db.db import DB
 from sqlalchemy import text
 from controller.DbGet import DbGet
+import pymysql
 
 
 dbGet = DbGet()
 
-class OperationDav:
+class OperatioDav:
     def __init__(self):
         self.db = DB()
         self.engine = self.db.engine
@@ -15,18 +16,16 @@ class OperationDav:
     def calcule_dav(self, table_name: str):
         """
         Calcule montant_dav pour chaque ligne de la table dat_<label>.
-        Règles :
-        - On filtre sur type_sysdate = CURACCOUNT ou CURACCOUNT-<date> <= date_limite
-        - On additionne debit_mvmt + credit_mvmt + open_balance correspondants
+        Supprime les doublons sur Numero_compte comme dans la première fonction.
         """
         conn = None
         try:
-            conn = self.db.connect()
+            conn = self.db.connect()    
 
             # Lire la table entière dans un DataFrame
             df = pd.read_sql(f"SELECT * FROM {table_name}", conn)
 
-            # Fonction locale pour calculer montant_dav
+            # Fonction pour calculer montant_dav
             def extract_dav(row):
                 montant_dav_total = 0.0
                 date_limite = dbGet.getHistoryDate()
@@ -40,7 +39,6 @@ class OperationDav:
                     balance_values = row['open_balance'].split('|')
 
                     for index, entry in enumerate(type_sysdate_values):
-                        # Filtrage CURACCOUNT avec date limite
                         if entry == "CURACCOUNT":
                             is_valid = True
                         elif entry.startswith("CURACCOUNT-"):
@@ -57,9 +55,21 @@ class OperationDav:
 
                 return montant_dav_total
 
-            # Calculer la nouvelle colonne
+            # Calcul du montant_dav
+            df['montant_dav'] = df.apply(extract_dav, axis=1)
+            df['debit_dav'] = df['montant_dav'].apply(lambda x: x if x > 0 else 0.0)
+            df['credit_dav'] = df['montant_dav'].apply(lambda x: -x if x < 0 else 0.0)
 
-            # Ajouter la colonne si elle n'existe pas
+# Après avoir calculé montant_dav et les colonnes debit/credit
+            df_unique = df.drop_duplicates(subset=['Numero_compte'], keep='first')
+
+# Supprimer toutes les lignes existantes dans la table et ré-insérer les uniques
+            conn.execute(text(f"DELETE FROM {table_name}"))
+
+# Insérer uniquement les lignes uniques
+            df_unique.to_sql(table_name, conn, if_exists='append', index=False)
+
+            # Ajouter les colonnes si elles n'existent pas
             def add_column_if_not_exists(conn, table_name, column_name, column_type="DOUBLE DEFAULT 0"):
                 result = conn.execute(text(f"""
                     SELECT COLUMN_NAME 
@@ -69,22 +79,24 @@ class OperationDav:
 
                 if not result:
                     conn.execute(text(f"ALTER TABLE {table_name} ADD COLUMN {column_name} {column_type}"))
-                    
-            
-            df['montant_dav'] = df.apply(extract_dav, axis=1)
-            
 
             add_column_if_not_exists(conn, table_name, "montant_dav")
+            add_column_if_not_exists(conn, table_name, "debit_dav")
+            add_column_if_not_exists(conn, table_name, "credit_dav")
 
             # Mise à jour dans la table
             for idx, row in df.iterrows():
                 update_query = f"""
                     UPDATE {table_name}
-                    SET montant_dav = :montant_dav
+                    SET montant_dav = :montant_dav,
+                        debit_dav = :debit_dav,
+                        credit_dav = :credit_dav
                     WHERE Numero_compte = :Numero_compte
                 """
                 conn.execute(text(update_query), {
                     "montant_dav": row['montant_dav'],
+                    "debit_dav": row['debit_dav'],
+                    "credit_dav": row['credit_dav'],
                     "Numero_compte": row['Numero_compte']
                 })
 
@@ -99,8 +111,3 @@ class OperationDav:
                     conn.close()
                 except Exception as close_err:
                     print(f"[ERREUR] Fermeture connexion (calcule_dav) : {close_err}")
-
-
-                    
-                    
-            

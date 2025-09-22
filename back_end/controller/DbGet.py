@@ -240,7 +240,6 @@ class DbGet:
                 DELETE t1 FROM {table_name} t1
                 INNER JOIN {table_name} t2
                 ON t1.Agence = t2.Agence
-                AND t1.code_client = t2.code_client
                 AND t1.Numero_compte = t2.Numero_compte
                 AND t1.Produits = t2.Produits
                 AND t1.id_comp_2 < t2.id_comp_2;
@@ -251,7 +250,6 @@ class DbGet:
             query_drop_cols = f"""
             ALTER TABLE {table_name}
             DROP COLUMN type_sysdate,
-            DROP COLUMN id_comp_2,
             DROP COLUMN debit_mvmt,
             DROP COLUMN open_balance,
             DROP COLUMN credit_mvmt;

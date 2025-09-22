@@ -7,7 +7,9 @@ from sqlalchemy import text
 from controller.DatReport import DATReport 
 from controller.DbGet import DbGet
 from controller.Operation import Operation
-from controller.OperatioDav import OperationDav
+from controller.OperatioDav import OperatioDav
+from controller.Esri import Esri
+from controller.OperationEsri import OperationEsri
 
 from controller.DavUnique import DavUnique
 
@@ -15,8 +17,10 @@ router = APIRouter()
 dat_report = DATReport()
 db_get = DbGet()
 operation = Operation()
-operation_dav = OperationDav()
+operation_dav = OperatioDav()
 dav_unique = DavUnique()
+esri = Esri()
+operation_esri = OperationEsri()
 
 
 @router.get("/dat/all")
@@ -80,7 +84,7 @@ def create_dav_precompute():
         if not table_name:
             raise Exception("Erreur lors de la création de la table DAV")
         operation_dav.calcule_dav(table_name)
-        db_get.traitement_dat(table_name)
+        dav_unique.traitement_dav(table_name)
 
         return JSONResponse(content={
                     "status": "success",
@@ -91,7 +95,72 @@ def create_dav_precompute():
     except Exception as e:
         return JSONResponse(content={"status": "error", "message": str(e)}, status_code=500)
 
+@router.post("/esri/create_esri_precompute")
+def create_esri_precompute(label: str):
+    try:
+        table_name = esri.create_tableEsri(label)
+        if not table_name:
+            raise Exception("Erreur lors de la création de la table ESRI")
+        
+        operation_esri.calcule_esri(table_name)
+        
+        return JSONResponse(content={
+            "status": "success",
+            "message": f"Table ESRI créée et pré-traitée : {table_name} ✅",
+            "table_name": table_name
+        })
+    except Exception as e:
+        return JSONResponse(content={"status": "error", "message": str(e)}, status_code=500)
 
+@router.post("/dav/traitement_dav")
+def traitement_dav(table_name: str):
+    """
+    Nettoie les données dans la table dav_<label>
+    - Remplace NULL par 0 pour debit_mvmt, credit_mvmt, open_balance
+    - Gère les duplicatas en gardant la première occurrence
+    - Traite le code_client pour ne garder que la première valeur avant '|'
+    """
+    try:
+        dav_unique.traitement_dav(table_name)
+        return JSONResponse(content={
+                    "status": "success",
+                    "message": f"Table nettoyée : {table_name} ✅"
+        })
+    except Exception as e:
+        return JSONResponse(content={"status": "error", "message": str(e)}, status_code=500)
+    
+    
+    
+    
+    
+    
+    
+#creation table et insertion de table arrangement_customer
+@router.post("/dav/create_table_arrCust")
+def create_table_arrCust():
+    """
+    Crée une table arrangement_customer
+    """
+    try:
+        result = dav_unique.create_table_arrCust()
+        
+        if not result:
+            raise Exception("Erreur lors de la création de la table arrangement_customer")
+        
+        
+        dav_unique.insert_data_arrCust()
+        dav_unique.create_index()
+        
+        return JSONResponse(content={
+                    "status": "success",
+                    "message": f"Table arrangement_customer créée et donnee inserer avec les index ✅"
+        })
+        
+    except Exception as e:
+        return JSONResponse(content={"status": "error", "message": str(e)}, status_code=500)
+
+
+    
 @router.get("/dat/export_excel")
 def export_excel(table_name: str):
     """
