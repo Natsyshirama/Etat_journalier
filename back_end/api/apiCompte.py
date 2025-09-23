@@ -23,32 +23,6 @@ esri = Esri()
 operation_esri = OperationEsri()
 
 
-@router.get("/dat/all")
-def get_all_dat(limit: int = Query(1000, description="Nombre de lignes à retourner")):
-    """
-    Récupère les premières lignes de la table DAT pré-calculée
-    """
-    try:
-        data = dat_report.get_all(limit=limit)
-        return JSONResponse(content={"status": "success", "data": data})
-    except Exception as e:
-        return JSONResponse(content={"status": "error", "message": str(e)}, status_code=500)
-
-
-@router.get("/dat/client/{code_client}")
-def get_dat_by_client(code_client: str):
-    """
-    Récupère les données DAT pour un code client spécifique
-    """
-    try:
-        data = dat_report.get_by_client(code_client)
-        if not data:
-            return JSONResponse(content={"status": "warning", "message": f"Aucune donnée trouvée pour le client {code_client}"})
-        return JSONResponse(content={"status": "success", "data": data})
-    except Exception as e:
-        return JSONResponse(content={"status": "error", "message": str(e)}, status_code=500)
-
-
 @router.post("/dat/create_dat_precompute")
 def create_dat_precompute():
     """
@@ -112,28 +86,6 @@ def create_esri_precompute(label: str):
     except Exception as e:
         return JSONResponse(content={"status": "error", "message": str(e)}, status_code=500)
 
-@router.post("/dav/traitement_dav")
-def traitement_dav(table_name: str):
-    """
-    Nettoie les données dans la table dav_<label>
-    - Remplace NULL par 0 pour debit_mvmt, credit_mvmt, open_balance
-    - Gère les duplicatas en gardant la première occurrence
-    - Traite le code_client pour ne garder que la première valeur avant '|'
-    """
-    try:
-        dav_unique.traitement_dav(table_name)
-        return JSONResponse(content={
-                    "status": "success",
-                    "message": f"Table nettoyée : {table_name} ✅"
-        })
-    except Exception as e:
-        return JSONResponse(content={"status": "error", "message": str(e)}, status_code=500)
-    
-    
-    
-    
-    
-    
     
 #creation table et insertion de table arrangement_customer
 @router.post("/dav/create_table_arrCust")
@@ -160,7 +112,7 @@ def create_table_arrCust():
         return JSONResponse(content={"status": "error", "message": str(e)}, status_code=500)
 
 
-    
+#exportation des tables
 @router.get("/dat/export_excel")
 def export_excel(table_name: str):
     """
@@ -183,4 +135,55 @@ def export_excel(table_name: str):
     except Exception as e:
         return JSONResponse(content={"status": "error", "message": str(e)}, status_code=500)
 
+@router.get("/dat/liste_dat")
+def listeDta():
+    """"
+        liste table dat
+    """ 
+    try:
+        listeDta = dat_report.getListeDat()
+        if not listeDta:
+            raise Exception("Aucune table DAT trouvée")
+        
+        return {"tables": listeDta}
+    except Exception as e:
+        return JSONResponse(content={"status": "error", "message": str(e)}, status_code=500)
+    
+
+@router.get("/dat/{table_name}")
+def get_dat_table(table_name: str):
+    try:
+        data = dat_report.getDat(table_name)
+        return {"table": table_name, **data}
+    except Exception as e:
+        return {"error": str(e)}
+
+#returner le resumer
+
+@router.get("/dat/{table_name}/resume")
+def get_dat_resume(table_name: str):
+
+    try:
+        summary = dat_report.getResumeDat(table_name)
+        if not summary:
+            return JSONResponse(status_code=404, content={"error": "Résumé introuvable ou table vide"})
+
+        # Conversion sécurisée en types JSON (int / float)
+        safe_summary = {
+            "table_name": table_name,
+            "nb_lignes": int(summary.get("nb_lignes") or 0),
+            "nb_clients": int(summary.get("nb_clients") or 0),
+            "total_montant_capital": float(summary.get("total_montant_capital") or 0),
+            "total_montant_pay_total": float(summary.get("total_montant_pay_total") or 0)
+        }
+
+        return safe_summary
+
+    except ValueError as ve:
+        return JSONResponse(status_code=400, content={"error": str(ve)})
+    except Exception as e:
+        return JSONResponse(status_code=500, content={"error": f"Erreur serveur: {e}"})
+    
+    
+    
 api_router = router
