@@ -101,17 +101,17 @@ class DbGet:
                     
                     
 
-    def create_tableDatPreCompute(self):
+    def create_tableDatPreCompute(self, name: str):
         """
         Crée une table DAT_<label> pré-calculée
         """
         conn = None
         try:
-            # recuperation historydate
-            label = self.getHistoryDate()
-            # Récupération du label dynamique
+            # # recuperation historydate
+            # label = self.getHistoryDate()
+            # # Récupération du label dynamique
             
-            table_name = f"dat_{label}"
+            table_name = f"dat_{name}"
 
             query = f"""
             CREATE TABLE IF NOT EXISTS {table_name} AS
@@ -208,7 +208,35 @@ class DbGet:
                     print(f"[ERREUR] Fermeture connexion (create_tableDatPreCompute) : {close_err}")
 
 
-
+    def update_statusHistoryInsert(self, name: str):
+        conn = None
+        try:
+            conn = self.db.connect()
+            
+            query = f"""
+                    UPDATE history_insert
+                    SET dat_status = true
+                    WHERE label = '{name}';
+            """
+            conn.execute(text(query))
+            conn.commit()
+            
+            print(f"[INFO] history_insert mis à jour pour {name} ✅")
+            return True
+            
+        except Exception as e:
+            print(f"[ERREUR] clean_tableDatPreCompute : {e}")
+            return None
+        finally:
+            if conn:
+                try:
+                    conn.close()
+                except Exception as close_err:
+                    print(f"[ERREUR] Fermeture connexion (clean_tableDatPreCompute) : {close_err}")
+            
+   
+            
+            
     def traitement_dat(self, table_name: str):
         """
         Nettoie les données dans la table dat_<label>

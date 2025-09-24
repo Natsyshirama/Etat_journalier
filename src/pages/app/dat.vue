@@ -13,10 +13,12 @@
       </v-col>
     </v-row>
 
+    <!-- Résumé (au-dessus du tableau) -->
+    <Resumer v-if="selectedTable" :tableName="selectedTable" />
+
     <!-- Tableau des données -->
     <v-row>
       <v-col cols="12">
-        <!-- Conteneur scroll vertical -->
         <div style="max-height: 600px; overflow-y: auto;">
           <v-data-table
             :headers="headers"
@@ -27,7 +29,6 @@
             :search="search"
             dense
           >
-            <!-- Recherche -->
             <template v-slot:top>
               <v-text-field
                 v-model="search"
@@ -38,7 +39,6 @@
               />
             </template>
 
-            <!-- Pagination footer -->
             <template v-slot:footer>
               <v-pagination
                 v-model="page"
@@ -48,7 +48,6 @@
               />
             </template>
 
-            <!-- Message quand pas de données -->
             <template v-slot:no-data>
               <v-alert type="info" border="left" color="blue" dark>
                 Aucune donnée trouvée
@@ -64,29 +63,18 @@
 <script setup>
 import { ref, onMounted, watch, computed } from "vue"
 import axios from "axios"
+import Resumer from "@/components/dat/Resumer.vue"
 
-const tables = ref([])             // Liste des tables DAT
-const selectedTable = ref(null)    // Table sélectionnée
-const headers = ref([])            // Colonnes dynamiques
-const items = ref([])              // Lignes de données
-const search = ref("")             // Texte de recherche
-
-// Pagination frontend
+const tables = ref([])
+const selectedTable = ref(null)
+const headers = ref([])
+const items = ref([])
+const search = ref("")
 const page = ref(1)
 const itemsPerPage = ref(10)
 
-const pageCount = computed(() => {
-  return Math.ceil(items.value.length / itemsPerPage.value)
-})
+const pageCount = computed(() => Math.ceil(items.value.length / itemsPerPage.value))
 
-// Liste des items affichés sur la page courante
-const paginatedItems = computed(() => {
-  const start = (page.value - 1) * itemsPerPage.value
-  const end = start + itemsPerPage.value
-  return items.value.slice(start, end)
-})
-
-// Charger la liste des tables depuis le backend
 const fetchTables = async () => {
   try {
     const res = await axios.get("http://127.0.0.1:8000/api/dat/liste_dat")
@@ -96,27 +84,27 @@ const fetchTables = async () => {
   }
 }
 
-// Charger les données d'une table sélectionnée
 const fetchTableData = async (tableName) => {
+  if (!tableName) {
+    items.value = []
+    headers.value = []
+    return
+  }
   try {
     const res = await axios.get(`http://127.0.0.1:8000/api/dat/${tableName}`)
     items.value = res.data.rows || []
-
-    // Colonnes dynamiques depuis backend
     headers.value = res.data.columns.map((col) => ({
       title: col,
       key: col
     }))
-
-    page.value = 1  // reset pagination
+    page.value = 1
   } catch (err) {
     console.error("Erreur lors du chargement de la table:", err)
   }
 }
 
-// Recharger les données quand une table est sélectionnée
 watch(selectedTable, (newVal) => {
-  if (newVal) fetchTableData(newVal)
+  fetchTableData(newVal)
 })
 
 onMounted(() => {

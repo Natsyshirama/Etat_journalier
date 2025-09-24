@@ -38,14 +38,10 @@ class DATReport:
                 try:
                     conn.close()
                 except Exception as close_err:
-                    print(f"[ERREUR] Fermeture connexion (getHistory) : {close_err}")
+                    print(f"[ERREUR] Fermeture connexion (getListeDat) : {close_err}")
                 
 
     def getDat(self, table_name: str):
-        """
-        Récupère les données d'une table commençant par dat_.
-        Retourne colonnes + rows
-        """
         if not table_name or not table_name.startswith("dat_"):
             raise ValueError("Nom de table invalide")
 
@@ -53,7 +49,7 @@ class DATReport:
         try:
             conn = self.db.connect()
 
-            query = text(f"SELECT * FROM `{table_name}` LIMIT 100")  
+            query = text(f"SELECT * FROM `{table_name}`")  
             result = conn.execute(query)
 
             rows = result.fetchall()
@@ -76,12 +72,14 @@ class DATReport:
                 except Exception as close_err:
                     print(f"[ERREUR] Fermeture connexion (getDat) : {close_err}")
 
+
     def getResumeDat(self, table_name: str):
         if not table_name or not table_name.startswith("dat_"):
             raise ValueError("Nom de table invalide")
 
         conn = None
         try:
+           
             conn = self.db.connect()
             query = text(f"""
                 SELECT 
@@ -93,7 +91,12 @@ class DATReport:
             """)
 
             result = conn.execute(query).fetchone()  # tuple
-            columns = result.keys() if hasattr(result, "keys") else ["nb_lignes","nb_clients","total_montant_capital","total_montant_pay_total"]
+            columns = result.keys() if hasattr(result, "keys") else [
+                "nb_lignes",
+                "nb_clients",
+                "total_montant_capital",
+                "total_montant_pay_total"
+                ]
 
             # Convertir en dict
             summary = {col: result[i] for i, col in enumerate(columns)}
@@ -109,4 +112,35 @@ class DATReport:
                     conn.close()
                 except Exception as close_err:
                     print(f"[ERREUR] Fermeture connexion : {close_err}")
+
+    def getListeHistoryInsert(self):
+       
+        conn = None
+        try:
+            conn = self.db.connect()
+
+            query = text("""
+                SELECT label, used, dat_status, dav_status
+                FROM history_insert
+                ORDER BY used DESC
+            """)
+
+            result = conn.execute(query)
+            rows = result.fetchall()
+            columns = list(result.keys())
+
+            # Transformer en liste de dictionnaires
+            data = [dict(zip(columns, row)) for row in rows]
+
+            return data
+
+        except Exception as e:
+            print(f"[ERREUR] getListeHistoryInsert : {e}")
+            return []
+        finally:
+            if conn:
+                try:
+                    conn.close()
+                except Exception as close_err:
+                    print(f"[ERREUR] Fermeture connexion (getListeHistoryInsert) : {close_err}")
 

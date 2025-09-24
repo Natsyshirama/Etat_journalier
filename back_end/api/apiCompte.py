@@ -23,14 +23,14 @@ esri = Esri()
 operation_esri = OperationEsri()
 
 
-@router.post("/dat/create_dat_precompute")
-def create_dat_precompute():
+@router.post("/dat/create_dat_precompute/{name}")
+def create_dat_precompute(name: str):
     """
     Crée une table DAT pré-calculée (DAT_<label>)
     """
     try:
-        table_name = db_get.create_tableDatPreCompute()
-        
+        table_name = db_get.create_tableDatPreCompute(name)
+        db_get.update_statusHistoryInsert(name)
         if not table_name:
             raise Exception("Erreur lors de la création de la table DAT")
         
@@ -137,7 +137,7 @@ def export_excel(table_name: str):
 
 @router.get("/dat/liste_dat")
 def listeDta():
-    """"
+    """
         liste table dat
     """ 
     try:
@@ -146,17 +146,23 @@ def listeDta():
             raise Exception("Aucune table DAT trouvée")
         
         return {"tables": listeDta}
-    except Exception as e:
-        return JSONResponse(content={"status": "error", "message": str(e)}, status_code=500)
     
+    except ValueError as ve:
+        return JSONResponse(status_code=400, content={"error": str(ve)})
+    except Exception as e:
+        return JSONResponse(status_code=500, content={"error": f"Erreur serveur: {e}"})
 
 @router.get("/dat/{table_name}")
 def get_dat_table(table_name: str):
+    """ tablea de dat selectionner
+    """
     try:
         data = dat_report.getDat(table_name)
         return {"table": table_name, **data}
+    except ValueError as ve:
+        return JSONResponse(status_code=400, content={"error": str(ve)})
     except Exception as e:
-        return {"error": str(e)}
+        return JSONResponse(status_code=500, content={"error": f"Erreur serveur: {e}"})
 
 #returner le resumer
 
@@ -185,5 +191,22 @@ def get_dat_resume(table_name: str):
         return JSONResponse(status_code=500, content={"error": f"Erreur serveur: {e}"})
     
     
+@router.get("/history/liste")
+def liste_history():
+
+    try:
+        history_list = dat_report.getListeHistoryInsert()
+        if not history_list:
+            return JSONResponse(
+                content={"status": "error", "message": "Aucun enregistrement trouvé"},
+                status_code=404
+            )
+        return {"history": history_list}
+
+    except ValueError as ve:
+        return JSONResponse(status_code=400, content={"error": str(ve)})
+    except Exception as e:
+        return JSONResponse(status_code=500, content={"error": f"Erreur serveur: {e}"})
+
     
 api_router = router
