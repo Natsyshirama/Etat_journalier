@@ -144,3 +144,37 @@ class DATReport:
                 except Exception as close_err:
                     print(f"[ERREUR] Fermeture connexion (getListeHistoryInsert) : {close_err}")
 
+
+    def get_graphe_data(self,x: str, y: str, table_name: str = "dat_20250915"):
+        """
+        Fonction métier : retourne les données agrégées pour le graphique.
+        """
+        conn = None
+        try:
+            conn = self.db.connect()
+            
+            allowed_columns = ["client", "agence", "produit", "numero_compte"]
+            if x not in allowed_columns or y not in allowed_columns:
+                raise ValueError("Colonnes non autorisées")
+
+            query = f"""
+                SELECT {x} AS x_value, {y} AS y_value, COUNT(*) AS count
+                FROM {table_name}
+                GROUP BY {x}, {y}
+                ORDER BY count DESC;
+            """
+
+            result = conn.execute(text(query))
+            rows = result.fetchall()
+            columns = list(result.keys())
+
+            data = [dict(zip(columns, row)) for row in rows]
+
+            return {"columns": columns, "rows": data}
+        except Exception as e:
+            print(f"[ERREUR] get_graphe_data : {e}")
+            return {"status": "error", "message": str(e)}
+
+        finally:
+            if conn:
+                conn.close()

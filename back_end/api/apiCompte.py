@@ -208,5 +208,25 @@ def liste_history():
     except Exception as e:
         return JSONResponse(status_code=500, content={"error": f"Erreur serveur: {e}"})
 
+
+
+@router.get("/dat/{table_name}")
+def get_graphe_dat(
+    table_name: str,
+    x: str = Query(..., description="Colonne X (ex: client, agence, produit, numero_compte)"),
+    y: str = Query(..., description="Colonne Y (ex: client, agence, produit, numero_compte)")
+):
+    """
+    API pour récupérer des données agrégées pour graphiques dynamiques.
+    Exemple: /dat/dat_20250915?x=client&y=agence
+    """
+    try:
+        data = dat_report.get_graphe_data(x, y, table_name)
+        return data
+    except ValueError as ve:
+        return JSONResponse(status_code=400, content={"error": str(ve)})
+    except Exception as e:
+        return JSONResponse(status_code=500, content={"error": f"Erreur serveur: {e}"})
     
+        
 api_router = router

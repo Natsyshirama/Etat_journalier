@@ -40,7 +40,7 @@ const rail = ref(true);
 
 const list_menu = [
   { icon: 'mdi-home-city', title: 'Crédits', to: '/app/credits' },
-  { icon: 'mdi-account', title: 'DAT', to: '/app/InitialiseDat' },
+  { icon: 'mdi-account', title: 'DAT', to: '/app/dat' },
   { icon: 'mdi-file-table-box-multiple-outline', title: 'Mes Fichier', to: '/app/file_manager' },
   { icon: 'mdi-map-marker-radius', title: 'Users', to: '/app/getMyloc' },
 ]

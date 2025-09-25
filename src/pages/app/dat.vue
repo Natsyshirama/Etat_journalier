@@ -12,7 +12,10 @@
         />
       </v-col>
     </v-row>
-
+     <!-- <div>
+    <h1 class="text-2xl font-bold mb-6">Page Données</h1>
+    <Dashboard />
+    </div> -->
     <!-- Résumé (au-dessus du tableau) -->
     <Resumer v-if="selectedTable" :tableName="selectedTable" />
 
@@ -64,6 +67,8 @@
 import { ref, onMounted, watch, computed } from "vue"
 import axios from "axios"
 import Resumer from "@/components/dat/Resumer.vue"
+import Dashboard from "@/components/dat/grapheDat.vue";
+
 
 const tables = ref([])
 const selectedTable = ref(null)

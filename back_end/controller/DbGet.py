@@ -295,3 +295,5 @@ class DbGet:
                     conn.close()
                 except Exception as close_err:
                     print(f"[ERREUR] Fermeture connexion (clean_tableDatPreCompute) : {close_err}")
+    
+    
