@@ -4,7 +4,7 @@ from typing import List, Optional
 import json
 from db.db import DB
 from sqlalchemy import text
-from controller.DatReport import DATReport 
+from controller.DatReport import DatReport 
 from controller.DbGet import DbGet
 from controller.Operation import Operation
 from controller.OperatioDav import OperatioDav
@@ -14,7 +14,7 @@ from controller.OperationEsri import OperationEsri
 from controller.DavUnique import DavUnique
 
 router = APIRouter()
-dat_report = DATReport()
+dat_report = DatReport()
 db_get = DbGet()
 operation = Operation()
 operation_dav = OperatioDav()
@@ -210,7 +210,7 @@ def liste_history():
 
 
 
-@router.get("/dat/{table_name}")
+@router.get("/datGraphe/{table_name}")
 def get_graphe_dat(
     table_name: str,
     x: str = Query(..., description="Colonne X (ex: kill, agence, produit, numero_compte)"),

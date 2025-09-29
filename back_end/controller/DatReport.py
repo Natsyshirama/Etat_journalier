@@ -5,7 +5,7 @@ from controller.DbGet import DbGet
 
 db_get = DbGet()
 
-class DATReport:
+class DatReport:
     def __init__(self):
         self.db = DB()
         self.engine = self.db.engine
@@ -146,6 +146,7 @@ class DATReport:
 
 
     def get_graphe_data(self, x: str, y: str, table_name: str = "dat_20250915"):
+   
         conn = None
         try:
             conn = self.db.connect()
@@ -160,25 +161,26 @@ class DATReport:
 
             numeric_columns = ["montant_capital", "montant_pay_total"]
 
+            # Cas particulier : compter clients distincts par Agence
+            if (x == "Agence" and y == "code_client") or (x == "code_client" and y == "Agence"):
+                select = "Agence, COUNT(DISTINCT code_client) AS value"
+                group_by = "Agence"
+
             # Déterminer l'agrégation
-            if x in numeric_columns and y not in numeric_columns:
-                agg = f"SUM({x}) AS value"
-                select = f"{y}, {agg}"
+            elif x in numeric_columns and y not in numeric_columns:
+                select = f"{y}, SUM({x}) AS value"
                 group_by = y
             elif y in numeric_columns and x not in numeric_columns:
-                agg = f"SUM({y}) AS value"
-                select = f"{x}, {agg}"
+                select = f"{x}, SUM({y}) AS value"
                 group_by = x
             elif x in numeric_columns and y in numeric_columns:
-                agg = f"SUM({x}) AS value_x, SUM({y}) AS value_y"
-                select = agg
-                group_by = None
+                select = f"SUM({x}) AS value_x, SUM({y}) AS value_y"
+                group_by = None  # pas de groupement
             else:  # deux catégorielles
-                agg = "COUNT(DISTINCT code_client) AS value" if x == "code_client" else "COUNT(*) AS value"
-                select = f"{x}, {y}, {agg}"
+                select = f"{x}, {y}, COUNT(*) AS value"
                 group_by = f"{x}, {y}"
 
-            # Construction de la requête
+            # Construire la requête
             if group_by:
                 query = f"SELECT {select} FROM {table_name} GROUP BY {group_by} ORDER BY value DESC;"
             else:
@@ -191,7 +193,8 @@ class DATReport:
             columns = list(result.keys())
 
             data = [dict(zip(columns, row)) for row in rows]
-            return {"query": query,"columns": columns, "rows": data}
+            return {"query": query, "columns": columns, "rows": data}
+
 
         except Exception as e:
             print(f"[ERREUR] get_graphe_data : {e}")
@@ -200,5 +203,4 @@ class DATReport:
         finally:
             if conn:
                 conn.close()
-
-
+                
