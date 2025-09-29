@@ -213,15 +213,13 @@ def liste_history():
 @router.get("/dat/{table_name}")
 def get_graphe_dat(
     table_name: str,
-    x: str = Query(..., description="Colonne X (ex: client, agence, produit, numero_compte)"),
-    y: str = Query(..., description="Colonne Y (ex: client, agence, produit, numero_compte)")
+    x: str = Query(..., description="Colonne X (ex: kill, agence, produit, numero_compte)"),
+    y: str = Query(..., description="Colonne Y (ex: kill, agence, produit, numero_compte)")
 ):
-    """
-    API pour récupérer des données agrégées pour graphiques dynamiques.
-    Exemple: /dat/dat_20250915?x=client&y=agence
-    """
+
     try:
         data = dat_report.get_graphe_data(x, y, table_name)
+        print(data)
         return data
     except ValueError as ve:
         return JSONResponse(status_code=400, content={"error": str(ve)})

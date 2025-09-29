@@ -145,32 +145,54 @@ class DATReport:
                     print(f"[ERREUR] Fermeture connexion (getListeHistoryInsert) : {close_err}")
 
 
-    def get_graphe_data(self,x: str, y: str, table_name: str = "dat_20250915"):
-        """
-        Fonction métier : retourne les données agrégées pour le graphique.
-        """
+    def get_graphe_data(self, x: str, y: str, table_name: str = "dat_20250915"):
         conn = None
         try:
             conn = self.db.connect()
-            
-            allowed_columns = ["client", "agence", "produit", "numero_compte"]
+
+            # Colonnes autorisées
+            allowed_columns = [
+                "code_client", "Agence", "Produits", "Numero_compte",
+                "montant_capital", "montant_pay_total"
+            ]
             if x not in allowed_columns or y not in allowed_columns:
                 raise ValueError("Colonnes non autorisées")
 
-            query = f"""
-                SELECT {x} AS x_value, {y} AS y_value, COUNT(*) AS count
-                FROM {table_name}
-                GROUP BY {x}, {y}
-                ORDER BY count DESC;
-            """
+            numeric_columns = ["montant_capital", "montant_pay_total"]
+
+            # Déterminer l'agrégation
+            if x in numeric_columns and y not in numeric_columns:
+                agg = f"SUM({x}) AS value"
+                select = f"{y}, {agg}"
+                group_by = y
+            elif y in numeric_columns and x not in numeric_columns:
+                agg = f"SUM({y}) AS value"
+                select = f"{x}, {agg}"
+                group_by = x
+            elif x in numeric_columns and y in numeric_columns:
+                agg = f"SUM({x}) AS value_x, SUM({y}) AS value_y"
+                select = agg
+                group_by = None
+            else:  # deux catégorielles
+                agg = "COUNT(DISTINCT code_client) AS value" if x == "code_client" else "COUNT(*) AS value"
+                select = f"{x}, {y}, {agg}"
+                group_by = f"{x}, {y}"
+
+            # Construction de la requête
+            if group_by:
+                query = f"SELECT {select} FROM {table_name} GROUP BY {group_by} ORDER BY value DESC;"
+            else:
+                query = f"SELECT {select} FROM {table_name} ORDER BY value_x DESC;"
+
+            print("Requête SQL exécutée :", query)
 
             result = conn.execute(text(query))
             rows = result.fetchall()
             columns = list(result.keys())
 
             data = [dict(zip(columns, row)) for row in rows]
+            return {"query": query,"columns": columns, "rows": data}
 
-            return {"columns": columns, "rows": data}
         except Exception as e:
             print(f"[ERREUR] get_graphe_data : {e}")
             return {"status": "error", "message": str(e)}
@@ -178,3 +200,5 @@ class DATReport:
         finally:
             if conn:
                 conn.close()
+
+
