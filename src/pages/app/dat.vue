@@ -1,5 +1,5 @@
 <template>
-  <v-container>
+  <v-container class="dat-container">
     <!-- Sélecteur de table -->
     <v-row class="mb-4">
       <v-col cols="12" md="6">
@@ -12,73 +12,79 @@
         />
       </v-col>
     </v-row>
-     <!-- <div>
-    <h1 class="text-2xl font-bold mb-6">Page Données</h1>
-    <Dashboard />
-    </div> -->
-    <!-- Résumé (au-dessus du tableau) -->
+
+    <!-- Résumé -->
     <Resumer v-if="selectedTable" :tableName="selectedTable" />
 
-    <!-- Tableau des données -->
-    <v-row>
-      <v-col cols="12">
-        <div style="max-height: 600px; overflow-y: auto;">
-          <v-data-table
-            :headers="headers"
-            :items="items"
-            :items-per-page="itemsPerPage"
-            :page.sync="page"
-            class="elevation-1"
-            :search="search"
-            dense
-          >
-            <template v-slot:top>
-              <v-text-field
-                v-model="search"
-                label="Rechercher"
-                class="mx-4"
-                clearable
-                dense
-              />
-            </template>
+    <!-- Bouton Dashboard / Tableau -->
+    <v-row class="mb-4">
+      <v-col cols="12" md="6">
+        <v-btn
+          color="primary"
+          class="mr-2"
+          @click="displayComponent = 'tableau'"
+          :outlined="displayComponent !== 'tableau'"
+        >
+          Tableau
+        </v-btn>
 
-            <template v-slot:footer>
-              <v-pagination
-                v-model="page"
-                :length="pageCount"
-                circle
-                class="my-2"
-              />
-            </template>
-
-            <template v-slot:no-data>
-              <v-alert type="info" border="left" color="blue" dark>
-                Aucune donnée trouvée
-              </v-alert>
-            </template>
-          </v-data-table>
-        </div>
+        <v-btn
+          color="primary"
+          @click="displayComponent = 'dashboard'"
+          :outlined="displayComponent !== 'dashboard'"
+        >
+          Dashboard
+        </v-btn>
       </v-col>
     </v-row>
+
+    <!-- Composants conditionnels -->
+    <v-row>
+      <v-col cols="12" class="component-wrapper">
+        <Tableau
+          v-if="selectedTable && displayComponent === 'tableau'"
+          :tableName="selectedTable"
+        />
+        <Dashboard
+          v-if="selectedTable && displayComponent === 'dashboard'"
+          :tableName="selectedTable"
+        />
+      </v-col>
+    </v-row>
+
+    <!-- Graphique (affiché uniquement sur Dashboard) -->
+    <v-row>
+      <v-col cols="12" class="component-wrapper">
+        <DatGraphe
+          v-if="selectedTable && displayComponent === 'dashboard'"
+          :tableName="selectedTable"
+        />
+      </v-col>
+    </v-row>
+
+    <!-- Alerte par défaut -->
+    <v-alert
+      v-if="!selectedTable"
+      type="info"
+      border="left"
+      color="blue"
+      dark
+      class="mb-4"
+    >
+      Sélectionnez une table
+    </v-alert>
   </v-container>
 </template>
-
 <script setup>
-import { ref, onMounted, watch, computed } from "vue"
+import { ref, onMounted, watch } from "vue"
 import axios from "axios"
 import Resumer from "@/components/dat/Resumer.vue"
-import Dashboard from "@/components/dat/grapheDat.vue";
-
+import Tableau from "@/components/dat/Tableau.vue"
+import DatGraphe from "@/components/dat/DatGraphe.vue"
 
 const tables = ref([])
-const selectedTable = ref(null)
-const headers = ref([])
-const items = ref([])
-const search = ref("")
-const page = ref(1)
-const itemsPerPage = ref(10)
-
-const pageCount = computed(() => Math.ceil(items.value.length / itemsPerPage.value))
+const selectedTable = ref(localStorage.getItem("selectedTable") || null) // récupère la valeur sauvegardée
+const displayComponent = ref("tableau")
 
 const fetchTables = async () => {
   try {
@@ -89,30 +95,29 @@ const fetchTables = async () => {
   }
 }
 
-const fetchTableData = async (tableName) => {
-  if (!tableName) {
-    items.value = []
-    headers.value = []
-    return
-  }
-  try {
-    const res = await axios.get(`http://127.0.0.1:8000/api/dat/${tableName}`)
-    items.value = res.data.rows || []
-    headers.value = res.data.columns.map((col) => ({
-      title: col,
-      key: col
-    }))
-    page.value = 1
-  } catch (err) {
-    console.error("Erreur lors du chargement de la table:", err)
-  }
-}
-
+// Sauvegarder automatiquement dans localStorage dès que selectedTable change
 watch(selectedTable, (newVal) => {
-  fetchTableData(newVal)
+  if (newVal) {
+    localStorage.setItem("selectedTable", newVal)
+  }
 })
 
 onMounted(() => {
   fetchTables()
 })
 </script>
+
+
+<style scoped>
+.dat-container {
+  max-height: 90vh; /* limite la hauteur globale pour que tout tienne à l'écran */
+  overflow-y: auto;  /* scroll vertical si nécessaire */
+  padding-bottom: 20px;
+}
+/* 
+.component-wrapper {
+  max-height: 600px; 
+  overflow-y: auto; /* scroll vertical si nécessaire */
+  /* padding-bottom: 10px; */
+/* } */ 
+</style>

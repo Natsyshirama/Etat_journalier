@@ -8,9 +8,7 @@ class DbGet:
         
     
     def create_indexes(self):
-        """
-        Crée tous les index recommandés pour optimiser les tables.
-        """
+      
         indexes = [
             # Table aa_arrangement_mcbc_live_full
             "CREATE INDEX IF NOT EXISTS idx_arrangement_id ON aa_arrangement_mcbc_live_full(id(255))",
@@ -73,9 +71,7 @@ class DbGet:
             
 
     def getHistoryDate(self):
-        """
-        Récupère le label actif dans history_mcbd
-        """
+       
         conn = None
         try:
             conn = self.db.connect()
@@ -102,9 +98,7 @@ class DbGet:
                     
 
     def create_tableDatPreCompute(self, name: str):
-        """
-        Crée une table DAT_<label> pré-calculée
-        """
+       
         conn = None
         try:
             # # recuperation historydate
@@ -238,16 +232,12 @@ class DbGet:
             
             
     def traitement_dat(self, table_name: str):
-        """
-        Nettoie les données dans la table dat_<label>
-        - Remplace NULL par 0 pour debit_mvmt, credit_mvmt, open_balance
-        - Normalise code_client en gardant seulement la partie avant '|'
-        """
+       
         conn = None
         try:
             conn = self.db.connect()
 
-            # Remplacer NULL par 0
+            # null -> 0
             query_nulls = f"""
             UPDATE {table_name}
             SET 
@@ -257,7 +247,7 @@ class DbGet:
             """
             conn.execute(text(query_nulls))
 
-            # Nettoyer code_client (prendre la première partie avant '|')
+            # Nettoye code_client 
             query_code_client = f"""
             UPDATE {table_name}
             SET code_client = SUBSTRING_INDEX(code_client, '|', 1);
@@ -274,7 +264,7 @@ class DbGet:
                 """
             conn.execute(text(query_dedup))
 
-            # Supprimer colonnes inutiles
+            # delete colone inutile
             query_drop_cols = f"""
             ALTER TABLE {table_name}
             DROP COLUMN type_sysdate,

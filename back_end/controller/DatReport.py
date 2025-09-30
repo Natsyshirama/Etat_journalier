@@ -145,7 +145,7 @@ class DatReport:
                     print(f"[ERREUR] Fermeture connexion (getListeHistoryInsert) : {close_err}")
 
 
-    def get_graphe_data(self, x: str, y: str, table_name: str = "dat_20250915"):
+    def get_graphe_data(self, x: str, y: str, table_name: str):
    
         conn = None
         try:
