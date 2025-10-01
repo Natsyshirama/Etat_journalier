@@ -78,8 +78,8 @@
 <script setup>
 import { ref, onMounted, watch } from "vue"
 import axios from "axios"
-import Resumer from "@/components/dat/Resumer.vue"
-import Tableau from "@/components/dat/Tableau.vue"
+import Resumer from "@/components/dat/ResumerDat.vue"
+import Tableau from "@/components/dat/TableauDat.vue"
 import DatGraphe from "@/components/dat/DatGraphe.vue"
 
 const tables = ref([])

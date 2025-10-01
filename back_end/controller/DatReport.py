@@ -11,6 +11,7 @@ class DatReport:
         self.engine = self.db.engine
 
 
+
   #liste des tables dat disponibles
     def getListeDat(self):
         conn = None
@@ -151,7 +152,7 @@ class DatReport:
         try:
             conn = self.db.connect()
 
-            # Colonnes autorisées
+            #colone autorise
             allowed_columns = [
                 "code_client", "Agence", "Produits", "Numero_compte",
                 "montant_capital", "montant_pay_total"
@@ -161,12 +162,12 @@ class DatReport:
 
             numeric_columns = ["montant_capital", "montant_pay_total"]
 
-            # Cas particulier : compter clients distincts par Agence
+            # particulier : nombre de clients par agence
             if (x == "Agence" and y == "code_client") or (x == "code_client" and y == "Agence"):
                 select = "Agence, COUNT(DISTINCT code_client) AS value"
                 group_by = "Agence"
 
-            # Déterminer l'agrégation
+            # determiner le type de graphique
             elif x in numeric_columns and y not in numeric_columns:
                 select = f"{y}, SUM({x}) AS value"
                 group_by = y

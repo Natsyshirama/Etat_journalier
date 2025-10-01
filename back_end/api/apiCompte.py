@@ -10,6 +10,7 @@ from controller.Operation import Operation
 from controller.OperatioDav import OperatioDav
 from controller.Esri import Esri
 from controller.OperationEsri import OperationEsri
+from controller.DavReport import DavReport
 
 from controller.DavUnique import DavUnique
 
@@ -21,6 +22,7 @@ operation_dav = OperatioDav()
 dav_unique = DavUnique()
 esri = Esri()
 operation_esri = OperationEsri()
+dav_report = DavReport()
 
 
 @router.post("/dat/create_dat_precompute/{name}")
@@ -49,9 +51,7 @@ def create_dat_precompute(name: str):
 
 @router.post("/dat/create_dav_precompute")
 def create_dav_precompute():
-    """
-    Crée une table DAV pré-calculée (DAV_<label>)
-    """
+
     try:
         table_name = dav_unique.create_table_dav()
         
@@ -135,6 +135,8 @@ def export_excel(table_name: str):
     except Exception as e:
         return JSONResponse(content={"status": "error", "message": str(e)}, status_code=500)
 
+
+##"""""""""""""DAT REPORT""""""""""""""##
 @router.get("/dat/liste_dat")
 def listeDta():
     """
@@ -190,7 +192,26 @@ def get_dat_resume(table_name: str):
     except Exception as e:
         return JSONResponse(status_code=500, content={"error": f"Erreur serveur: {e}"})
     
+   
+
+@router.get("/datGraphe/{table_name}")
+def get_graphe_dat(
+    table_name: str,
+    x: str = Query(..., description="Colonne X (ex: kill, agence, produit, numero_compte)"),
+    y: str = Query(..., description="Colonne Y (ex: kill, agence, produit, numero_compte)")
+):
+
+    try:
+        data = dat_report.get_graphe_data(x, y, table_name)
+        print(data)
+        return data
+    except ValueError as ve:
+        return JSONResponse(status_code=400, content={"error": str(ve)})
+    except Exception as e:
+        return JSONResponse(status_code=500, content={"error": f"Erreur serveur: {e}"})
     
+##"""""""""""HISTORY INSERT""""""""""##
+ 
 @router.get("/history/liste")
 def liste_history():
 
@@ -209,22 +230,58 @@ def liste_history():
         return JSONResponse(status_code=500, content={"error": f"Erreur serveur: {e}"})
 
 
-
-@router.get("/datGraphe/{table_name}")
-def get_graphe_dat(
-    table_name: str,
-    x: str = Query(..., description="Colonne X (ex: kill, agence, produit, numero_compte)"),
-    y: str = Query(..., description="Colonne Y (ex: kill, agence, produit, numero_compte)")
-):
-
+#""""""""""""""""""""""DAV REPORT""""""""""""""""""##
+@router.get("/dav/liste_dav")
+def listeDav():
+    """
+        liste table dav
+    """ 
     try:
-        data = dat_report.get_graphe_data(x, y, table_name)
-        print(data)
-        return data
+        listeDav = dav_report.getListeDav()
+        if not listeDav:
+            raise Exception("Aucune table DAV trouvée")
+        
+        return {"tables": listeDav}
+    
+    except ValueError as ve:
+        return JSONResponse(status_code=400, content={"error": str(ve)})
+    except Exception as e:
+        return JSONResponse(status_code=500, content={"error": f"Erreur serveur: {e}"})
+
+@router.get("/dav/{table_name}")
+def get_dav_table(table_name: str):
+    """ tablea de dav selectionner
+    """
+    try:
+        data = dav_report.getDav(table_name)
+        return {"table": table_name, **data}
     except ValueError as ve:
         return JSONResponse(status_code=400, content={"error": str(ve)})
     except Exception as e:
         return JSONResponse(status_code=500, content={"error": f"Erreur serveur: {e}"})
     
-        
+@router.get("/dav/{table_name}/resume")
+def get_dav_resume(table_name: str):
+
+    try:
+        summary = dav_report.getResumeDav(table_name)
+        if not summary:
+            return JSONResponse(status_code=404, content={"error": "Résumé introuvable ou table vide"})
+
+        # Conversion sécurisée en types JSON (int / float)
+        safe_summary = {
+            "table_name": table_name,
+            "nb_lignes": int(summary.get("nb_lignes") or 0),
+            "nb_clients": int(summary.get("nb_clients") or 0),
+            "total_montant_dav": float(summary.get("total_montant_dav") or 0),
+            "total_debit_dav": float(summary.get("total_debit_dav") or 0),
+            "total_credit_dav": float(summary.get("total_credit_dav") or 0)
+        }
+
+        return safe_summary
+
+    except ValueError as ve:
+        return JSONResponse(status_code=400, content={"error": str(ve)})
+    except Exception as e:
+        return JSONResponse(status_code=500, content={"error": f"Erreur serveur: {e}"})
 api_router = router

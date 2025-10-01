@@ -14,10 +14,7 @@ class OperatioDav:
         
         
     def calcule_dav(self, table_name: str):
-        """
-        Calcule montant_dav pour chaque ligne de la table dat_<label>.
-        Supprime les doublons sur Numero_compte comme dans la première fonction.
-        """
+       
         conn = None
         try:
             conn = self.db.connect()    
@@ -27,10 +24,10 @@ class OperatioDav:
 
             # Fonction pour calculer montant_dav
             def extract_dav(row):
-                montant_dav_total = 0.0
+                montant_dav = 0.0
                 date_limite = dbGet.getHistoryDate()
                 if not all(k in row for k in ['type_sysdate', 'debit_mvmt', 'credit_mvmt', 'open_balance']):
-                    return montant_dav_total
+                    return montant_dav
 
                 if isinstance(row['type_sysdate'], str):
                     type_sysdate_values = row['type_sysdate'].split('|')
@@ -51,9 +48,9 @@ class OperatioDav:
                             debit = float(debit_values[index].strip() or '0') if index < len(debit_values) else 0.0
                             credit = float(credit_values[index].strip() or '0') if index < len(credit_values) else 0.0
                             balance = float(balance_values[index].strip() or '0') if index < len(balance_values) else 0.0
-                            montant_dav_total += debit + credit + balance
+                            montant_dav += debit + credit + balance
 
-                return montant_dav_total
+                return montant_dav
 
             # Calcul du montant_dav
             df['montant_dav'] = df.apply(extract_dav, axis=1)
@@ -67,7 +64,6 @@ class OperatioDav:
             conn.execute(text(f"DELETE FROM {table_name}"))
 
 # Insérer uniquement les lignes uniques
-            df_unique.to_sql(table_name, conn, if_exists='append', index=False)
 
             # Ajouter les colonnes si elles n'existent pas
             def add_column_if_not_exists(conn, table_name, column_name, column_type="DOUBLE DEFAULT 0"):
@@ -83,6 +79,8 @@ class OperatioDav:
             add_column_if_not_exists(conn, table_name, "montant_dav")
             add_column_if_not_exists(conn, table_name, "debit_dav")
             add_column_if_not_exists(conn, table_name, "credit_dav")
+
+            df_unique.to_sql(table_name, conn, if_exists='append', index=False)
 
             # Mise à jour dans la table
             for idx, row in df.iterrows():
