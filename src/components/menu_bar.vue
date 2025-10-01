@@ -133,7 +133,7 @@ const formatDateString = (rawDate) => {
  })
  onMounted(() => {
     (async () => {
-      historyDates.value = await fetchData('http://192.168.1.212:8000/api/history_insert')
+      historyDates.value = await fetchData('http://127.0.0.1:8000/api/history_insert')
     })();
   get_last_import_file()
  })

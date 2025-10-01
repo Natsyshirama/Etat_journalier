@@ -45,7 +45,6 @@
  
 <script setup>
 import { onMounted, ref,watch } from 'vue';
-import { onMounted, ref,watch } from 'vue';
 import { usePopupStore } from '../stores';
 
 const tab = ref("one");
