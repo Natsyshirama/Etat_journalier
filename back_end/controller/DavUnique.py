@@ -114,14 +114,14 @@ class DavUnique:
                     print(f"[ERREUR] Fermeture connexion (create_index) : {close_err}")
                     
                     
-    def create_table_dav(self):
+    def create_table_dav(self,name: str):
        
         conn = None
         try:
             
-            label = dbGet.getHistoryDate()
             
-            table_name = f"dav_{label}"
+            
+            table_name = f"dav_{name}"
             
             query = f"""
                 CREATE TABLE IF NOT EXISTS {table_name} AS
@@ -207,7 +207,34 @@ class DavUnique:
                 except Exception as close_err:
                     print(f"[ERREUR] Fermeture connexion (create_tableDatPreCompute) : {close_err}")
 
-
+    def update_statusHistoryInsert(self, name: str):
+            conn = None
+            try:
+                conn = self.db.connect()
+                
+                query = f"""
+                        UPDATE history_insert
+                        SET dav_status = true
+                        WHERE label = '{name}';
+                """
+                conn.execute(text(query))
+                conn.commit()
+                
+                print(f"[INFO] history_insert mis à jour pour {name} ✅")
+                return True
+                
+            except Exception as e:
+                print(f"[ERREUR] clean_tableDatPreCompute : {e}")
+                return None
+            finally:
+                if conn:
+                    try:
+                        conn.close()
+                    except Exception as close_err:
+                        print(f"[ERREUR] Fermeture connexion (clean_tableDatPreCompute) : {close_err}")
+                
+    
+                
     def traitement_dav(self, table_name: str):
         
         conn = None

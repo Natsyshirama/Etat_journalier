@@ -50,11 +50,11 @@ def create_dat_precompute(name: str):
 
 
 @router.post("/dat/create_dav_precompute")
-def create_dav_precompute():
+def create_dav_precompute(name:str):
 
     try:
-        table_name = dav_unique.create_table_dav()
-        
+        table_name = dav_unique.create_table_dav(name)
+        dav_unique.update_statusHistoryInsert(name)
         if not table_name:
             raise Exception("Erreur lors de la création de la table DAV")
         operation_dav.calcule_dav(table_name)
