@@ -12,9 +12,7 @@ class DavUnique:
         self.engine = self.db.engine
 
     def create_table_arrCust(self):
-        """
-        creation du table arrangement_customer
-        """
+       
         conn = None
         try:
              # Créer la table arrangement_customer si elle n'existe pas déjà
@@ -43,9 +41,7 @@ class DavUnique:
 
 
     def insert_data_arrCust(self):
-        """
-        insertion des données dans arrangement_customer
-        """
+  
         conn = None
         try:
             conn= self.db.connect()
@@ -88,9 +84,7 @@ class DavUnique:
                     
                     
     def create_index(self):
-        """
-        creation des index pour arrangement_customer
-        """
+       
         index = [
                 " CREATE INDEX IF NOT EXISTS idx_arrangement_id ON arrangement_customer (arrangement_id)",
 
@@ -121,9 +115,7 @@ class DavUnique:
                     
                     
     def create_table_dav(self):
-        """
-            creation du table dat_dav_uniquecr
-        """
+       
         conn = None
         try:
             
@@ -195,8 +187,7 @@ class DavUnique:
                 WHERE 
                     arrangement.product_line IN ('ACCOUNTS')
                     AND arrangement.arr_status IN ('AUTH', 'CURRENT','PENDING.CLOSURE')
-                    AND arrangement.product_group IN ('DV.SP.MG')
-                LIMIT 100;
+                    AND arrangement.product_group IN ('DV.SP.MG') LIMIT 100;
                 """
                 
             conn = self.db.connect()
@@ -218,11 +209,7 @@ class DavUnique:
 
 
     def traitement_dav(self, table_name: str):
-        """
-        Nettoie les données dans la table dat_<label>
-        - Remplace NULL par 0 pour debit_mvmt, credit_mvmt, open_balance
-        - Normalise code_client en gardant seulement la partie avant '|'
-        """
+        
         conn = None
         try:
             conn = self.db.connect()
