@@ -5,7 +5,7 @@
           permanent 
         >
           <v-list-item 
-            title="Dama Dany"
+            :title=popupStore.user_access.name
             nav
             
             @click.stop="rail = !rail"
@@ -26,17 +26,19 @@
               :to="item.to"
               :prepend-icon="item.icon"
               :title="item.title"
-              color="green-accent-3"
-            ></v-list-item> 
+              color="green-accent-3" 
+            ></v-list-item>  
          
           </v-list>
         </v-navigation-drawer> 
   </template>
 
 <script setup> 
+import { usePopupStore } from '../stores';
 import { ref } from 'vue';
 const drawer = ref(true);
 const rail = ref(true);
+const popupStore=usePopupStore()
 
 const list_menu = [
   { icon: 'mdi-home-city', title: 'Crédits', to: '/app/credits' },

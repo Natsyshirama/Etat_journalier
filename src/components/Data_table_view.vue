@@ -45,6 +45,7 @@
  
 <script setup>
 import { onMounted, ref,watch } from 'vue';
+import { onMounted, ref,watch } from 'vue';
 import { usePopupStore } from '../stores';
 
 const tab = ref("one");
@@ -145,10 +146,22 @@ async function fetchData(url, listRef, storeKey) {
   
   usePopupStore()[storeKey]=[]
   try { 
+async function fetchData(url, listRef, storeKey) { 
+   
+  
+  usePopupStore()[storeKey]=[]
+  try { 
     const response = await fetch(url);
     if (!response.ok) throw new Error(`Erreur HTTP : ${response.status}`);
     const data = await response.json();
     data.response.data.forEach(item => listRef.value.push(item));
+    usePopupStore()[storeKey] = listRef;  
+    if (storeKey==='encours_actual_data') { 
+      tabs.value[0].liste= listRef;
+    } else if (storeKey==='remboursement_actual_data') { 
+      tabs.value[1].liste= listRef;
+    }
+    
     usePopupStore()[storeKey] = listRef;  
     if (storeKey==='encours_actual_data') { 
       tabs.value[0].liste= listRef;
@@ -178,6 +191,7 @@ watch(usePopupStore().selected_date, (val) => {
 
 onMounted(() => {
   // console.log(usePopupStore().selected_date);
+  // console.log(usePopupStore().selected_date);
   
   const date = '20250829';
   fetchData(`http://127.0.0.1:8000/api/get_encours_credits?date=${date}`, listes.encours, 'encours_actual_data');
@@ -192,4 +206,5 @@ onMounted(() => {
 }
 </style>
 
+<!-- usePopupStore().selected_date -->
 <!-- usePopupStore().selected_date -->

@@ -1,0 +1,12 @@
+uvicorn
+fastapi
+openpyxl
+pymysql
+pandas
+sqlalchemy
+werkzeug
+aiofiles
+python-multipart 
+jwt
+pycrypt
+python-jose[cryptography]

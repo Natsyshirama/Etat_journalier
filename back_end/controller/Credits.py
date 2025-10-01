@@ -1760,20 +1760,20 @@ class Credits:
                             "name": """ Création de la TABLE etat_remboursement IF EXISTS """,
                             "sql": """CREATE TABLE IF NOT EXISTS etat_remboursement AS
                                         SELECT
-                                            arrangement_id,
-                                            Date_pret,
-                                            product,
-                                            co_code,
-                                            linked_appl_id,
-                                            Nom_client,
-                                            customer,
-                                            echeance,
-                                            date_echeance,
-                                            payment_date,
-                                            Capital AS Capital,
-                                            principal_int  AS principal_int,
-                                            penality_int AS penality_int,
-                                            SUM(TOTAL) AS TOTAL
+                                        arrangement_id,
+                                        Date_pret,
+                                        product,
+                                        co_code,
+                                        linked_appl_id,
+                                        Nom_client,
+                                        customer,
+                                        echeance,
+                                        date_echeance,
+                                        payment_date,
+                                        Capital AS Capital,
+                                        principal_int  AS principal_int,
+                                        penality_int AS penality_int,
+                                        SUM(TOTAL) AS TOTAL
                                         FROM temp_etat_remb   GROUP BY arrangement_id;"""
                         }, 
                         {
