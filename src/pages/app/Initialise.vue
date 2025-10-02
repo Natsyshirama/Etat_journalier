@@ -9,13 +9,13 @@
 
         <!-- Si non initialisé -->
         <v-btn
-          v-if="!selectedHistory.dat_status"
+          v-if="!selectedHistory.dat_status || !selectedHistory.dav_status"
           color="primary"
           class="mt-4"
           @click="initializeTable"
           :loading="loading"
         >
-          Initialiser
+          Initialiser                         
         </v-btn>
 
         <!-- Si déjà initialisé -->
@@ -66,7 +66,7 @@ const initializeTable = async () => {
   loading.value = true
   try {
     const res = await axios.post(
-      `http://127.0.0.1:8000/api/dat/create_dat_precompute/${selectedHistory.value.label}`
+      `http://127.0.0.1:8000/api/dat/initialise/${selectedHistory.value.label}`
     )
 
     // Vérifier si le backend renvoie status "success"

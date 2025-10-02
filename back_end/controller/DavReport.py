@@ -39,14 +39,15 @@ class DavReport:
                     print(f"[ERREUR] Fermeture connexion (getListeDav) : {close_err}")
 
     def getDav(self, table_name: str):
-        if not table_name or not table_name.startswith("dav_"):
+        table_name_vrai = f"dav_{table_name}"
+        if not table_name_vrai or not table_name_vrai.startswith("dav_"):
             raise ValueError("Nom de table invalide")
 
         conn = None
         try:
             conn = self.db.connect()
 
-            query = text(f"SELECT * FROM `{table_name}`")  
+            query = text(f"SELECT * FROM `{table_name_vrai}`")  
             result = conn.execute(query)
 
             rows = result.fetchall()
@@ -69,7 +70,8 @@ class DavReport:
                     print(f"[ERREUR] Fermeture connexion (getDav) : {close_err}")
                     
     def getResumeDav(self, table_name: str):
-        if not table_name or not table_name.startswith("dav_"):
+        table_name_vrai = f"dav_{table_name}"
+        if not table_name_vrai or not table_name_vrai.startswith("dav_"):
             raise ValueError("Nom de table invalide")
 
         conn = None
@@ -83,13 +85,13 @@ class DavReport:
                     SUM(montant_dav) AS total_montant_dav,
                     SUM(debit_dav) AS total_debit_dav,
                     SUM(credit_dav) AS total_credit_dav
-                FROM `{table_name}`
+                FROM `{table_name_vrai}`
             """)
             result = conn.execute(query).fetchone()
 
             columns =  result.keys() if hasattr(result, "keys") else [
                 
-                "nb_lignes", "nb_clients", "total_montant_dav", "total_debit_dav", "total_credit_dav"
+                 "nb_clients", "total_montant_dav", "total_debit_dav", "total_credit_dav"
             ]
             
             summary = {col: result[idx] for idx, col in enumerate(columns)} if result else {}
@@ -108,6 +110,9 @@ class DavReport:
                     
                     
     def get_graphe_dataDav(self, x: str, y: str, table_name:str):
+        table_name_vrai = f"dav_{table_name}"
+        if not table_name_vrai or not table_name_vrai.startswith("dav_"):
+                raise ValueError("Nom de table invalide")
         conn = None
         try:
             conn = self.db.connect()
@@ -138,9 +143,9 @@ class DavReport:
                 group_by = f"{x}, {y}"
                 
             if group_by:
-                query = f"SELECT {select} FROM {table_name} GROUP BY {group_by} ORDER BY value DESC;"
+                query = f"SELECT {select} FROM {table_name_vrai} GROUP BY {group_by} ORDER BY value DESC;"
             else:
-                query = f"SELECT {select} FROM {table_name} ORDER BY value_x DESC;"
+                query = f"SELECT {select} FROM {table_name_vrai} ORDER BY value_x DESC;"
 
             print("Requête SQL exécutée :", query)
             

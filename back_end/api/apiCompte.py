@@ -68,6 +68,31 @@ def create_dav_precompute(name:str):
         
     except Exception as e:
         return JSONResponse(content={"status": "error", "message": str(e)}, status_code=500)
+    
+@router.post("/dat/initialise/{name}")
+def initialize(name: str):
+    try:
+        table_name_dat = db_get.create_tableDatPreCompute(name)
+        table_name_dav = dav_unique.create_table_dav(name)
+        
+        dav_unique.update_statusHistoryInsert(name)
+        db_get.update_statusHistoryInsert(name)
+        if not table_name_dat or not table_name_dav:
+            raise Exception("Erreur lors de la création de la table DAT et DAV")
+        
+        operation.calculeAmtCap(table_name_dat)
+        db_get.traitement_dat(table_name_dat)
+        operation_dav.calcule_dav(table_name_dav)
+        dav_unique.traitement_dav(table_name_dav)
+        return JSONResponse(content={
+                    "status": "success",
+                    "message": f"Table créée et nettoyée et calculer : {table_name_dat} et {table_name_dav} ✅",
+                    "table_name_dat": table_name_dat,
+                    "table_name_dav": table_name_dav
+        })
+    except Exception as e:
+        return JSONResponse(content={"status": "error", "message": str(e)}, status_code=500)
+        
 
 @router.post("/esri/create_esri_precompute")
 def create_esri_precompute(label: str):

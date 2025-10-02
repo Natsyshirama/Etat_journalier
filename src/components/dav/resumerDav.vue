@@ -2,9 +2,7 @@
 <template>
   <v-card v-if="resume" class="mb-4 pa-4" outlined>
     <v-row>
-      <v-col cols="12" md="3">
-        <strong>Nombre de lignes :</strong> {{ resume.nb_lignes }}
-      </v-col>
+      
       <v-col cols="12" md="3">
         <strong>Nombre de clients :</strong> {{ resume.nb_clients }}
       </v-col>

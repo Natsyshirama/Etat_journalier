@@ -43,14 +43,15 @@ class DatReport:
                 
 
     def getDat(self, table_name: str):
-        if not table_name or not table_name.startswith("dat_"):
+        table_name_vrai = f"dat_{table_name}"
+        if not table_name_vrai or not table_name_vrai.startswith("dat_"):
             raise ValueError("Nom de table invalide")
 
         conn = None
         try:
             conn = self.db.connect()
 
-            query = text(f"SELECT * FROM `{table_name}`")  
+            query = text(f"SELECT * FROM `{table_name_vrai}`")  
             result = conn.execute(query)
 
             rows = result.fetchall()
@@ -75,7 +76,8 @@ class DatReport:
 
 
     def getResumeDat(self, table_name: str):
-        if not table_name or not table_name.startswith("dat_"):
+        table_name_vrai = f"dat_{table_name}"
+        if not table_name_vrai or not table_name_vrai.startswith("dat_"):
             raise ValueError("Nom de table invalide")
 
         conn = None
@@ -88,7 +90,7 @@ class DatReport:
                     COUNT(DISTINCT code_client) AS nb_clients,
                     SUM(montant_capital) AS total_montant_capital,
                     SUM(montant_pay_total) AS total_montant_pay_total
-                FROM `{table_name}`
+                FROM `{table_name_vrai}`
             """)
 
             result = conn.execute(query).fetchone()  # tuple
@@ -147,7 +149,11 @@ class DatReport:
 
 
     def get_graphe_data(self, x: str, y: str, table_name: str):
-   
+        
+        table_name_vrai = f"dat_{table_name}"
+        if not table_name_vrai or not table_name_vrai.startswith("dat_"):
+            raise ValueError("Nom de table invalide")
+        
         conn = None
         try:
             conn = self.db.connect()
@@ -183,9 +189,9 @@ class DatReport:
 
             # Construire la requête
             if group_by:
-                query = f"SELECT {select} FROM {table_name} GROUP BY {group_by} ORDER BY value DESC;"
+                query = f"SELECT {select} FROM {table_name_vrai} GROUP BY {group_by} ORDER BY value DESC;"
             else:
-                query = f"SELECT {select} FROM {table_name} ORDER BY value_x DESC;"
+                query = f"SELECT {select} FROM {table_name_vrai} ORDER BY value_x DESC;"
 
             print("Requête SQL exécutée :", query)
 

@@ -5,7 +5,7 @@
       <v-col cols="12" md="6">
         <v-select
           v-model="selectedTable"
-          :items="tables"
+          :items="history.map(item => item.label)"
           label="Choisir une table"
           outlined
           dense
@@ -82,16 +82,16 @@ import Resumer from "@/components/dat/ResumerDat.vue"
 import Tableau from "@/components/dat/TableauDat.vue"
 import DatGraphe from "@/components/dat/DatGraphe.vue"
 
-const tables = ref([])
+const history = ref([])
 const selectedTable = ref(localStorage.getItem("selectedTable") || null) // récupère la valeur sauvegardée
 const displayComponent = ref("tableau")
 
 const fetchTables = async () => {
   try {
-    const res = await axios.get("http://127.0.0.1:8000/api/dat/liste_dat")
-    tables.value = res.data.tables
+    const res = await axios.get("http://127.0.0.1:8000/api/history/liste")
+    history.value = res.data.history || []
   } catch (err) {
-    console.error("Erreur lors du chargement des tables:", err)
+    console.error("Erreur lors du chargement de l'history_insert:", err)
   }
 }
 

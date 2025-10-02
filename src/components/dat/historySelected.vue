@@ -4,24 +4,38 @@
     <v-divider></v-divider>
 
     <v-list>
-      <v-list-item
-        v-for="item in history"
-        :key="item.label"
-        @click="selectHistory(item)"
-        class="d-flex align-center justify-space-between"
-      >
-        <v-list-item-title>{{ item.label }}</v-list-item-title>
+  <v-list-item
+    v-for="item in history"
+    :key="item.label"
+    @click="selectHistory(item)"
+    class="d-flex align-center justify-space-between"
+  >
+    <!-- Nom de la table -->
+    <v-list-item-title>{{ item.label }}</v-list-item-title>
 
-        <!-- Badge vert ou rouge -->
-        <v-chip
-          :color="item.dat_status ? 'green' : 'red'"
-          dark
-          small
-        >
-          Initialized
-        </v-chip>
-      </v-list-item>
-    </v-list>
+    <!-- Statuts -->
+    <div class="d-flex gap-2">
+      <!-- Statut DAT -->
+      <v-chip
+        :color="item.dat_status ? 'green' : 'red'"
+        dark
+        small
+      >
+        DAT
+      </v-chip>
+
+      <!-- Statut DAV -->
+      <v-chip
+        :color="item.dav_status ? 'green' : 'red'"
+        dark
+        small
+      >
+        DAV
+      </v-chip>
+    </div>
+  </v-list-item>
+</v-list>
+
   </v-card>
 </template>
 
