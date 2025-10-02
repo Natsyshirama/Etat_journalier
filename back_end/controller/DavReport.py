@@ -105,3 +105,56 @@ class DavReport:
                     conn.close()
                 except Exception as close_err:
                     print(f"[ERREUR] Fermeture connexion (getResumeDav) : {close_err}")
+                    
+                    
+    def get_graphe_dataDav(self, x: str, y: str, table_name:str):
+        conn = None
+        try:
+            conn = self.db.connect()
+            
+            colone_auto= [
+                "code_client", "Agence", "Produits", "montant_dav", "credit_dav", "debit_dav"
+            ]
+            if x not in colone_auto or y not in colone_auto:
+                raise ValueError("Colonnes non autorisées")
+            
+            numeric_columns = ["montant_dav", "credit_dav", "debit_dav"]
+            
+            if (x == "Agence" and y == "code_client") or (x == "code_client" and y == "Agence"):
+                select = "Agence, COUNT(DISTINCT code_client) AS value"
+                group_by = "Agence"
+                
+            elif x in numeric_columns and y not in numeric_columns:
+                select = f"{y}, SUM({x}) AS value"
+                group_by = y
+            elif y in numeric_columns and x not in numeric_columns:
+                select = f"{x}, SUM({y}) AS value"
+                group_by = x
+            elif x in numeric_columns and y in numeric_columns:
+                select = f"SUM({x}) AS value_x, SUM({y}) AS value_y"
+                group_by = None  # pas de groupement
+            else:  # deux catégorielles
+                select = f"{x}, {y}, COUNT(*) AS value"
+                group_by = f"{x}, {y}"
+                
+            if group_by:
+                query = f"SELECT {select} FROM {table_name} GROUP BY {group_by} ORDER BY value DESC;"
+            else:
+                query = f"SELECT {select} FROM {table_name} ORDER BY value_x DESC;"
+
+            print("Requête SQL exécutée :", query)
+            
+            result = conn.execute(text(query))
+            rows = result.fetchall()
+            columns = list(result.keys())
+
+            data = [dict(zip(columns, row)) for row in rows]
+            return {"query": query, "columns": columns, "rows": data}
+        
+        except Exception as e:
+            print(f"[ERREUR] get_graphe_data : {e}")
+            return {"status": "error", "message": str(e)}
+
+        finally:
+            if conn:
+                conn.close()

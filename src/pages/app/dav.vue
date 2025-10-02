@@ -1,5 +1,5 @@
 <template>
-  <v-container class="dav-container">
+  <v-container class="dat-container">
     <!-- Sélecteur de table -->
     <v-row class="mb-4">
       <v-col cols="12" md="6">
@@ -17,20 +17,22 @@
     <Resumer v-if="selectedTable" :tableName="selectedTable" />
 
     <!-- Bouton Dashboard / Tableau -->
-    <v-row class="mb-4">
-      <v-col cols="12" md="6">
-        <v-btn
-          color="primary"
-          class="mr-2"
-          @click="displayComponent = 'tableau'"
-          :outlined="displayComponent !== 'tableau'"
-        >
-          Tableau
-        </v-btn>
+    <!-- Bouton Toggle -->
+   <!-- Bouton Toggle avec icône -->
+<v-row class="mb-4">
+  <v-col cols="12" md="6">
+    <v-btn
+      variant="text"
+      @click="toggleComponent"
+      class="toggle-btn"
+    >
+      <v-icon size="28">
+        {{ displayComponent === 'tableau' ? 'mdi-view-dashboard' : 'mdi-table' }}
+      </v-icon>
+    </v-btn>
+  </v-col>
+</v-row>
 
-       
-      </v-col>
-    </v-row>
 
     <!-- Composants conditionnels -->
     <v-row>
@@ -39,12 +41,22 @@
           v-if="selectedTable && displayComponent === 'tableau'"
           :tableName="selectedTable"
         />
-        <!--  -->
+        <Dashboard
+          v-if="selectedTable && displayComponent === 'dashboard'"
+          :tableName="selectedTable"
+        />
       </v-col>
     </v-row>
 
-    <!-- Graphique (affiché uniquement sur Dashboard) -->
-   
+    Graphique (affiché uniquement sur Dashboard)
+    <v-row>
+      <v-col cols="12" class="component-wrapper">
+        <DatGraphe
+          v-if="selectedTable && displayComponent === 'dashboard'"
+          :tableName="selectedTable"
+        />
+      </v-col>
+    </v-row>
 
     <!-- Alerte par défaut -->
     <v-alert
@@ -64,7 +76,7 @@ import { ref, onMounted, watch } from "vue"
 import axios from "axios"
 import Resumer from "@/components/dav/ResumerDav.vue"
 import Tableau from "@/components/dav/TableauDav.vue"
-// import DatGraphe from "@/components/dav/DatGraphe.vue"
+import DatGraphe from "@/components/dav/DavGraphe.vue"
 
 const tables = ref([])
 const selectedTable = ref(localStorage.getItem("selectedTable") || null) // récupère la valeur sauvegardée
@@ -78,6 +90,11 @@ const fetchTables = async () => {
     console.error("Erreur lors du chargement des tables:", err)
   }
 }
+
+const toggleComponent = () => {
+  displayComponent.value = displayComponent.value === "tableau" ? "dashboard" : "tableau"
+}
+
 
 // Sauvegarder automatiquement dans localStorage dès que selectedTable change
 watch(selectedTable, (newVal) => {
@@ -93,11 +110,21 @@ onMounted(() => {
 
 
 <style scoped>
-.dav-container {
+.dat-container {
   max-height: 90vh; /* limite la hauteur globale pour que tout tienne à l'écran */
   overflow-y: auto;  /* scroll vertical si nécessaire */
   padding-bottom: 20px;
 }
+.toggle-btn {
+  background-color: transparent !important;
+  box-shadow: none !important;
+  color: #3f4143; /* couleur de l’icône (bleu Vuetify par défaut) */
+}
+
+.toggle-btn:hover {
+  background: rgb(9, 161, 62) !important; /* léger effet hover */
+}
+
 /* 
 .component-wrapper {
   max-height: 600px; 

@@ -21,7 +21,7 @@
   </v-card>
 </template>
 
-<script setup>f
+<script setup>
 import { ref, watch } from "vue"
 import axios from "axios"
 
