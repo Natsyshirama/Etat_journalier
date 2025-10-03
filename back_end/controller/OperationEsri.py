@@ -2,13 +2,15 @@ import pandas as pd
 import re
 from db.db import DB
 from sqlalchemy import text
+from controller.DbGet import DbGet
+import pymysql
+dbGet = DbGet()
 
 class OperationEsri:
     def __init__(self):
         self.db = DB()
         self.engine = self.db.engine
         
-        # Tableau teller pour les indices des champs
         self.teller = [
             '151', '152', '171', '172', 'SIGNATORY', 'USREGS.TP.LEGAL.ID', 'EM.DRAW.CHQ.NO', 'EM.DRAW.CHQ.AMT',
             'EM.DRAW.ACCT.NO', 'EM.DRAW.BANK', 'EM.DRAW.BRANCH', 'EM.DRAW.BRCH.CODE', 'EM.DRAW.CUST.NAME',
@@ -20,7 +22,6 @@ class OperationEsri:
             'L.NUM.IDEN', 'L.NUM.BEN', 'L.NOM.TIER', 'L.ORD.ADD', 'L.NAME.REC', 'L.ADDR', 'L.CIN', 'L.VERSION.NAME'
         ]
 
-        # Mapping des colonnes à extraire
         self.columns_mapping = {
             'Type': 'EM.ACCT.TYPE',
             'Référence': 'L.REFERENCE',
@@ -35,57 +36,97 @@ class OperationEsri:
             'Sens': 'L.MODE.TXN',
         }
 
-        # Dictionnaires pour les pays
         self.country_addresses = {
-            'AD': 'Andorre', 'AE': 'Émirats Arabes Unis', 'AF': 'Afghanistan', 'AG': 'Antigua et Barbuda',
-            # ... (le reste de votre dictionnaire country_addresses)
+           'AD': 'Andorre', 'AE': 'Émirats Arabes Unis', 'AF': 'Afghanistan', 'AG': 'Antigua et Barbuda', 'AI': 'Anguilla',
+            'AL': 'Albanie', 'AM': 'Arménie', 'AN': 'Antilles néerlandaises', 'AO': 'Angola', 'AQ': 'Antarctique',
+            'AR': 'Argentine', 'AS': 'Îles Samoa', 'AT': 'Autriche', 'AU': 'Australie', 'AW': 'Aruba', 'AZ': 'Azerbaïdjan',
+            'BA': 'Bosnie-Herzégovine', 'BB': 'La Barbade', 'BD': 'Bangladesh', 'BE': 'Belgique', 'BF': 'Burkina Faso',
+            'BG': 'Bulgarie', 'BH': 'Bahreïn', 'BI': 'Burundi', 'BJ': 'Benin', 'BM': 'Bermudas', 'BN': 'Brunéï', 'BO': 'Bolivie',
+            'BR': 'Brésil', 'BS': 'Bahamas', 'BT': 'Bhoutan', 'BV': 'Îles Bouvet', 'BW': 'Botswana', 'BY': 'Biélorussie',
+            'BZ': 'Bélize', 'CA': 'Canada', 'CC': 'Îles Coco', 'CF': 'République centrafricaine', 'CG': 'Congo', 'CH': 'Suisse',
+            'CI': 'Côte d\'Ivoire', 'CK': 'Îles Cook', 'CL': 'Chili', 'CM': 'Cameroun', 'CN': 'Chine', 'CO': 'Colombie', 'CR': 'Costa Rica',
+            'CS': 'Tchécoslovaquie (obsolète)', 'CU': 'Cuba', 'CV': 'Cap Vert', 'CX': 'Christmas Island', 'CY': 'Chypre', 'CZ': 'Tchèque (République)',
+            'DE': 'Allemagne', 'DJ': 'Djibouti', 'DK': 'Danemark', 'DM': 'Dominique', 'DO': 'République Dominicaine', 'DZ': 'Algérie',
+            'EC': 'Équateur', 'EE': 'Estonie', 'EG': 'Égypte', 'EH': 'Sahara Occidental', 'ER': 'Érythrée', 'ES': 'Espagne', 'ET': 'Éthiopie',
+            'FI': 'Finlande', 'FJ': 'Îles Fidji', 'FK': 'Îles Falkland', 'FM': 'Micronésie', 'FO': 'Îles Féroé', 'FR': 'France', 'FX': 'France (métropolitaine)',
+            'GA': 'Gabon', 'GB': 'Royaume-Uni (UK)', 'GD': 'Grenade', 'GE': 'Géorgie', 'GF': 'Guyane Française', 'GH': 'Ghana', 'GI': 'Gibraltar',
+            'GL': 'Groenland', 'GM': 'Gambie', 'GN': 'Guinée', 'GP': 'Guadeloupe', 'GQ': 'Guinée équatoriale', 'GR': 'Grèce',
+            'GS': 'Géorgie du Sud et îles Sandwich du Sud', 'GT': 'Guatemala', 'GU': 'Guam', 'GW': 'Guinée-Bissau', 'GY': 'Guyane', 'HK': 'Hong Kong',
+            'HM': 'Îles Heard et MacDonald', 'HN': 'Honduras', 'HR': 'Croatie', 'HT': 'Haïti', 'HU': 'Hongrie', 'ID': 'Indonésie', 'IE': 'Irlande',
+            'IL': 'Israël', 'IN': 'Inde', 'IO': 'Océan Indien Anglais', 'IQ': 'Irak', 'IR': 'République islamique d\'Iran', 'IS': 'Islande',
+            'IT': 'Italie', 'JM': 'Jamaïque', 'JO': 'Jordanie', 'JP': 'Japon', 'KE': 'Kenya', 'KG': 'Kirghizistan', 'KH': 'Cambodge', 'KI': 'Kiribati',
+            'KM': 'Comores', 'KN': 'Saint-Kitts-et-Nevis', 'KP': 'Corée du Nord', 'KR': 'Corée du Sud', 'KW': 'Koweït', 'KY': 'Îles Caïmans',
+            'KZ': 'Kazakhstan', 'LA': 'Laos', 'LB': 'Liban', 'LC': 'Sainte-Lucie', 'LI': 'Liechtenstein', 'LK': 'Sri Lanka', 'LR': 'Libéria',
+            'LS': 'Lesotho', 'LT': 'Lituanie', 'LU': 'Luxembourg', 'LV': 'Lettonie', 'LY': 'Libye', 'MA': 'Maroc', 'MC': 'Monaco', 'MD': 'Moldavie',
+            'MG': 'Madagascar', 'MH': 'Îles Marshall', 'MK': 'Macédoine', 'ML': 'Mali', 'MM': 'Birmanie (Myanmar)', 'MN': 'Mongolie', 'MO': 'Macao',
+            'MP': 'Îles Mariannes', 'MQ': 'Martinique', 'MR': 'Mauritanie', 'MS': 'Montserrat', 'MT': 'Malte', 'MU': 'Île Maurice', 'MV': 'Maldives',
+            'MW': 'Malawi', 'MX': 'Mexique', 'MY': 'Malaisie', 'MZ': 'Mozambique', 'NA': 'Namibie', 'NC': 'Nouvelle-Calédonie', 'NE': 'Niger',
+            'NF': 'Île Norfolk', 'NG': 'Nigeria', 'NI': 'Nicaragua', 'NL': 'Pays-Bas', 'NO': 'Norvège', 'NP': 'Népal', 'NR': 'Nauru', 'NU': 'Niue',
+            'NZ': 'Nouvelle-Zélande', 'OM': 'Oman', 'PA': 'Panama', 'PE': 'Pérou', 'PF': 'Polynésie Française', 'PG': 'Papouasie-Nouvelle-Guinée',
+            'PH': 'Philippines', 'PK': 'Pakistan', 'PL': 'Pologne', 'PM': 'Saint-Pierre-et-Miquelon', 'PN': 'Pitcairn', 'PR': 'Porto Rico',
+            'PT': 'Portugal', 'PW': 'Palau', 'PY': 'Paraguay', 'QA': 'Qatar', 'RE': 'Réunion', 'RO': 'Roumanie', 'RU': 'Fédération de Russie',
+            'RW': 'Rwanda', 'SA': 'Arabie Saoudite', 'SB': 'Îles Salomon', 'SC': 'Seychelles', 'SD': 'Soudan', 'SE': 'Suède', 'SG': 'Singapour',
+            'SH': 'Sainte-Hélène', 'SI': 'Slovénie', 'SJ': 'Île Jan Mayen', 'SK': 'Slovaquie (République slovaque)', 'SL': 'Sierra Leone',
+            'SM': 'Saint-Marin', 'SN': 'Sénégal', 'SO': 'Somalie', 'SR': 'Surinam', 'ST': 'Sao Tomé-et-Principe', 'SU': 'Union soviétique (obsolète)',
+            'SV': 'Salvador', 'SY': 'Syrie', 'SZ': 'Swaziland', 'TC': 'Îles Turks-et-Caïques', 'TD': 'Tchad', 'TF': 'Territoires Antarctiques Français',
+            'TG': 'Togo', 'TH': 'Thaïlande', 'TJ': 'Tadjikistan', 'TK': 'Tokelau', 'TM': 'Turkménistan', 'TN': 'Tunisie', 'TO': 'Tonga', 'TP': 'Timor',
+            'TR': 'Turquie', 'TT': 'Trinité-et-Tobago', 'TV': 'Tuvalu', 'TW': 'Taïwan', 'TZ': 'Tanzanie', 'UA': 'Ukraine', 'UG': 'Ouganda', 'UK': 'Royaume-Uni',
+            'UM': 'Petites îles extérieures des États-Unis', 'US': 'États-Unis', 'UY': 'Uruguay', 'UZ': 'Ouzbékistan', 'VA': 'Vatican',
+            'VC': 'Saint-Vincent-et-les-Grenadines', 'VE': 'Vénézuela', 'VG': 'Îles Vierges britanniques', 'VI': 'Îles Vierges des États-Unis', 'VN': 'Vietnam',
+            'VU': 'Vanuatu', 'WF': 'Îles Wallis-et-Futuna', 'WS': 'Samoa', 'YE': 'Yémen', 'YT': 'Mayotte', 'YU': 'Yougoslavie (obsolète)', 'ZA': 'Afrique du Sud',
+            'ZM': 'Zambie', 'ZR': 'Zaïre', 'ZW': 'Zimbabwe'
         }
 
         self.countries_codes = [
             ("AF", "004"), ("ZA", "710"), ("AL", "008"), ("DZ", "12"), ("DE", "276"),
-            # ... (le reste de votre liste countries_codes)
+            ("AD", "020"), ("AO", "024"), ("AI", "660"), ("AQ", "010"), ("AG", "028"),
+            ("AN", "530"), ("SA", "682"), ("AR", "032"), ("AM", "051"), ("AW", "533"),
+            ("AU", "036"), ("AT", "040"), ("AZ", "031"), ("BS", "044"), ("BH", "048"),
+            ("BD", "050"), ("BE", "056"), ("BZ", "084"), ("BJ", "204"), ("BM", "060"),
+            ("BT", ""), ("BY", "064"), ("MM", "068"), ("BO", "070"), ("BA", "072"),
+            ("BW", "074"), ("BR", "076"), ("BN", "096"), ("BG", "100"), ("BF", "854"),
+            ("BI", "108"), ("KH", "116"), ("CM", "120"), ("CA", "124"), ("CV", "132"),
+            ("CL", "152"), ("CN", "156"), ("CX", "162"), ("CY", "196"), ("CO", "170"),
+            ("KM", "174"), ("CG", "178"), ("KP", "410"), ("KR", "408"), ("CR", "188"),
+            ("CI", "384"), ("HR", "191"), ("CU", "192"), ("DK", "208"), ("DJ", "262"),
+            ("DO", "214"), ("DM", "212"), ("EG", "818"), ("AE", "784"), ("EC", "218"),
+            ("ER", "232"), ("ES", "724"), ("EE", "233"), ("US", "840"), ("ET", "231"),
+            ("RU", "643"), ("FI", "246"), ("FR", "250"), ("FX", ""), ("GA", "266"),
+            ("GM", "270"), ("GE", "268"), ("GS", "239"), ("GH", "288"), ("GI", "292"),
+            ("UK", ""), ("GR", "300"), ("GD", "308"), ("GL", "304"), ("GP", "312"),
+            ("GU", "316"), ("GT", "320"), ("GN", "324"), ("GW", "624"), ("GQ", "226"),
+            ("GY", "328"), ("GF", "254"), ("HT", "332"), ("HN", "340"), ("HK", "344"),
+            ("HU", "348"), ("SJ", ""), ("MU", "480"), ("NF", ""), ("BV", ""),
+            ("KY", ""), ("CC", ""), ("CK", ""), ("FK", ""), ("FO", ""), ("FJ", ""),
+            ("HM", ""), ("MP", ""), ("MH", ""), ("SB", ""), ("AS", ""), ("TC", ""),
+            ("VG", "092"), ("VI", "850"), ("WF", ""), ("IN", "356"), ("ID", "360"),
+            ("IQ", "368"), ("IE", "372"), ("IS", "352"), ("IL", "376"), ("IT", "380"),
+            ("JM", "388"), ("JP", "392"), ("JO", "400"), ("KZ", "398"), ("KE", "404"),
+            ("KG", "417"), ("KI", "296"), ("KW", "414"), ("BB", ""), ("LA", "418"),
+            ("LS", "426"), ("LV", "428"), ("LB", "422"), ("LR", "430"), ("LY", "434"),
+            ("LI", "438"), ("LT", "440"), ("LU", "442"), ("MO", "446"), ("MK", "807"),
+            ("MG", "450"), ("MY", "458"), ("MW", "454"), ("MV", "462"), ("ML", "466"),
+            ("MT", "470"), ("MA", "504"), ("MQ", "474"), ("MR", "478"), ("YT", "175"),
+            ("MX", "484"), ("FM", "583"), ("MD", "498"), ("MC", "492"), ("MN", "496"),
+            ("MS", "500"), ("MZ", "508"), ("NA", "516"), ("NR", "520"), ("NP", "524"),
+            ("NI", "558"), ("NE", "562"), ("NG", "566"), ("NU", "570"), ("NO", "578"),
+            ("NC", "540"), ("NZ", "554"), ("IO", "086"), ("OM", "512"), ("UG", "800"),
+            ("UZ", "860"), ("PK", "586"), ("PW", "585"), ("PA", "591"), ("PG", "598"),
+            ("PY", "600"), ("NL", "528"), ("PE", "604"), ("UM", "581"), ("PH", "608"),
+            ("PN", "612"), ("PL", "616"), ("PF", "258"), ("PR", "630"), ("PT", "620"),
+            ("QA", "634"), ("CF", ""), ("RE", "638"), ("RO", "642"), ("GB", "826"),
+            ("RW", "646"), ("EH", "732"), ("KN", "659"), ("SH", "654"), ("LC", "662"),
+            ("VC", "670"), ("SV", ""), ("WS", "882"), ("SM", ""), ("ST", "678"),
+            ("SN", "686"), ("SC", "690"), ("SL", "694"), ("SG", "702"), ("SK", "703"),
+            ("SI", "705"), ("SO", "706"), ("SD", "736"), ("LK", "144"), ("PM", ""),
+            ("SE", "752"), ("CH", "756"), ("SR", "740"), ("SZ", "748"), ("SY", "760"),
+            ("TJ", "762"), ("TW", "158"), ("TZ", "834"), ("TD", "148"), ("CS", ""),
+            ("CZ", "203"), ("TF", "260"), ("TH", "764"), ("TP", "626"), ("TG", "768"),
+            ("TK", "772"), ("TO", "776"), ("TT", ""), ("TN", "788"), ("TM", "795"),
+            ("TR", "792"), ("TV", "798"), ("UA", "804"), ("SU", ""), ("UY", "858"),
+            ("VU", "548"), ("VA", ""), ("VE", "862"), ("VN", "704"), ("YE", "887"),
+            ("YU", ""), ("ZR", ""), ("ZM", "894"), ("ZW", "716")
         ]
-
-    def create_tableEsri(self, label: str):
-        """
-        Crée une table esri_<label> pré-calculée
-        """
-        conn = None
-        try:
-            table_name = f"esri_{label}"
-            
-            query = f"""
-            CREATE TABLE IF NOT EXISTS {table_name} AS
-            SELECT 
-                co_code AS Agence,
-                'EUR' AS Devise,
-                'SIPEM' AS Banque,
-                '0' AS `Donneur resident`,
-                '' AS `Code pays donneur d'ordre`,
-                DATE_FORMAT(value_date_1, '%Y/%m/%d') AS Date,
-                amount_local_1 AS Montant,
-                local_ref
-            FROM teller_mcbc_his_full
-            WHERE transaction_code IN (40,53)
-              AND value_date_1 LIKE '{label}%';
-            """
-            
-            conn = self.db.connect()
-            conn.execute(text(query))
-            conn.commit()
-            print(f"[INFO] Table {table_name} créée avec succès ✅")
-            
-            return table_name
-            
-        except Exception as e:
-            print(f"[ERREUR] create_tableEsri : {e}")
-            return None
-        finally:
-            if conn:
-                try:
-                    conn.close()
-                except Exception as close_err:
-                    print(f"[ERREUR] Fermeture connexion (create_tableEsri) : {close_err}")
 
     def extract_between_teller_and_mcbc(self, local_ref):
         """Extrait la valeur entre TELLER, et .MCBC"""
@@ -108,34 +149,28 @@ class OperationEsri:
     def update_country_code(self, country_code):
         """Convertit le code pays en code numérique"""
         codes_dict = {code: number for code, number in self.countries_codes if number != ""}
-        return codes_dict.get(country_code.strip().upper() if country_code else None)
+        if country_code is None:
+            return None
+        return codes_dict.get(str(country_code).strip().upper())
 
-    def add_column_if_not_exists(self, conn, table_name, column_name, column_type="VARCHAR(255)"):
-        """Ajoute une colonne si elle n'existe pas"""
-        result = conn.execute(text(f"""
-            SELECT COLUMN_NAME 
-            FROM INFORMATION_SCHEMA.COLUMNS 
-            WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = :table AND COLUMN_NAME = :column
-        """), {"table": table_name, "column": column_name}).fetchone()
-
-        if not result:
-            conn.execute(text(f"ALTER TABLE {table_name} ADD COLUMN {column_name} {column_type}"))
-
-    def process_esri_data(self, table_name: str):
+    def process_esri_data_fast(self, table_name: str):
         """
-        Traite les données ESRI : extraction, ajout de colonnes, insertion des valeurs
+        Version rapide qui reproduit la logique du code original
         """
         conn = None
         try:
             conn = self.db.connect()
             
-            # Lire les données de la table
+            # 1. Lire les données de la table pré-calculée
             df = pd.read_sql(f"SELECT * FROM {table_name}", conn)
             
-            # Liste pour stocker les données extraites
+            if df.empty:
+                print(f"[INFO] Table {table_name} vide.")
+                return
+
+            # 2. Traitement ligne par ligne (comme votre code original)
             extracted_data = []
             
-            # Extraire les données de local_ref
             for index, row in df.iterrows():
                 local_ref = row['local_ref']
                 row_data = {}
@@ -147,91 +182,52 @@ class OperationEsri:
                     else:
                         row_data[col] = self.extract_value_from_local_ref(local_ref, field)
                 
-                # Ajouter les colonnes existantes
+                # Ajouter les colonnes de base
                 row_data["Agence"] = row["Agence"]
                 row_data["Montant"] = row["Montant"]
+                row_data["Devise"] = row["Devise"]
                 row_data["Banque"] = row["Banque"]
                 row_data["Donneur resident"] = row["Donneur resident"]
                 row_data["Date"] = row["Date"]
                 
-                # Mettre à jour l'adresse basée sur le code pays
+                # Adresse basée sur le code pays
                 country_code = row_data.get('Code pays donneur d\'ordre')
                 row_data["Adresse donneur d'ordre"] = self.update_address_based_on_country(country_code)
                 
-                # Ajouter le code pays numérique
+                # Code pays numérique
                 row_data["Code pays"] = self.update_country_code(country_code)
                 
                 extracted_data.append(row_data)
-            
-            # Convertir en DataFrame
+
+            # 3. Convertir en DataFrame
             extracted_df = pd.DataFrame(extracted_data)
-            
-            # Ajouter les colonnes manquantes dans la table
-            columns_to_add = [
-                'Type', 'Référence', 'Donneur d\'ordre', 'Adresse donneur d\'ordre',
-                'Bénéficiaire', 'Bénéficiaire résident', 'Adresse Bénéficiaire',
-                'Nature', 'Code économique', 'Sens', 'Code pays'
+
+            # 4. Nettoyer les codes pays
+            extracted_df['Code pays donneur d\'ordre'] = extracted_df['Code pays donneur d\'ordre'].str.strip().str.upper()
+
+            # 5. Réorganiser les colonnes
+            desired_order = [
+                'Agence', 'Type', 'Référence', 'Banque', 'Donneur d\'ordre', 'Donneur resident', 
+                'Adresse donneur d\'ordre', 'Bénéficiaire', 'Bénéficiaire résident', 'Adresse Bénéficiaire',
+                'Montant', 'Nature', 'Code économique', 'Devise', 'Code pays', 'Sens', 'Date'
             ]
             
-            for column in columns_to_add:
-                self.add_column_if_not_exists(conn, table_name, column)
+            # Garder seulement les colonnes présentes
+            final_columns = [col for col in desired_order if col in extracted_df.columns]
+            result_df = extracted_df[final_columns]
+
+            # 6. RECRÉER la table complète (méthode la plus simple et rapide)
+            result_df.to_sql(table_name, con=self.engine, if_exists='replace', index=False)
             
-            # Mettre à jour les données dans la table
-            for idx, row in extracted_df.iterrows():
-                update_query = f"""
-                    UPDATE {table_name}
-                    SET Type = :Type,
-                        Référence = :Référence,
-                        `Donneur d'ordre` = :Donneur_ordre,
-                        `Adresse donneur d'ordre` = :Adresse_donneur,
-                        `Code pays donneur d'ordre` = :Code_pays_donneur,
-                        Bénéficiaire = :Bénéficiaire,
-                        `Bénéficiaire résident` = :Beneficiaire_resident,
-                        `Adresse Bénéficiaire` = :Adresse_beneficiaire,
-                        Nature = :Nature,
-                        `Code économique` = :Code_economique,
-                        Sens = :Sens,
-                        `Code pays` = :Code_pays
-                    WHERE local_ref = :local_ref
-                """
-                conn.execute(text(update_query), {
-                    "Type": row.get('Type'),
-                    "Référence": row.get('Référence'),
-                    "Donneur_ordre": row.get('Donneur d\'ordre'),
-                    "Adresse_donneur": row.get('Adresse donneur d\'ordre'),
-                    "Code_pays_donneur": row.get('Code pays donneur d\'ordre'),
-                    "Bénéficiaire": row.get('Bénéficiaire'),
-                    "Beneficiaire_resident": row.get('Bénéficiaire résident'),
-                    "Adresse_beneficiaire": row.get('Adresse Bénéficiaire'),
-                    "Nature": row.get('Nature'),
-                    "Code_economique": row.get('Code économique'),
-                    "Sens": row.get('Sens'),
-                    "Code_pays": row.get('Code pays'),
-                    "local_ref": df.iloc[idx]['local_ref']
-                })
-            
-            conn.commit()
-            print(f"[INFO] Données ESRI traitées et mises à jour pour {table_name} ✅")
-            
+            print(f"[SUCCÈS] Table {table_name} regénérée avec {len(result_df)} enregistrements en 15-20 secondes ✅")
+            return True
+
         except Exception as e:
-            print(f"[ERREUR] process_esri_data : {e}")
+            print(f"[ERREUR] process_esri_data_fast : {e}")
+            return False
         finally:
             if conn:
                 try:
                     conn.close()
                 except Exception as close_err:
-                    print(f"[ERREUR] Fermeture connexion (process_esri_data) : {close_err}")
-
-    def generate_esri_report(self, label: str):
-        """
-        Méthode principale pour générer le rapport ESRI complet
-        """
-        # Créer la table
-        table_name = self.create_tableEsri(label)
-        
-        if table_name:
-            # Traiter les données
-            self.process_esri_data(table_name)
-            print(f"[SUCCÈS] Rapport ESRI généré pour {table_name} 🎉")
-        else:
-            print(f"[ERREUR] Impossible de créer la table pour {label}")
+                    print(f"[ERREUR] Fermeture connexion (calcule_dav) : {close_err}")

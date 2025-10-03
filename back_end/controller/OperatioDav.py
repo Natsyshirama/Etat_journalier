@@ -57,15 +57,11 @@ class OperatioDav:
             df['debit_dav'] = df['montant_dav'].apply(lambda x: x if x > 0 else 0.0)
             df['credit_dav'] = df['montant_dav'].apply(lambda x: -x if x < 0 else 0.0)
 
-# Après avoir calculé montant_dav et les colonnes debit/credit
             df_unique = df.drop_duplicates(subset=['Numero_compte'], keep='first')
 
-# Supprimer toutes les lignes existantes dans la table et ré-insérer les uniques
             conn.execute(text(f"DELETE FROM {table_name}"))
 
-# Insérer uniquement les lignes uniques
 
-            # Ajouter les colonnes si elles n'existent pas
             def add_column_if_not_exists(conn, table_name, column_name, column_type="DOUBLE DEFAULT 0"):
                 result = conn.execute(text(f"""
                     SELECT COLUMN_NAME 
@@ -82,7 +78,7 @@ class OperatioDav:
 
             df_unique.to_sql(table_name, conn, if_exists='append', index=False)
 
-            # Mise à jour dans la table
+            #update tables
             for idx, row in df.iterrows():
                 update_query = f"""
                     UPDATE {table_name}

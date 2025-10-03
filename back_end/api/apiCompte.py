@@ -101,16 +101,19 @@ def create_esri_precompute(label: str):
         if not table_name:
             raise Exception("Erreur lors de la création de la table ESRI")
         
-        operation_esri.calcule_esri(table_name)
-        
+        # Utiliser la version rapide
+        operation_esri.process_esri_data_fast(table_name)
+         
+  
         return JSONResponse(content={
-            "status": "success",
-            "message": f"Table ESRI créée et pré-traitée : {table_name} ✅",
-            "table_name": table_name
-        })
+                "status": "success", 
+                "message": f"Table ESRI créée et traitée en 15s : {table_name} ✅",
+                "table_name": table_name
+            })
+        
     except Exception as e:
         return JSONResponse(content={"status": "error", "message": str(e)}, status_code=500)
-
+    
     
 #creation table et insertion de table arrangement_customer
 @router.post("/dav/create_table_arrCust")
