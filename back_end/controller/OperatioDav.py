@@ -76,7 +76,12 @@ class OperatioDav:
             add_column_if_not_exists(conn, table_name, "debit_dav")
             add_column_if_not_exists(conn, table_name, "credit_dav")
 
-            df_unique.to_sql(table_name, conn, if_exists='append', index=False)
+            df_unique.to_sql(
+                table_name, 
+                conn, 
+                if_exists='append', 
+                index=False
+                )
 
             #update tables
             for idx, row in df.iterrows():

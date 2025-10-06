@@ -209,17 +209,19 @@ class OperationEsri:
                 'Montant', 'Nature', 'Code économique', 'Devise', 'Code pays', 'Sens', 'Date'
             ]
             
-            # Garder seulement les colonnes présentes
             final_columns = [col for col in desired_order if col in extracted_df.columns]
             result_df = extracted_df[final_columns]
 
-            # 6. CORRECTION : Utiliser self.engine au lieu de conn
-            # Fermer d'abord la connexion actuelle
+           
             if conn:
                 conn.close()
             
-            # Réécrire la table avec self.engine (nouvelle connexion)
-            result_df.to_sql(table_name, con=self.engine, if_exists='replace', index=False)
+            result_df.to_sql(
+                table_name, 
+                con=self.engine, 
+                if_exists='replace', 
+                index=False
+                )
             
             print(f"[SUCCÈS] Table {table_name} regénérée avec {len(result_df)} enregistrements ✅")
             return True

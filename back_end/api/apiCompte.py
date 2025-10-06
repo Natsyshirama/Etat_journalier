@@ -11,6 +11,7 @@ from controller.OperatioDav import OperatioDav
 from controller.Esri import Esri
 from controller.OperationEsri import OperationEsri
 from controller.DavReport import DavReport
+from controller.ChangeMande import ChangeMande
 
 from controller.DavUnique import DavUnique
 
@@ -23,7 +24,7 @@ dav_unique = DavUnique()
 esri = Esri()
 operation_esri = OperationEsri()
 dav_report = DavReport()
-
+change_mande = ChangeMande()
 
 @router.post("/dat/create_dat_precompute/{name}")
 def create_dat_precompute(name: str):
@@ -114,6 +115,23 @@ def create_esri_precompute(label: str):
         return JSONResponse(content={"status": "error", "message": str(e)}, status_code=500)
     
     
+@router.post("/change/generate_tables")
+def create_change_precompute(value_date: str):
+    try:
+        result = change_mande.generate_tables_report(value_date)
+       
+        if result and result.get("status") == "success":
+            return JSONResponse(
+                status_code=200,
+                content=result
+            )
+        else:
+            raise Exception("Erreur lors de la création des tables Change Mande")
+        
+    except Exception as e:
+        return JSONResponse(content={"status": "error", "message": str(e)}, status_code=500)
+
+
 #creation table et insertion de table arrangement_customer
 @router.post("/dav/create_table_arrCust")
 def create_table_arrCust():
