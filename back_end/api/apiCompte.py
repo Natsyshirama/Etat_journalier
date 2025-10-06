@@ -101,7 +101,6 @@ def create_esri_precompute(label: str):
         if not table_name:
             raise Exception("Erreur lors de la création de la table ESRI")
         
-        # Utiliser la version rapide
         operation_esri.process_esri_data_fast(table_name)
          
   

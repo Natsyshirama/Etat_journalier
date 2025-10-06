@@ -154,9 +154,6 @@ class OperationEsri:
         return codes_dict.get(str(country_code).strip().upper())
 
     def process_esri_data_fast(self, table_name: str):
-        """
-        Version rapide qui reproduit la logique du code original
-        """
         conn = None
         try:
             conn = self.db.connect()
@@ -166,9 +163,9 @@ class OperationEsri:
             
             if df.empty:
                 print(f"[INFO] Table {table_name} vide.")
-                return
+                return False
 
-            # 2. Traitement ligne par ligne (comme votre code original)
+            # 2. Traitement ligne par ligne
             extracted_data = []
             
             for index, row in df.iterrows():
@@ -216,18 +213,25 @@ class OperationEsri:
             final_columns = [col for col in desired_order if col in extracted_df.columns]
             result_df = extracted_df[final_columns]
 
-            # 6. RECRÉER la table complète (méthode la plus simple et rapide)
+            # 6. CORRECTION : Utiliser self.engine au lieu de conn
+            # Fermer d'abord la connexion actuelle
+            if conn:
+                conn.close()
+            
+            # Réécrire la table avec self.engine (nouvelle connexion)
             result_df.to_sql(table_name, con=self.engine, if_exists='replace', index=False)
             
-            print(f"[SUCCÈS] Table {table_name} regénérée avec {len(result_df)} enregistrements en 15-20 secondes ✅")
+            print(f"[SUCCÈS] Table {table_name} regénérée avec {len(result_df)} enregistrements ✅")
             return True
 
         except Exception as e:
             print(f"[ERREUR] process_esri_data_fast : {e}")
+            import traceback
+            print(f"[DEBUG] {traceback.format_exc()}")
             return False
         finally:
             if conn:
                 try:
                     conn.close()
                 except Exception as close_err:
-                    print(f"[ERREUR] Fermeture connexion (calcule_dav) : {close_err}")
+                    print(f"[ERREUR] Fermeture connexion : {close_err}")
