@@ -158,28 +158,25 @@ class OperationEsri:
         try:
             conn = self.db.connect()
             
-            # 1. Lire les données de la table pré-calculée
+           
             df = pd.read_sql(f"SELECT * FROM {table_name}", conn)
             
             if df.empty:
                 print(f"[INFO] Table {table_name} vide.")
                 return False
 
-            # 2. Traitement ligne par ligne
             extracted_data = []
             
             for index, row in df.iterrows():
                 local_ref = row['local_ref']
                 row_data = {}
                 
-                # Extraire les données selon le mapping
                 for col, field in self.columns_mapping.items():
                     if col == "Type":
                         row_data[col] = self.extract_between_teller_and_mcbc(local_ref)
                     else:
                         row_data[col] = self.extract_value_from_local_ref(local_ref, field)
                 
-                # Ajouter les colonnes de base
                 row_data["Agence"] = row["Agence"]
                 row_data["Montant"] = row["Montant"]
                 row_data["Devise"] = row["Devise"]

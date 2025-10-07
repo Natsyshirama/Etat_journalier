@@ -12,7 +12,7 @@ from controller.Esri import Esri
 from controller.OperationEsri import OperationEsri
 from controller.DavReport import DavReport
 from controller.ChangeMande import ChangeMande
-
+from controller.EsriReport import EsriReport
 from controller.DavUnique import DavUnique
 
 router = APIRouter()
@@ -25,7 +25,9 @@ esri = Esri()
 operation_esri = OperationEsri()
 dav_report = DavReport()
 change_mande = ChangeMande()
+esri_report = EsriReport()
 
+#create dat_precompute
 @router.post("/dat/create_dat_precompute/{name}")
 def create_dat_precompute(name: str):
     """
@@ -50,6 +52,7 @@ def create_dat_precompute(name: str):
         return JSONResponse(content={"status": "error", "message": str(e)}, status_code=500)
 
 
+#create dav_precompute
 @router.post("/dat/create_dav_precompute")
 def create_dav_precompute(name:str):
 
@@ -70,6 +73,7 @@ def create_dav_precompute(name:str):
     except Exception as e:
         return JSONResponse(content={"status": "error", "message": str(e)}, status_code=500)
     
+# initialise dat et dav
 @router.post("/dat/initialise/{name}")
 def initialize(name: str):
     try:
@@ -94,7 +98,8 @@ def initialize(name: str):
     except Exception as e:
         return JSONResponse(content={"status": "error", "message": str(e)}, status_code=500)
         
-
+#INITIALISATION ESRI
+#create tables esri_precompute
 @router.post("/esri/create_esri_precompute")
 def create_esri_precompute(label: str):
     try:
@@ -114,7 +119,8 @@ def create_esri_precompute(label: str):
     except Exception as e:
         return JSONResponse(content={"status": "error", "message": str(e)}, status_code=500)
     
-    
+#INITIALISATION CHANGE
+#create tables change
 @router.post("/change/generate_tables")
 def create_change_precompute(value_date: str):
     try:
@@ -179,7 +185,39 @@ def export_excel(table_name: str):
 
     except Exception as e:
         return JSONResponse(content={"status": "error", "message": str(e)}, status_code=500)
-
+#""""""""""""""""""ESRI REPORT""""""""""""""##
+@router.get("/esri/{date_value}")
+def getEsri(date_value: str):
+    try:
+        data = esri_report.getEsri(date_value)
+        if not data or not data.get("rows"):
+            return JSONResponse(status_code=404, content={"error": "Aucune donnée ESRI trouvée pour cette date"})
+        
+        return {"table": f"esri_{date_value}", **data}
+    except ValueError as ve:
+        return JSONResponse(status_code=400, content={"error": str(ve)})
+    except Exception as e:
+        return JSONResponse(status_code=500, content={"error": f"Erreur serveur: {e}"})
+        
+@router.get("/esri/{date_value}/resume")
+def get_esri_resume(date_value:str):
+    try:
+        summary = esri_report.getResumer(date_value)
+        if not summary:
+            return JSONResponse(status_code=404, content={"error": "Résumé introuvable ou table vide"})
+        
+        # Conversion sécurisée en types JSON (int / float)
+        safe_summary = {
+            "table_name": f"esri_{date_value}",
+            "nb_lignes": int(summary.get("nb_lignes") or 0),
+            "total_montant": float(summary.get("total_montant") or 0)
+        }
+        
+        return safe_summary
+    except ValueError as ve:
+        return JSONResponse(status_code=400, content={"error": str(ve)})
+    except Exception as e:
+        return JSONResponse(status_code=500, content={"error": f"Erreur serveur: {e}"})
 
 ##"""""""""""""DAT REPORT""""""""""""""##
 @router.get("/dat/liste_dat")

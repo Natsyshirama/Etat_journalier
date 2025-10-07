@@ -294,8 +294,7 @@ class ChangeMande:
         except Exception as e:
             print(f"[ERREUR] generate_tables_report: {e}")
             return False
-        finally:
-            self.clean_temp_tables()
+        
         
 
         
