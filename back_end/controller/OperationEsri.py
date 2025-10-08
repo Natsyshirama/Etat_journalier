@@ -153,17 +153,32 @@ class OperationEsri:
             return None
         return codes_dict.get(str(country_code).strip().upper())
 
-    def process_esri_data_fast(self, table_name: str):
+    def process_esri_data_fast(self, date_debut: str, date_fin:str):
         conn = None
         try:
             conn = self.db.connect()
             
-           
-            df = pd.read_sql(f"SELECT * FROM {table_name}", conn)
+            query = text("""
+                SELECT 
+                    co_code AS Agence,
+                    'EUR' AS Devise,
+                    'SIPEM' AS Banque,
+                    '0' AS `Donneur resident`,
+                    '' AS `Code pays donneur d'ordre`,
+                    DATE_FORMAT(value_date_1, '%Y/%m/%d') AS Date,
+                    amount_local_1 AS Montant,
+                    local_ref
+                FROM teller_mcbc_his_full
+                WHERE transaction_code IN (40, 53)
+                AND value_date_1 BETWEEN :date_debut AND :date_fin ;
+            """)
+            df = pd.read_sql(query, conn, params={"date_debut": date_debut, "date_fin": date_fin})
+
             
             if df.empty:
-                print(f"[INFO] Table {table_name} vide.")
-                return False
+                print(f"[INFO] Aucune donnée ESRI trouvée entre {date_debut} et {date_fin}.")
+                return pd.DataFrame()
+
 
             extracted_data = []
             
@@ -209,25 +224,15 @@ class OperationEsri:
             final_columns = [col for col in desired_order if col in extracted_df.columns]
             result_df = extracted_df[final_columns]
 
-           
-            if conn:
-                conn.close()
             
-            result_df.to_sql(
-                table_name, 
-                con=self.engine, 
-                if_exists='replace', 
-                index=False
-                )
-            
-            print(f"[SUCCÈS] Table {table_name} regénérée avec {len(result_df)} enregistrements ✅")
-            return True
+            print(f"[INFO] Données ESRI traitées avec succès entre {date_debut} et {date_fin} ({len(result_df)} lignes) ✅")
+            return result_df,final_columns
 
         except Exception as e:
             print(f"[ERREUR] process_esri_data_fast : {e}")
-            import traceback
+            import traceback 
             print(f"[DEBUG] {traceback.format_exc()}")
-            return False
+            return pd.DataFrame()
         finally:
             if conn:
                 try:

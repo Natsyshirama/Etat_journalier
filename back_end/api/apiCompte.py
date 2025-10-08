@@ -27,7 +27,6 @@ dav_report = DavReport()
 change_mande = ChangeMande()
 esri_report = EsriReport()
 
-#create dat_precompute
 @router.post("/dat/create_dat_precompute/{name}")
 def create_dat_precompute(name: str):
     """
@@ -52,7 +51,6 @@ def create_dat_precompute(name: str):
         return JSONResponse(content={"status": "error", "message": str(e)}, status_code=500)
 
 
-#create dav_precompute
 @router.post("/dat/create_dav_precompute")
 def create_dav_precompute(name:str):
 
@@ -73,7 +71,7 @@ def create_dav_precompute(name:str):
     except Exception as e:
         return JSONResponse(content={"status": "error", "message": str(e)}, status_code=500)
     
-# initialise dat et dav
+#******************* INITIALISATION DAT ET DAV***********************
 @router.post("/dat/initialise/{name}")
 def initialize(name: str):
     try:
@@ -100,27 +98,53 @@ def initialize(name: str):
         
 #INITIALISATION ESRI
 #create tables esri_precompute
+
 @router.post("/esri/create_esri_precompute")
-def create_esri_precompute(label: str):
+def create_esri_precompute( date_debut: str = Query(...), date_fin: str = Query(...)):
     try:
-        table_name = esri.create_tableEsri(label)
-        if not table_name:
-            raise Exception("Erreur lors de la création de la table ESRI")
-        
-        operation_esri.process_esri_data_fast(table_name)
-         
-  
-        return JSONResponse(content={
-                "status": "success", 
-                "message": f"Table ESRI créée et traitée en 15s : {table_name} ✅",
-                "table_name": table_name
-            })
-        
+        # --- Exécuter le traitement ESRI ---
+        result_df,columns = operation_esri.process_esri_data_fast(date_debut, date_fin)
+
+        if result_df.empty:
+            return JSONResponse(
+                content={
+                    "status": "warning",
+                    "message": f"Aucune donnée trouvée entre {date_debut} et {date_fin}",
+                   
+                },
+                status_code=200
+            )
+
+        # --- Convertir le DataFrame en liste de dictionnaires ---
+        data_json = json.loads(result_df.to_json(orient="records", force_ascii=False))
+
+        # --- Réponse finale ---
+        return JSONResponse(
+            content={
+                "status": "success",
+                "message": f"Données ESRI pré-calculées entre {date_debut} et {date_fin} ✅",
+                
+                "columns": columns,
+                "rows": data_json,
+                "count": len(data_json)
+            },
+            status_code=200
+        )
+
     except Exception as e:
+        import traceback
+        print(f"[ERREUR] create_esri_precompute : {e}")
+        print(traceback.format_exc())
         return JSONResponse(content={"status": "error", "message": str(e)}, status_code=500)
-    
-#INITIALISATION CHANGE
-#create tables change
+
+
+
+
+
+
+
+
+###########INITIALISATION CHANGE#############
 @router.post("/change/generate_tables")
 def create_change_precompute(value_date: str):
     try:
@@ -163,6 +187,8 @@ def create_table_arrCust():
         return JSONResponse(content={"status": "error", "message": str(e)}, status_code=500)
 
 
+
+###EXPORT EXCEL###
 #exportation des tables
 @router.get("/dat/export_excel")
 def export_excel(table_name: str):
@@ -185,39 +211,9 @@ def export_excel(table_name: str):
 
     except Exception as e:
         return JSONResponse(content={"status": "error", "message": str(e)}, status_code=500)
-#""""""""""""""""""ESRI REPORT""""""""""""""##
-@router.get("/esri/{date_value}")
-def getEsri(date_value: str):
-    try:
-        data = esri_report.getEsri(date_value)
-        if not data or not data.get("rows"):
-            return JSONResponse(status_code=404, content={"error": "Aucune donnée ESRI trouvée pour cette date"})
-        
-        return {"table": f"esri_{date_value}", **data}
-    except ValueError as ve:
-        return JSONResponse(status_code=400, content={"error": str(ve)})
-    except Exception as e:
-        return JSONResponse(status_code=500, content={"error": f"Erreur serveur: {e}"})
-        
-@router.get("/esri/{date_value}/resume")
-def get_esri_resume(date_value:str):
-    try:
-        summary = esri_report.getResumer(date_value)
-        if not summary:
-            return JSONResponse(status_code=404, content={"error": "Résumé introuvable ou table vide"})
-        
-        # Conversion sécurisée en types JSON (int / float)
-        safe_summary = {
-            "table_name": f"esri_{date_value}",
-            "nb_lignes": int(summary.get("nb_lignes") or 0),
-            "total_montant": float(summary.get("total_montant") or 0)
-        }
-        
-        return safe_summary
-    except ValueError as ve:
-        return JSONResponse(status_code=400, content={"error": str(ve)})
-    except Exception as e:
-        return JSONResponse(status_code=500, content={"error": f"Erreur serveur: {e}"})
+
+
+
 
 ##"""""""""""""DAT REPORT""""""""""""""##
 @router.get("/dat/liste_dat")
@@ -249,7 +245,6 @@ def get_dat_table(table_name: str):
     except Exception as e:
         return JSONResponse(status_code=500, content={"error": f"Erreur serveur: {e}"})
 
-#returner le resumer
 
 @router.get("/dat/{table_name}/resume")
 def get_dat_resume(table_name: str):
@@ -293,6 +288,12 @@ def get_graphe_dat(
     except Exception as e:
         return JSONResponse(status_code=500, content={"error": f"Erreur serveur: {e}"})
 
+
+
+
+
+
+
 ##"""""""""""HISTORY INSERT""""""""""##
  
 @router.get("/history/liste")
@@ -311,6 +312,13 @@ def liste_history():
         return JSONResponse(status_code=400, content={"error": str(ve)})
     except Exception as e:
         return JSONResponse(status_code=500, content={"error": f"Erreur serveur: {e}"})
+
+
+
+
+
+
+
 
 
 #""""""""""""""""""""""DAV REPORT""""""""""""""""""##
