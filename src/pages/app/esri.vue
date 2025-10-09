@@ -1,5 +1,5 @@
 <template>
-  <v-container class="esri-container">
+  <v-container class="esri-container"  fluid>
     <!-- En-tête : Sélection période -->
     <v-row class="mb-4">
       <v-col cols="12" md="3">
@@ -20,14 +20,7 @@
         />
       </v-col>
 
-      <v-col cols="12" md="3">
-        <v-text-field
-          v-model="label"
-          label="Label (ex: 202505)"
-          outlined
-          dense
-        />
-      </v-col>
+  
 
       <v-col cols="12" md="3" class="d-flex align-center">
         <v-btn
@@ -78,7 +71,6 @@ import TablesEsri from "@/components/esri/TableauEsri.vue"
 
 const dateDebut = ref("")
 const dateFin = ref("")
-const label = ref("")
 const loading = ref(false)
 const exporting = ref(false)
 const status = ref(null)
@@ -88,7 +80,7 @@ const rows = ref([])
 const tableEsriRef = ref(null)
 
 const fetchEsriData = async () => {
-  if (!dateDebut.value || !dateFin.value || !label.value) {
+  if (!dateDebut.value || !dateFin.value) {
     status.value = "error"
     message.value = "Veuillez remplir toutes les informations."
     return
@@ -104,7 +96,7 @@ const fetchEsriData = async () => {
       null,
       {
         params: {
-          label: label.value,
+          
           date_debut: dateDebut.value,
           date_fin: dateFin.value,
         },

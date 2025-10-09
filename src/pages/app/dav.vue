@@ -1,5 +1,5 @@
 <template>
-  <v-container class="dat-container">
+  <v-container class="dat-container" fluid>
     <!-- Sélecteur de table -->
     <v-row class="mb-4">
       <v-col cols="12" md="6">

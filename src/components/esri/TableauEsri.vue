@@ -1,42 +1,47 @@
 <template>
-  <div style="max-height: 600px; overflow-y: auto;">
-    <v-data-table
-      :headers="headers"
-      :items="rows"
-      :items-per-page="itemsPerPage"
-      :page.sync="page"
-      class="elevation-1"
-      :search="search"
-      dense
-    >
-      <!-- Barre de recherche -->
-      <template v-slot:top>
-        <v-text-field
-          v-model="search"
-          label="Rechercher"
-          class="mx-4"
-          clearable
-          dense
-        />
-      </template>
+  <div class="table-wrapper">
+    <!-- 🔍 Barre de recherche fixée en haut -->
+    <div class="table-search-bar">
+      <v-text-field
+        v-model="search"
+        label="Rechercher"
+        clearable
+        dense
+        hide-details
+      />
+    </div>
 
-      <!-- Pagination -->
-      <template v-slot:footer>
-        <v-pagination
-          v-model="page"
-          :length="pageCount"
-          circle
-          class="my-2"
-        />
-      </template>
+    <!-- 📊 Tableau scrollable avec headers fixes -->
+    <div class="table-scroll">
+      <v-data-table
+        :headers="headers"
+        :items="rows"
+        :items-per-page="itemsPerPage"
+        :page.sync="page"
+        class="elevation-1 fixed-header-table"
+        :search="search"
+        dense
+        fixed-header
+        height="500px"
+      >
+        <!-- Pagination -->
+        <template v-slot:footer>
+          <v-pagination
+            v-model="page"
+            :length="pageCount"
+            circle
+            class="my-2"
+          />
+        </template>
 
-      <!-- Message si vide -->
-      <template v-slot:no-data>
-        <v-alert type="info" border="left" color="blue" dark>
-          Aucune donnée trouvée
-        </v-alert>
-      </template>
-    </v-data-table>
+        <!-- Message si vide -->
+        <template v-slot:no-data>
+          <v-alert type="info" border="left" color="blue" dark>
+            Aucune donnée trouvée
+          </v-alert>
+        </template>
+      </v-data-table>
+    </div>
   </div>
 </template>
 
@@ -74,3 +79,42 @@ watch(
   () => (page.value = 1)
 )
 </script>
+
+<style scoped>
+.table-wrapper {
+  display: flex;
+  flex-direction: column;
+  height: 600px;
+  width: 100%;
+  background-color: transparent;
+}
+
+/* 🔍 Barre de recherche fixée */
+.table-search-bar {
+  position: sticky;
+  top: 0;
+  z-index: 20;
+  background-color: #121212; /* couleur fond selon ton thème */
+  padding: 8px;
+  border-bottom: 1px solid #333;
+}
+
+/* 📊 Tableau avec zone scrollable */
+.table-scroll {
+  flex: 1;
+  overflow-y: auto;
+}
+
+/* 📌 Rendre l'en-tête du tableau fixe */
+.fixed-header-table ::v-deep(.v-data-table__wrapper) {
+  overflow-y: auto;
+  max-height: 500px;
+}
+
+.fixed-header-table ::v-deep(th) {
+  position: sticky;
+  top: 0;
+  background-color: #1e1e1e; /* couleur header */
+  z-index: 15;
+}
+</style>

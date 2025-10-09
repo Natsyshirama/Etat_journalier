@@ -108,7 +108,7 @@ def create_esri_precompute( date_debut: str = Query(...), date_fin: str = Query(
         if result_df.empty:
             return JSONResponse(
                 content={
-                    "status": "warning",
+                    "status": "error",
                     "message": f"Aucune donnée trouvée entre {date_debut} et {date_fin}",
                    
                 },
@@ -122,7 +122,7 @@ def create_esri_precompute( date_debut: str = Query(...), date_fin: str = Query(
         return JSONResponse(
             content={
                 "status": "success",
-                "message": f"Données ESRI pré-calculées entre {date_debut} et {date_fin} ✅",
+                "message": f"Données ESRI  entre {date_debut} et {date_fin} ",
                 
                 "columns": columns,
                 "rows": data_json,
