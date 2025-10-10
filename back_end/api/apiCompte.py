@@ -12,7 +12,6 @@ from controller.Esri import Esri
 from controller.OperationEsri import OperationEsri
 from controller.DavReport import DavReport
 from controller.ChangeMande import ChangeMande
-from controller.EsriReport import EsriReport
 from controller.DavUnique import DavUnique
 
 router = APIRouter()
@@ -25,7 +24,6 @@ esri = Esri()
 operation_esri = OperationEsri()
 dav_report = DavReport()
 change_mande = ChangeMande()
-esri_report = EsriReport()
 
 @router.post("/dat/create_dat_precompute/{name}")
 def create_dat_precompute(name: str):
@@ -139,29 +137,33 @@ def create_esri_precompute( date_debut: str = Query(...), date_fin: str = Query(
 
 
 
-
-
-
-
-
 ###########INITIALISATION CHANGE#############
-@router.post("/change/generate_tables")
-def create_change_precompute(value_date: str):
+@router.post("/change/generate_report_optimized")
+async def create_change_report_optimized(date_debut: str, date_fin: str):
     try:
-        result = change_mande.generate_tables_report(value_date)
-       
-        if result and result.get("status") == "success":
-            return JSONResponse(
-                status_code=200,
-                content=result
-            )
-        else:
-            raise Exception("Erreur lors de la création des tables Change Mande")
         
+        result = change_mande.generate_tables_report(date_debut, date_fin)
+
+        if not result:
+            raise Exception("Aucune donnée disponible pour cette période.")
+
+        # Utiliser orient='records' pour une sérialisation plus rapide
+        response_data = {
+            "status": "success",
+            "periode": {"date_debut": date_debut, "date_fin": date_fin},
+            "etat": result["etat"].to_dict(orient="records"),
+            "allocation": result["allocation"].to_dict(orient="records"),
+            "synthese": result["synthese"].to_dict(orient="records"),
+        }
+
+        return JSONResponse(status_code=200, content=response_data)
+
     except Exception as e:
-        return JSONResponse(content={"status": "error", "message": str(e)}, status_code=500)
-
-
+        return JSONResponse(
+            status_code=500,
+            content={"status": "error", "message": str(e)}
+        )
+        
 #creation table et insertion de table arrangement_customer
 @router.post("/dav/create_table_arrCust")
 def create_table_arrCust():

@@ -10,12 +10,12 @@ class ChangeMande:
     def __init__(self):
         self.db = DB()
         self.engine = self.db.engine
-    
-    def create_temp_table_brute(self, value_date: str):
-        conn = None
+        
+    def create_unified_temp_table(self, date_debut: str, date_fin: str):
+        """Crée une seule table temporaire unifiée"""
         try:
-            query_brutes= f"""
-                CREATE TEMPORARY TABLE IF NOT EXISTS temp_change_brutes AS
+            query = """
+                CREATE TEMPORARY TABLE IF NOT EXISTS temp_change_unified AS
                 SELECT
                     LEFT(tel.id, LENGTH(tel.id) - 1) AS `CODE OPERATIONS`,
                     DATE_FORMAT(tel.value_date_1, '%Y/%m/%d') AS `Date Operation`,
@@ -39,150 +39,65 @@ class ChangeMande:
                     tel.amount_local_1 AS `MONTANT C,V MGA`,
                     'BB' AS `MODE DE PAIEMENT`,
                     tel.narrative_1 AS `OBSERVATIONS`,
-                    tel.co_code as Agence
+                    tel.co_code as Agence,
+                    tel.transaction_code
                 FROM
                     teller_mcbc_his_full AS tel
                 WHERE
                     transaction_code IN (35, 38, 23, 26)
-                    AND tel.value_date_1 LIKE '{value_date}%';
-                    """
-                    
-            conn = self.db.connect()
-            conn.execute(text(query_brutes))
-            conn.commit()
-            print("[INFO] Table temporaire temp_change_brutes créée avec succès ✅")
-            return True
-        except Exception as e:
-            print(f"[ERREUR] create_temp_table_brute : {e}")
-            return False
-        finally:
-            if conn:
-                try:
-                    conn.close()
-                except Exception as close_err:
-                    print(f"[ERREUR] Fermeture connexion  : {close_err}")
-                    
-    def create_temp_table_26(self, value_date: str):
-        conn =  None
-        try:
-            query_brutes_26 = f"""
-                CREATE TEMPORARY TABLE IF NOT EXISTS temp_change_26 AS 
-                SELECT
-                    LEFT(tel.id, LENGTH(tel.id) - 1) AS `CODE OPERATIONS`,
-                    DATE_FORMAT(tel.value_date_1, '%Y/%m/%d') AS `Date Operation`,
-                    tel.narrative_1 AS `Nom Beneficiaire`,
-                    tel.narrative_2 AS `Adresse Beneficiaire`,
-                    CASE
-                        WHEN transaction_code = 26 THEN tel.narrative_1
-                        ELSE NULL
-                    END AS `N°REF TITRE DE TRANSPORT`,
-                    CASE
-                        WHEN transaction_code = 26 THEN ''
-                        ELSE NULL
-                    END AS `DESTINATION PRINCIPALE`,
-                    CASE
-                        WHEN transaction_code = 26 THEN 'FOR'
-                        ELSE NULL
-                    END AS `NATURE VOYAGE`,
-                    tel.currency_1 AS `CODE DEVISE`,
-                    tel.deal_rate AS `COURS`,
-                    tel.amount_fcy_1 AS `MONTANT OPERATION DEVISE`,
-                    tel.amount_local_1 AS `MONTANT C,V MGA`,
-                    'BB' AS `MODE DE PAIEMENT`,
-                    tel.narrative_1 AS `OBSERVATIONS`
-                FROM
-                    teller_mcbc_his_full AS tel
-                WHERE
-                    transaction_code = 26
-                    AND tel.value_date_1 LIKE '{value_date}%';
-                """
-            conn = self.db.connect()
-            conn.execute(text(query_brutes_26))
-            conn.commit()
-            print("[INFO] Table temporaire temp_change_26 créée avec succès ✅")
-            return True
-        except Exception as e:
-            print(f"[ERREUR] create_temp_table_26 : {e}")
-            return False
-        finally:
-            if conn:
-                try:
-                    conn.close()
-                except Exception as close_err:
-                    print(f"[ERREUR] Fermeture connexion  : {close_err}")  
-                    
-    def get_data_brute(self):
-        conn = None
-        try:
-            conn = self.db.connect()
-            query = "SELECT * FROM temp_change_brutes; "
-            df_brute = pd.read_sql(query, conn)
-            return df_brute
-        except Exception as e:
-            print(f"[ERREUR] get_data_brute : {e}")
-            return pd.DataFrame()
-        finally:
-            if conn:
-                try:
-                    conn.close()
-                except Exception as close_err:
-                    print(f"[ERREUR] Fermeture connexion (get_data_brute) : {close_err}")
-    
-    def get_data_brute_26(self):
-        conn = None
-        try:
-            conn = self.db.connect()
-            query = "SELECT * FROM temp_change_26; "
-            df_brute_26 = pd.read_sql(query, conn)
-            return df_brute_26
-        except Exception as e:
-            print(f"[ERREUR] get_data_brute_26 : {e}")
-            return pd.DataFrame()
-        finally:
-            if conn:
-                try:
-                    conn.close()
-                except Exception as close_err:
-                    print(f"[ERREUR] Fermeture connexion (get_data_brute_26) : {close_err}")
-                    
-    
-    def query_synthese(self, value_date: str):
-        conn = None
-        try:
-            conn = self.db.connect()
+                    AND tel.value_date_1 BETWEEN :date_debut AND :date_fin
+            """
             
-            query = text("""
-            SELECT
-                SUM(CASE WHEN tel.currency_1 = 'EUR' AND tel.transaction_code = 23 THEN tel.amount_fcy_1 ELSE 0 END) AS `ACHAT/MONTANT EUR`,
-                SUM(CASE WHEN tel.currency_1 = 'EUR' AND tel.transaction_code = 23 THEN tel.amount_local_1 ELSE 0 END) AS `ACHAT/MONTANT MGA EUR`,
-                SUM(CASE WHEN tel.currency_1 = 'USD' AND tel.transaction_code = 23 THEN tel.amount_fcy_1 ELSE 0 END) AS `ACHAT/MONTANT USD`,
-                SUM(CASE WHEN tel.currency_1 = 'USD' AND tel.transaction_code = 23 THEN tel.amount_local_1 ELSE 0 END) AS `ACHAT/MONTANT MGA USD`,
-                SUM(CASE WHEN tel.currency_1 = 'USD' AND tel.transaction_code = 26 THEN tel.amount_fcy_1 ELSE 0 END) AS `VENTE/MONTANT USD`,
-                SUM(CASE WHEN tel.currency_1 = 'USD' AND tel.transaction_code = 26 THEN tel.amount_local_1 ELSE 0 END) AS `VENTE/MONTANT MGA USD`,
-                SUM(CASE WHEN tel.currency_1 = 'EUR' AND tel.transaction_code = 26 THEN tel.amount_fcy_1 ELSE 0 END) AS `VENTE/MONTANT EUR`,
-                SUM(CASE WHEN tel.currency_1 = 'EUR' AND tel.transaction_code = 26 THEN tel.amount_local_1 ELSE 0 END) AS `VENTE/MONTANT MGA EUR`
-            FROM
-                teller_mcbc_his_full AS tel
-            WHERE
-                tel.transaction_code IN (23, 26)
-                AND tel.value_date_1 LIKE :value_date
-            """)
-
-            df_synthese = pd.read_sql(query, conn, params={"value_date": f"{value_date}%"})
+            with self.db.connect() as conn:
+                conn.execute(text(query), {"date_debut": date_debut, "date_fin": date_fin})
+                conn.commit()
             
-            print(f"[INFO] Synthèse des opérations de change récupérée avec succès pour la date {value_date} ✅")
-            return df_synthese
-
+            print("[INFO] Table temporaire unifiée créée avec succès ✅")
+            return True
+            
         except Exception as e:
-            print(f"[ERREUR] query_synthese : {e}")
-            return pd.DataFrame()
-        finally:
-            if conn:
-                try:
-                    conn.close()
-                except Exception as close_err:
-                    print(f"[ERREUR] Fermeture connexion (query_synthese) : {close_err}")
-
+            print(f"[ERREUR] create_unified_temp_table : {e}")
+            return False
+       
+    def get_all_data(self, date_debut: str, date_fin: str):
+        """Récupère toutes les données en une seule connexion"""
+        try:
+            with self.db.connect() as conn:
+                # Données brutes
+                df_brutes = pd.read_sql(
+                    "SELECT * FROM temp_change_unified WHERE transaction_code IN (35, 38, 23, 26)", 
+                    conn
+                )
+                
+                # Données code 26
+                df_brutes_26 = pd.read_sql(
+                    "SELECT * FROM temp_change_unified WHERE transaction_code = 26", 
+                    conn
+                )
+                query = text("""
+                    SELECT
+                    SUM(CASE WHEN currency_1 = 'EUR' AND transaction_code = 23 THEN amount_fcy_1 ELSE 0 END) AS `ACHAT/MONTANT EUR`,
+                    SUM(CASE WHEN currency_1 = 'EUR' AND transaction_code = 23 THEN amount_local_1 ELSE 0 END) AS `ACHAT/MONTANT MGA EUR`,
+                    SUM(CASE WHEN currency_1 = 'USD' AND transaction_code = 23 THEN amount_fcy_1 ELSE 0 END) AS `ACHAT/MONTANT USD`,
+                    SUM(CASE WHEN currency_1 = 'USD' AND transaction_code = 23 THEN amount_local_1 ELSE 0 END) AS `ACHAT/MONTANT MGA USD`,
+                    SUM(CASE WHEN currency_1 = 'USD' AND transaction_code = 26 THEN amount_fcy_1 ELSE 0 END) AS `VENTE/MONTANT USD`,
+                    SUM(CASE WHEN currency_1 = 'USD' AND transaction_code = 26 THEN amount_local_1 ELSE 0 END) AS `VENTE/MONTANT MGA USD`,
+                    SUM(CASE WHEN currency_1 = 'EUR' AND transaction_code = 26 THEN amount_fcy_1 ELSE 0 END) AS `VENTE/MONTANT EUR`,
+                    SUM(CASE WHEN currency_1 = 'EUR' AND transaction_code = 26 THEN amount_local_1 ELSE 0 END) AS `VENTE/MONTANT MGA EUR`
+                FROM teller_mcbc_his_full
+                WHERE transaction_code IN (23, 26)
+                AND value_date_1 BETWEEN :date_debut AND :date_fin
+                             """)
+                
+                df_synthese_raw = pd.read_sql(query, conn, params={"date_debut": date_debut, "date_fin": date_fin})
+                
+                return df_brutes, df_brutes_26, df_synthese_raw
+                
+        except Exception as e:
+            print(f"[ERREUR] get_all_data_single_connection : {e}")
+            return pd.DataFrame(), pd.DataFrame(), pd.DataFrame()
+       
+    
     def process_synthese_data(self, df_synthese: str):
         try:
             if df_synthese.empty:
@@ -208,95 +123,34 @@ class ChangeMande:
             print(f"[ERREUR] process_synthese_data: {e}")
             return pd.DataFrame()
     
-    def create_table_from_dataframe(self, df, table_name, success_message):
-        
-        try:
-            
-            # Créer la table dans la base de données
-            df.to_sql(
-                name=table_name,
-                con=self.engine,
-                if_exists='replace',  # Remplace si la table existe déjà
-                index=False
-            )
-            print(f"[SUCCÈS] {success_message}: {table_name} ({len(df)} enregistrements)")
-            return True
-            
-        except Exception as e:
-            print(f"[ERREUR] _create_table_from_dataframe pour {table_name}: {e}")
-            return False
     
-    def clean_temp_tables(self):
-        conn = None
+    def generate_tables_report(self, date_debut: str, date_fin: str):
+        """Version optimisée de la génération de rapport"""
         try:
-            conn = self.db.connect()
-            
-            conn.execute("DROP TEMPORARY TABLE IF EXISTS temp_change_brutes;")
-            conn.execute("DROP TEMPORARY TABLE IF EXISTS temp_change_brutes_26;")
-            print("[SUCCÈS] Tables temporaires nettoyées")
-            
-            return True
-        except Exception as e:
-            print(f"[ERREUR] cleanup_temp_tables: {e}")
-            return False
-        finally:
-            if conn:
-                try:
-                    conn.close()
-                except Exception as close_err:
-                    print(f"[ERREUR] Fermeture connexion (cleanup_temp_tables) : {close_err}")
-        
-    def generate_tables_report(self, value_date):
-        
-        try:
-            # Créer les tables temporaires pour les données brutes
-            if not self.create_temp_table_brute(value_date):
-                return False
-            if not self.create_temp_table_26(value_date):
+            # Créer la table temporaire unifiée
+            if not self.create_unified_temp_table(date_debut, date_fin):
                 return False
             
-            # Récupérer les données
-            df_brutes = self.get_data_brute()
-            df_brutes_26 = self.get_data_brute_26()
-            df_synthese_raw = self.query_synthese(value_date)
-            resultat_synthese = self.process_synthese_data(df_synthese_raw)
+            # Récupérer toutes les données
+            df_brutes, df_brutes_26, df_synthese_raw = self.get_all_data(date_debut, date_fin)
             
-            # Vérifier si nous avons des données
-            if df_brutes.empty and df_brutes_26.empty and resultat_synthese.empty:
+            if df_brutes.empty and df_brutes_26.empty:
                 print("[ATTENTION] Aucune donnée à traiter")
                 return False
             
-            # Noms des tables à créer
-            table_etat = f"ETAT_{value_date}"
-            table_synthese = f"Synthese_{value_date}"
-            table_allocation = f"Allocation_devise_{value_date}"
+            # Traiter la synthèse
+            resultat_synthese = self.process_synthese_data(df_synthese_raw)
             
-            # Créer la table ETAT
-            if not df_brutes.empty:
-                self.create_table_from_dataframe(df_brutes, table_etat, "Table ETAT créée avec succès")
-            
-            # Créer la table Synthèse
-            if not resultat_synthese.empty:
-                self.create_table_from_dataframe(resultat_synthese, table_synthese, "Table Synthèse créée avec succès")
-            
-            # Créer la table Allocation_devise
-            if not df_brutes_26.empty:
-                self.create_table_from_dataframe(df_brutes_26, table_allocation, "Table Allocation_devise créée avec succès")
-            
-            print(f"[SUCCÈS] Tables créées: {table_etat}, {table_synthese}, {table_allocation}")
             return {
                 "status": "success",
-                "table_etat": table_etat,
-                "table_synthese": table_synthese,
-                "table_allocation": table_allocation
+                "etat": df_brutes,
+                "allocation": df_brutes_26,
+                "synthese": resultat_synthese
             }
             
         except Exception as e:
-            print(f"[ERREUR] generate_tables_report: {e}")
+            print(f"[ERREUR] generate_tables_report_optimized: {e}")
             return False
-        
-        
-
         
         
     
