@@ -100,6 +100,10 @@ def initialize(name: str):
 @router.post("/esri/create_esri_precompute")
 def create_esri_precompute( date_debut: str = Query(...), date_fin: str = Query(...)):
     try:
+        limit = db_get.getHistoryDate()
+        if limit and (date_debut < limit or date_fin < limit):
+            raise Exception(f"Les données avant le {limit} ont été archivées et ne sont plus accessibles.")
+       
         # --- Exécuter le traitement ESRI ---
         result_df,columns = operation_esri.process_esri_data_fast(date_debut, date_fin)
 
@@ -139,14 +143,15 @@ def create_esri_precompute( date_debut: str = Query(...), date_fin: str = Query(
 
 ###########INITIALISATION CHANGE#############
 @router.post("/change/generate_report_optimized")
-async def create_change_report_optimized(date_debut: str, date_fin: str):
+def create_change_report_optimized(date_debut: str, date_fin: str):
     try:
-        
+        limit = db_get.getHistoryDate()
         result = change_mande.generate_tables_report(date_debut, date_fin)
-
+        if limit and (date_debut < limit or date_fin < limit):
+            raise Exception(f"Les données avant le {limit} ont été archivées et ne sont plus accessibles.")
         if not result:
             raise Exception("Aucune donnée disponible pour cette période.")
-
+        
         # Utiliser orient='records' pour une sérialisation plus rapide
         response_data = {
             "status": "success",
@@ -163,6 +168,7 @@ async def create_change_report_optimized(date_debut: str, date_fin: str):
             status_code=500,
             content={"status": "error", "message": str(e)}
         )
+        
         
 #creation table et insertion de table arrangement_customer
 @router.post("/dav/create_table_arrCust")

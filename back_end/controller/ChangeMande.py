@@ -49,6 +49,10 @@ class ChangeMande:
             """
             
             with self.db.connect() as conn:
+                drop_query = "DROP TEMPORARY TABLE IF EXISTS temp_change_unified"
+
+                conn.execute(text(drop_query))
+
                 conn.execute(text(query), {"date_debut": date_debut, "date_fin": date_fin})
                 conn.commit()
             
@@ -65,15 +69,15 @@ class ChangeMande:
             with self.db.connect() as conn:
                 # Données brutes
                 df_brutes = pd.read_sql(
-                    "SELECT * FROM temp_change_unified WHERE transaction_code IN (35, 38, 23, 26)", 
+                    "SELECT * FROM temp_change_unified ", 
                     conn
                 )
                 
                 # Données code 26
-                df_brutes_26 = pd.read_sql(
-                    "SELECT * FROM temp_change_unified WHERE transaction_code = 26", 
-                    conn
-                )
+                df_brutes_26 =pd.read_sql(
+                    "SELECT * FROM temp_change_unified where transaction_code = 26", 
+                    conn)
+                
                 query = text("""
                     SELECT
                     SUM(CASE WHEN currency_1 = 'EUR' AND transaction_code = 23 THEN amount_fcy_1 ELSE 0 END) AS `ACHAT/MONTANT EUR`,

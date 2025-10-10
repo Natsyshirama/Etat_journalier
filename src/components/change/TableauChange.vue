@@ -1,5 +1,6 @@
 <template>
   <div class="table-wrapper">
+    <!-- 🔍 Barre de recherche -->
     <div class="table-search-bar">
       <v-text-field
         v-model="search"
@@ -7,21 +8,24 @@
         clearable
         dense
         hide-details
+        class="mx-4 mb-2"
       />
     </div>
 
+    <!-- 📊 Tableau scrollable -->
     <div class="table-scroll">
       <v-data-table
         :headers="headers"
         :items="rows"
         :items-per-page="itemsPerPage"
         :page.sync="page"
-        class="elevation-1 fixed-header-table"
         :search="search"
+        class="elevation-1 fixed-header-table"
         dense
         fixed-header
         height="500px"
       >
+        <!-- 📄 Pagination -->
         <template v-slot:footer>
           <v-pagination
             v-model="page"
@@ -31,6 +35,7 @@
           />
         </template>
 
+        <!-- 🛈 Aucune donnée -->
         <template v-slot:no-data>
           <v-alert type="info" border="left" color="blue" dark>
             Aucune donnée trouvée
@@ -70,6 +75,7 @@ const pageCount = computed(() =>
   Math.ceil(props.rows.length / itemsPerPage.value)
 )
 
+// 🔁 Reset la pagination quand les données changent
 watch(
   () => props.rows,
   () => (page.value = 1)
@@ -90,18 +96,18 @@ watch(
   position: sticky;
   top: 0;
   z-index: 20;
-  background-color: #121212; /* couleur fond selon ton thème */
+  background-color: #121212; /* couleur du fond selon ton thème */
   padding: 8px;
   border-bottom: 1px solid #333;
 }
 
-/* 📊 Tableau avec zone scrollable */
+/* 📊 Tableau avec scroll interne */
 .table-scroll {
   flex: 1;
   overflow-y: auto;
 }
 
-/* 📌 Rendre l'en-tête du tableau fixe */
+/* 📌 En-tête fixe du tableau */
 .fixed-header-table ::v-deep(.v-data-table__wrapper) {
   overflow-y: auto;
   max-height: 500px;
@@ -110,7 +116,7 @@ watch(
 .fixed-header-table ::v-deep(th) {
   position: sticky;
   top: 0;
-  background-color: #1e1e1e; /* couleur header */
+  background-color: #1e1e1e; /* couleur du header */
   z-index: 15;
 }
 </style>
