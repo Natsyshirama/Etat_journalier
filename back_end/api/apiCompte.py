@@ -101,8 +101,8 @@ def initialize(name: str):
 def create_esri_precompute( date_debut: str = Query(...), date_fin: str = Query(...)):
     try:
         limit = db_get.getHistoryDate()
-        if limit and (date_debut < limit or date_fin < limit):
-            raise Exception(f"Les données avant le {limit} ont été archivées et ne sont plus accessibles.")
+        if limit and (date_debut > limit or date_fin > limit):
+            raise Exception(f"Les données apres le {limit} ne sont pas encore disponible.")
        
         # --- Exécuter le traitement ESRI ---
         result_df,columns = operation_esri.process_esri_data_fast(date_debut, date_fin)
@@ -147,8 +147,8 @@ def create_change_report_optimized(date_debut: str, date_fin: str):
     try:
         limit = db_get.getHistoryDate()
         result = change_mande.generate_tables_report(date_debut, date_fin)
-        if limit and (date_debut < limit or date_fin < limit):
-            raise Exception(f"Les données avant le {limit} ont été archivées et ne sont plus accessibles.")
+        if limit and (date_debut > limit or date_fin > limit):
+            raise Exception(f"Les données apres le {limit} ne sont pas encore disponible.")
         if not result:
             raise Exception("Aucune donnée disponible pour cette période.")
         
@@ -173,9 +173,7 @@ def create_change_report_optimized(date_debut: str, date_fin: str):
 #creation table et insertion de table arrangement_customer
 @router.post("/dav/create_table_arrCust")
 def create_table_arrCust():
-    """
-    Crée une table arrangement_customer
-    """
+    
     try:
         result = dav_unique.create_table_arrCust()
         
