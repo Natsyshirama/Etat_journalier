@@ -32,14 +32,7 @@
           Charger les données
         </v-btn>
         
-        <v-btn
-          color="success"
-          @click="exportToExcel"
-          :disabled="!rows.length"
-          :loading="exporting"
-        >
-          Exporter Excel
-        </v-btn>
+       
       </v-col>
     </v-row>
 
@@ -62,11 +55,10 @@
       ref="tableEsriRef"
     />
   </v-container>
-</template>
-<script setup>
-import { ref } from "vue"
+</template><script setup>
+import { ref, onMounted, onUnmounted } from "vue"
 import axios from "axios"
-import * as XLSX from "xlsx" // Installation requise: npm install xlsx
+import * as XLSX from "xlsx"
 import TablesEsri from "@/components/esri/TableauEsri.vue"
 
 const dateDebut = ref("")
@@ -96,7 +88,6 @@ const fetchEsriData = async () => {
       null,
       {
         params: {
-          
           date_debut: dateDebut.value,
           date_fin: dateFin.value,
         },
@@ -163,6 +154,21 @@ const exportToExcel = () => {
     exporting.value = false
   }
 }
+
+// ✅ CORRECTION : Déplacer ces fonctions en dehors de exportToExcel
+const handleExportEvent = () => {
+  exportToExcel()
+}
+
+// Écouter l'événement
+onMounted(() => {
+  window.addEventListener('export-esri-data', handleExportEvent)
+})
+
+// Nettoyer l'événement
+onUnmounted(() => {
+  window.removeEventListener('export-esri-data', handleExportEvent)
+})
 </script>
 
 <style scoped>

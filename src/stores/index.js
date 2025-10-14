@@ -62,3 +62,10 @@ export const usePopupStore = defineStore('popup', () => {
 
   }
 })
+export const useExportStore = defineStore('export', {
+  actions: {
+    triggerEsriExport() {
+      
+    }
+  }
+})

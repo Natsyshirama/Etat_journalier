@@ -30,14 +30,7 @@
           Charger les données
         </v-btn>
 
-        <v-btn
-          color="success"
-          @click="exportToExcel"
-          :disabled="!hasData"
-          :loading="exporting"
-        >
-          Exporter Excel
-        </v-btn>
+        
       </v-col>
     </v-row>
 
@@ -92,7 +85,7 @@
 </template>
 
 <script setup>
-import { ref, computed } from "vue"
+import { ref, computed,onMounted, onUnmounted } from "vue"
 import axios from "axios"
 import * as XLSX from "xlsx"
 import TableauChange from "@/components/change/TableauChange.vue"
@@ -212,6 +205,17 @@ const exportToExcel = () => {
     exporting.value = false
   }
 }
+const handleExportEvent = () => {
+  exportToExcel()
+}
+
+onMounted(() => {
+  window.addEventListener('export-change-data', handleExportEvent)
+})
+
+onUnmounted(() => {
+  window.removeEventListener('export-change-data', handleExportEvent)
+})
 </script>
 
 <style scoped>

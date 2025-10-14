@@ -1,26 +1,23 @@
 <template>
-  <v-toolbar color=" " class="bg-transparent" title="Encours des crédits">
+  <v-toolbar color=" " class="bg-transparent" :title="toolbarTitle">
     <!-- Badge date -->
-
-      <div class="flex flex-row justify-end items-center space-x-4">
-        <h3 class="mr-5 text-xl">Date d'arrêt</h3>
-
-        <v-menu
-          v-model="menu"
-          close-on-content-click
-          offset-y
-          max-width="200"
-          min-width="200"
-        >
-          <template #activator="{ props }">
-            <v-btn v-bind="props" prepend-icon="mdi-calendar-range" variant="outlined">
-              <template #prepend>
-                <v-icon color="success" />
-              </template>
-              <span class="text-2xl">{{ selectedDate }}</span>
-            </v-btn>
-          </template>
-
+    <div class="flex flex-row justify-end items-center space-x-4">
+      <h3 class="mr-5 text-xl">Date d'arrêt</h3>
+      <v-menu
+        v-model="menu"
+        close-on-content-click
+        offset-y
+        max-width="200"
+        min-width="200"
+      >
+        <template #activator="{ props }">
+          <v-btn v-bind="props" prepend-icon="mdi-calendar-range" variant="outlined">
+            <template #prepend>
+              <v-icon color="success" />
+            </template>
+            <span class="text-2xl">{{ selectedDate }}</span>
+          </v-btn>
+        </template>
         <v-list style="max-height: 200px; overflow-y: auto;">
           <v-list-item
             v-for="date in historyDates"
@@ -28,50 +25,47 @@
             @click="() => selectDate(date.label)"
             role="button"
           >
-
-          <div class="flex" :title="date.stat_of!='init'? 'Base non initialisé':''">
-            
-            <v-icon v-if="date.stat_of !== 'init'"   class=" mr-2 text-red-700">mdi-database-alert</v-icon> 
-            <v-icon v-else color="success" class=" mr-2">mdi-database-check</v-icon> 
-            <v-list-item-title>{{ date.label }}</v-list-item-title>
-          </div>
+            <div class="flex" :title="date.stat_of!='init'? 'Base non initialisé':''">
+              <v-icon v-if="date.stat_of !== 'init'" class=" mr-2 text-red-700">mdi-database-alert</v-icon> 
+              <v-icon v-else color="success" class=" mr-2">mdi-database-check</v-icon> 
+              <v-list-item-title>{{ date.label }}</v-list-item-title>
+            </div>
           </v-list-item>
         </v-list>
-        </v-menu>
-      </div>
-    <!-- <div class="flex items-center gap-1 green_transparent mr-2 px-5 rounded-md">
-      <v-icon icon="mdi-database" />
-      <span v-if="date_last_import_file !== ''" title="Dernière importation">
-        {{ formatDateString(date_last_import_file) }}
-      </span>
-      <span v-else>Récupération ...</span>
-    </div> -->
+      </v-menu>
+    </div>
 
-    <!-- ✅ Bouton menu d'exportation -->
-    <v-menu offset-y>
+    <!-- ✅ Bouton exportation conditionnel -->
+    <v-btn 
+      v-if="isEsriPage || isChangePage" 
+      @click="handleExport" 
+      prepend-icon="mdi-share-variant"
+      :loading="exporting"
+    >
+      <template #prepend><v-icon color="success"></v-icon></template>
+      <span class="text-md">Exporter</span>
+    </v-btn>
+
+    <v-menu v-else offset-y>
       <template v-slot:activator="{ props }">
         <v-btn v-bind="props" prepend-icon="mdi-share-variant">
           <template #prepend><v-icon color="success"></v-icon></template>
           <span class="text-md">Exporter</span>
         </v-btn>
       </template>
-
       <v-list>
-        <v-list-item @click="exportToExcel_encours" >
+        <v-list-item @click="exportToExcel_encours">
           <template #prepend><v-icon color="success">mdi-file-chart</v-icon></template>
           <v-list-item-title style="font-size: 15px;">Encours</v-list-item-title>
         </v-list-item>
-
         <v-list-item @click="exportToExcel_LIMIT_AVM">
           <template #prepend><v-icon color="success">mdi-chart-bubble</v-icon></template>
           <v-list-item-title style="font-size: 15px;">Limit AVM</v-list-item-title>
         </v-list-item>
-
         <v-list-item @click="exportToExcel_LIMIT_CAUTION">
           <template #prepend><v-icon color="success">mdi-shield-check</v-icon></template>
           <v-list-item-title style="font-size: 15px;">Limit Caution</v-list-item-title>
         </v-list-item>
-
         <v-list-item @click="exportToExcel_remboursement">
           <template #prepend><v-icon color="success">mdi-cash-refund</v-icon></template>
           <v-list-item-title style="font-size: 15px;">État Remboursement</v-list-item-title>
@@ -87,18 +81,57 @@
 </template>
 
 <script setup>
-import { ref, watch, onMounted } from 'vue'
+import { ref, watch, onMounted, computed } from 'vue'
+import { useRoute } from 'vue-router'
 import { usePopupStore } from '../stores'
 import * as XLSX from 'xlsx'
 
+const route = useRoute()
 const selectedDate = ref('Chargement en cours...')
 const menu = ref(false)
 const popupStore = usePopupStore()
+const exporting = ref(false)
 
-const historyDates  = ref([])
+const historyDates = ref([])
 
-// 🗓️ Importation de la date
-const date_last_import_file = ref('')
+const isEsriPage = computed(() => route.path === '/app/esri')
+const isChangePage = computed(() => route.path === '/app/change')
+
+const toolbarTitle = computed(() => {
+  if (isEsriPage.value) return 'ESRI'
+  if (isChangePage.value) return 'CHANGE'
+  return 'Encours des crédits'
+})
+
+const handleExport = () => {
+  if (isEsriPage.value) {
+    exportEsriData()
+  } else if (isChangePage.value) {
+    exportChangeData()
+  }
+}
+
+const exportEsriData = async () => {
+  exporting.value = true
+  try {
+    window.dispatchEvent(new CustomEvent('export-esri-data'))
+  } catch (error) {
+    console.error('Erreur export ESRI:', error)
+  } finally {
+    exporting.value = false
+  }
+}
+
+const exportChangeData = async () => {
+  exporting.value = true
+  try {
+    window.dispatchEvent(new CustomEvent('export-change-data'))
+  } catch (error) {
+    console.error('Erreur export change:', error)
+  } finally {
+    exporting.value = false
+  }
+}
 
 const get_last_import_file = async () => {
   try {
