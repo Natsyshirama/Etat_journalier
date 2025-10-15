@@ -15,17 +15,17 @@ import io
  
  
  
-router = APIRouter()
+router2 = APIRouter()
 credits = Credits()
 credit_outstanding_report = Credit_outstanding_report()
 
 
 
-@router.get("/credits")
+@router2.get("/credits")
 def get_credits():
     return credits.get_data() 
 
-@router.post("/upload_multiple_files")
+@router2.post("/upload_multiple_files")
 async def upload_multiple_files(
     files: List[UploadFile] = File(...),
     app: str = Form(...),
@@ -99,7 +99,7 @@ async def upload_multiple_files(
 
     return StreamingResponse(main_process(), media_type="application/json")
 
-@router.post("/create_multiple_table")
+@router2.post("/create_multiple_table")
 async def create_multiple_table(request: Request):
     """
     Endpoint pour créer plusieurs tables à partir de fichiers CSV dans un sous-dossier
@@ -165,14 +165,14 @@ async def create_multiple_table(request: Request):
         credits.insert_into_history_table(label_value=str_date, used=1,stat_of=None)
     return StreamingResponse(generate_all(), media_type="application/json")
 
-@router.get("/show_files")
+@router2.get("/show_files")
 async def show_files(app: Optional[str] = Query(None)):
     files = credits.show_files(app=app)
     return JSONResponse(content={"files": files})
 
 
 
-@router.get("/get_last_import_file")
+@router2.get("/get_last_import_file")
 async def show_files(app: Optional[str] = Query(None)):
     response = credit_outstanding_report.get_last_import_file()
     print(response)
@@ -180,7 +180,7 @@ async def show_files(app: Optional[str] = Query(None)):
 
  
 
-@router.get("/run_encours")
+@router2.get("/run_encours")
 async def run_encours(request: Request, str_date: str = Query(None)):
     # print("DATE",str_date)
     
@@ -265,7 +265,7 @@ async def run_encours(request: Request, str_date: str = Query(None)):
     
     return StreamingResponse(event_generator(), media_type="text/event-stream")
 
-@router.get("/get_capital_sums")
+@router2.get("/get_capital_sums")
 def get_capital_sums():
     try:
         data = credit_outstanding_report.get_capital_sums()
@@ -294,7 +294,7 @@ def convert_decimals(obj):
 
 
 
-@router.get("/get_encours_credits")
+@router2.get("/get_encours_credits")
 async def get_encours_credits(date: str = Query(...)):  # obligatoire (not None)
     try:
         response = credit_outstanding_report.get_encours_credit_by_date(date)
@@ -306,7 +306,7 @@ async def get_encours_credits(date: str = Query(...)):  # obligatoire (not None)
         raise HTTPException(status_code=500, detail=str(e))
     
     
-@router.get("/encours_remboursement")
+@router2.get("/encours_remboursement")
 async def encours_remboursement(date: str = Query(...)): 
     try:
         response = credit_outstanding_report.get_encours_etat_remboursement(date)
@@ -321,7 +321,7 @@ async def encours_remboursement(date: str = Query(...)):
         raise HTTPException(status_code=500, detail=str(e))
 
     
-@router.get("/encours_limit")
+@router2.get("/encours_limit")
 async def encours_limit(limit_type: str = Query(...)): 
     try:
         response = credit_outstanding_report.get_limit(limit_type)
@@ -336,7 +336,7 @@ async def encours_limit(limit_type: str = Query(...)):
         raise HTTPException(status_code=500, detail=str(e))
 
 
-@router.get("/history_insert")
+@router2.get("/history_insert")
 async def history_insert( ): 
     try:
         response = credit_outstanding_report.get_history_insert()
@@ -350,7 +350,7 @@ async def history_insert( ):
         print(f"[ERREUR route get_encours_credits] {e}")
         raise HTTPException(status_code=500, detail=str(e))
 
-@router.get("/get_local_ref")
+@router2.get("/get_local_ref")
 async def get_local_ref(date: str = Query(...)): 
     try:
         response = credit_outstanding_report.get_local_reference(date)
@@ -365,7 +365,7 @@ async def get_local_ref(date: str = Query(...)):
         raise HTTPException(status_code=500, detail=str(e))
 
 
-@router.get("/get_pa_class")
+@router2.get("/get_pa_class")
 async def get_pa_class(date: str = Query(...)): 
     try:
         response = credit_outstanding_report.get_pa_class(date)
@@ -380,4 +380,4 @@ async def get_pa_class(date: str = Query(...)):
         raise HTTPException(status_code=500, detail=str(e))
 
 
-api_router = router
+api_router2 = router2
