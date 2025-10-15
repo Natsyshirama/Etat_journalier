@@ -40,9 +40,9 @@ const rail = ref(true);
 
 const list_menu = [
   { icon: 'mdi-home-city', title: 'Crédits', to: '/app/credits' },
-  { icon: 'mdi-account', title: 'DAT', to: '/app/dav ' },
+  { icon: 'mdi-bank', title: 'DAT', to: '/app/dav ' },
   { icon: 'mdi-account', title: 'ESRI', to: '/app/esri ' },
-  { icon: 'mdi-change', title: 'CHANGE', to: '/app/change ' },
+  { icon: 'mdi-swap-horizontal', title: 'CHANGE', to: '/app/change ' },
 
   { icon: 'mdi-file-table-box-multiple-outline', title: 'Mes Fichier', to: '/app/file_manager' },
   { icon: 'mdi-map-marker-radius', title: 'Users', to: '/app/getMyloc' },

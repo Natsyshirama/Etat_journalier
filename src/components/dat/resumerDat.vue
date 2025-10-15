@@ -1,5 +1,6 @@
 <!-- src/components/dat/Resumer.vue -->
 <template>
+  Bilan
   <v-card v-if="resume" class="mb-4 pa-4" outlined>
     <v-row>
       <v-col cols="12" md="3">
