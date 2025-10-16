@@ -98,14 +98,12 @@ import axios from "axios"
 // Composants DAT
 import ResumerDat from "@/components/dat/ResumerDat.vue"
 import TableauDat from "@/components/dat/TableauDat.vue"
-import DashboardDat from "@/components/dat/DatGraphe.vue" // À créer si nécessaire
 import DatGraphe from "@/components/dat/DatGraphe.vue"
 
 // Composants DAV
 import ResumerDav from "@/components/dav/ResumerDav.vue"
 import TableauDav from "@/components/dav/TableauDav.vue"
 import DashboardDav from "@/components/dav/DavGraphe.vue" // À créer si nécessaire
-import DavGraphe from "@/components/dav/DavGraphe.vue"
 
 const history = ref([])
 const selectedTable = ref(localStorage.getItem("selectedTable") || null)
@@ -121,7 +119,6 @@ const fetchTables = async () => {
   }
 }
 
-// Sauvegarder la table sélectionnée
 watch(selectedTable, (newVal) => {
   if (newVal) {
     localStorage.setItem("selectedTable", newVal)
