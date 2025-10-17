@@ -9,11 +9,8 @@ class Operation:
         
         
     def calculeAmtCap(self, table_name: str):
-        """
-        Lit la table dat_<label> dans un DataFrame pandas,
-        calcule montant_capital pour chaque ligne,
-        puis met à jour la table MySQL avec cette colonne.
-        """
+       
+       
         conn = None
         try:
             conn = self.db.connect()

@@ -52,7 +52,12 @@ class DbGet:
             "CREATE INDEX IF NOT EXISTS idx_account_id ON account_mcbc_live_full(id(255))",
             "CREATE INDEX IF NOT EXISTS idx_account_opening_date ON account_mcbc_live_full(opening_date(255))",
             # Table em_lo_application_mcbc_live_full
-            "CREATE INDEX IF NOT EXISTS idx_em_proc_status ON em_lo_application_mcbc_live_full(proc_status(255))"
+            "CREATE INDEX IF NOT EXISTS idx_em_proc_status ON em_lo_application_mcbc_live_full(proc_status(255))",
+            
+            # Table teller_mcbc_his_full
+            "CREATE INDEX idx_teller_value_date ON teller_mcbc_his_full(value_date_1)",
+            "CREATE INDEX idx_teller_transaction_code ON teller_mcbc_his_full(transaction_code)",
+            "CREATE INDEX idx_teller_currency ON teller_mcbc_his_full(currency_1)"  
         ]
 
         conn = None
@@ -186,7 +191,7 @@ class DbGet:
 
             conn = self.db.connect()
             conn.execute(text(query))
-            conn.commit()  # important pour valider la création
+            conn.commit() 
 
             print(f"[INFO] Table {table_name} créée avec succès ✅")
             return table_name
@@ -237,7 +242,7 @@ class DbGet:
         try:
             conn = self.db.connect()
 
-            # null -> 0
+            
             query_nulls = f"""
             UPDATE {table_name}
             SET 
@@ -247,7 +252,7 @@ class DbGet:
             """
             conn.execute(text(query_nulls))
 
-            # Nettoye code_client 
+            
             query_code_client = f"""
             UPDATE {table_name}
             SET code_client = SUBSTRING_INDEX(code_client, '|', 1);
@@ -264,7 +269,7 @@ class DbGet:
                 """
             conn.execute(text(query_dedup))
 
-            # delete colone inutile
+           
             query_drop_cols = f"""
             ALTER TABLE {table_name}
             DROP COLUMN type_sysdate,

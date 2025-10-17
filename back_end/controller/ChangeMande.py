@@ -62,6 +62,12 @@ class ChangeMande:
         except Exception as e:
             print(f"[ERREUR] create_unified_temp_table : {e}")
             return False
+        finally:
+            if conn:
+                try:
+                    conn.close()
+                except Exception as close_err:
+                    print(f"[ERREUR] Fermeture connexion : {close_err}")
        
     def get_all_data(self, date_debut: str, date_fin: str):
         """Récupère toutes les données en une seule connexion"""
@@ -129,7 +135,7 @@ class ChangeMande:
     
     
     def generate_tables_report(self, date_debut: str, date_fin: str):
-        """Version optimisée de la génération de rapport"""
+       
         try:
             # Créer la table temporaire unifiée
             if not self.create_unified_temp_table(date_debut, date_fin):

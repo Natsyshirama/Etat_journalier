@@ -49,25 +49,28 @@ def create_dat_precompute(name: str):
         return JSONResponse(content={"status": "error", "message": str(e)}, status_code=500)
 
 
-@router.post("/dat/create_dav_precompute")
-def create_dav_precompute(name:str):
+
+@router.post("/dav/dav_test")
+def dav_test(name:str):
 
     try:
-        table_name = dav_unique.create_table_dav(name)
-        dav_unique.update_statusHistoryInsert(name)
-        if not table_name:
-            raise Exception("Erreur lors de la création de la table DAV")
-        operation_dav.calcule_dav(table_name)
-        dav_unique.traitement_dav(table_name)
+        dav_unique.create_temp_client()
+        dav_unique.create_index()
+        dav_unique.create_funct()
+        table_name_dav = dav_unique.create_table_dav(name)
+        table_name_epr = dav_unique.create_table_epr(name)
+        
 
         return JSONResponse(content={
                     "status": "success",
-                    "message": f"Table créée et nettoyée et calculer : {table_name} ✅",
-                    "table_name": table_name
+                    "message": f"Table créée et nettoyée et calculer : {table_name_dav} et {table_name_epr}✅",
+                    "table_name_dav": table_name_dav,
+                    "table_name_epr": table_name_epr    
         })
         
     except Exception as e:
         return JSONResponse(content={"status": "error", "message": str(e)}, status_code=500)
+    
     
 #******************* INITIALISATION DAT ET DAV***********************
 @router.post("/dat/initialise/{name}")
