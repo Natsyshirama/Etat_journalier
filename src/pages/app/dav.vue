@@ -61,7 +61,7 @@
         </div>
       </v-window-item>
 
-      <!-- Onglet DAV -->
+      
       <v-window-item>
         <div v-if="selectedTable">
           <TableauDav

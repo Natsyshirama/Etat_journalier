@@ -137,8 +137,8 @@ class EprReport:
                 group_by = x
             elif x in numeric_columns and y in numeric_columns:
                 select = f"SUM({x}) AS value_x, SUM({y}) AS value_y"
-                group_by = None  # pas de groupement
-            else:  # deux catégorielles
+                group_by = None 
+            else: 
                 select = f"{x}, {y}, COUNT(*) AS value"
                 group_by = f"{x}, {y}"
                 
