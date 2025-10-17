@@ -11,9 +11,92 @@ class DavUnique:
         self.db = DB()  
         self.engine = self.db.engine
 
-    def create_temp_client(self):
-       
+    def add_status_columns(self):
+        conn = None
+        try:
+            conn = self.db.connect()
+            
+            check_columns_query = """
+                SELECT COLUMN_NAME 
+                FROM INFORMATION_SCHEMA.COLUMNS 
+                WHERE TABLE_NAME = 'history_insert' 
+                AND TABLE_SCHEMA = DATABASE();
+            """
+            
+            result = conn.execute(text(check_columns_query))
+            existing_columns = [row[0] for row in result]
+            
+            columns_to_add = []
+            
+            if 'dav_status' not in existing_columns:
+                columns_to_add.append("ADD COLUMN dav_status BOOLEAN DEFAULT FALSE")
+            
+            if 'dat_status' not in existing_columns:
+                columns_to_add.append("ADD COLUMN dat_status BOOLEAN DEFAULT FALSE")
+            
+            if 'epr_status' not in existing_columns:
+                columns_to_add.append("ADD COLUMN epr_status BOOLEAN DEFAULT FALSE")
+                
+            if 'stat_compte' not in existing_columns:
+                columns_to_add.append("ADD COLUMN stat_compte BOOLEAN DEFAULT FALSE")
+            
+            if columns_to_add:
+                alter_query = f"ALTER TABLE history_insert {', '.join(columns_to_add)};"
+                conn.execute(text(alter_query))
+                conn.commit()
+                print(f"[INFO] Colonnes ajoutées : {[col.split(' ')[2] for col in columns_to_add]} ✅")
+            else:
+                print("[INFO] Toutes les colonnes de status existent déjà ✅")
+            
+            return True
+            
+        except Exception as e:
+            print(f"[ERREUR] Ajout des colonnes status : {e}")
+            return False
+        finally:
+            if conn:
+                try:
+                    conn.close()
+                except Exception as close_err:
+                    print(f"[ERREUR] Fermeture connexion : {close_err}")
+                    
+                    
+    def verifie_statu(self, name: str):
         
+        conn = None
+        try:
+            conn = self.db.connect()
+            
+            query = f"""
+                SELECT stat_compte 
+                FROM history_insert 
+                WHERE label = '{name}';
+            """
+            
+            result = conn.execute(text(query))
+            row = result.fetchone()
+            
+            if row:
+                
+                statut = bool(row[0])
+                print(f"[STATUT] Compte {name} : {'DÉJÀ INITIALISÉ' if statut else 'PAS ENCORE INITIALISÉ'}")
+                return statut
+            else:
+                print(f"[STATUT] Compte {name} : N'EXISTE PAS (première initialisation)")
+                return False
+                
+        except Exception as e:
+            print(f"[ERREUR] verifie_statu : {e}")
+            return False
+        finally:
+            if conn:
+                try:
+                    conn.close()
+                except Exception as close_err:
+                    print(f"[ERREUR] Fermeture connexion : {close_err}")     
+                    
+                             
+    def create_temp_client(self):  
         try:
             
             query = f"""
@@ -42,8 +125,8 @@ class DavUnique:
                 except Exception as close_err:
                     print(f"[ERREUR] Fermeture connexion (create_tabletemp_client) : {close_err}")
 
+
     def create_index(self):
-       
         index = [
                 " CREATE INDEX IF NOT EXISTS idx_client_id ON temp_clients (id(255))",
 
@@ -89,103 +172,102 @@ class DavUnique:
           
           
     def create_funct(self):
-        try:
-            
+        try:       
             query = """
             
-    CREATE FUNCTION solde_account(
-        type_sysdate TEXT,
-        open_balance TEXT,
-        credit_mvmt TEXT,
-        debit_mvmt TEXT,
-        date_limite INT
-    )
-    RETURNS TEXT
-    DETERMINISTIC
-    BEGIN
-        -- Variables de travail
-        DECLARE token TEXT;
-        DECLARE remaining_type TEXT;
-        DECLARE remaining_open TEXT;
-        DECLARE remaining_credit TEXT;
-        DECLARE remaining_debit TEXT;
+            CREATE FUNCTION solde_account(
+                type_sysdate TEXT,
+                open_balance TEXT,
+                credit_mvmt TEXT,
+                debit_mvmt TEXT,
+                date_limite INT
+            )
+            RETURNS TEXT
+            DETERMINISTIC
+            BEGIN
+                -- Variables de travail
+                DECLARE token TEXT;
+                DECLARE remaining_type TEXT;
+                DECLARE remaining_open TEXT;
+                DECLARE remaining_credit TEXT;
+                DECLARE remaining_debit TEXT;
 
-        DECLARE sep_pos INT;
-        DECLARE open_val DECIMAL(20,2);
-        DECLARE credit_val DECIMAL(20,2);
-        DECLARE debit_val DECIMAL(20,2);
-        DECLARE sold_total DECIMAL(20,2) DEFAULT 0;
-        DECLARE date_part INT;
+                DECLARE sep_pos INT;
+                DECLARE open_val DECIMAL(20,2);
+                DECLARE credit_val DECIMAL(20,2);
+                DECLARE debit_val DECIMAL(20,2);
+                DECLARE sold_total DECIMAL(20,2) DEFAULT 0;
+                DECLARE date_part INT;
 
-        -- Initialisation des chaînes
-        SET remaining_type = type_sysdate;
-        SET remaining_open = open_balance;
-        SET remaining_credit = credit_mvmt;
-        SET remaining_debit = debit_mvmt;
+                -- Initialisation des chaînes
+                SET remaining_type = type_sysdate;
+                SET remaining_open = open_balance;
+                SET remaining_credit = credit_mvmt;
+                SET remaining_debit = debit_mvmt;
 
-        -- Boucle principale
-        WHILE LENGTH(remaining_type) > 0 DO
-            -- Extraction du token actuel
-            SET sep_pos = LOCATE('|', remaining_type);
-            IF sep_pos = 0 THEN
-                SET token = remaining_type;
-                SET remaining_type = '';
-            ELSE
-                SET token = LEFT(remaining_type, sep_pos - 1);
-                SET remaining_type = SUBSTRING(remaining_type, sep_pos + 1);
-            END IF;
+                -- Boucle principale
+                WHILE LENGTH(remaining_type) > 0 DO
+                    -- Extraction du token actuel
+                    SET sep_pos = LOCATE('|', remaining_type);
+                    IF sep_pos = 0 THEN
+                        SET token = remaining_type;
+                        SET remaining_type = '';
+                    ELSE
+                        SET token = LEFT(remaining_type, sep_pos - 1);
+                        SET remaining_type = SUBSTRING(remaining_type, sep_pos + 1);
+                    END IF;
 
-            -- open_balance
-            SET sep_pos = LOCATE('|', remaining_open);
-            IF sep_pos = 0 THEN
-                SET open_val = IF(remaining_open = '' OR remaining_open IS NULL, 0, CAST(remaining_open AS DECIMAL(20,2)));
-                SET remaining_open = '';
-            ELSE
-                SET open_val = IF(LEFT(remaining_open, sep_pos - 1) = '' OR LEFT(remaining_open, sep_pos - 1) IS NULL,
-                                0, CAST(LEFT(remaining_open, sep_pos - 1) AS DECIMAL(20,2)));
-                SET remaining_open = SUBSTRING(remaining_open, sep_pos + 1);
-            END IF;
+                    -- open_balance
+                    SET sep_pos = LOCATE('|', remaining_open);
+                    IF sep_pos = 0 THEN
+                        SET open_val = IF(remaining_open = '' OR remaining_open IS NULL, 0, CAST(remaining_open AS DECIMAL(20,2)));
+                        SET remaining_open = '';
+                    ELSE
+                        SET open_val = IF(LEFT(remaining_open, sep_pos - 1) = '' OR LEFT(remaining_open, sep_pos - 1) IS NULL,
+                                        0, CAST(LEFT(remaining_open, sep_pos - 1) AS DECIMAL(20,2)));
+                        SET remaining_open = SUBSTRING(remaining_open, sep_pos + 1);
+                    END IF;
 
-            -- credit_mvmt
-            SET sep_pos = LOCATE('|', remaining_credit);
-            IF sep_pos = 0 THEN
-                SET credit_val = IF(remaining_credit = '' OR remaining_credit IS NULL, 0, CAST(remaining_credit AS DECIMAL(20,2)));
-                SET remaining_credit = '';
-            ELSE
-                SET credit_val = IF(LEFT(remaining_credit, sep_pos - 1) = '' OR LEFT(remaining_credit, sep_pos - 1) IS NULL,
-                                    0, CAST(LEFT(remaining_credit, sep_pos - 1) AS DECIMAL(20,2)));
-                SET remaining_credit = SUBSTRING(remaining_credit, sep_pos + 1);
-            END IF;
+                    -- credit_mvmt
+                    SET sep_pos = LOCATE('|', remaining_credit);
+                    IF sep_pos = 0 THEN
+                        SET credit_val = IF(remaining_credit = '' OR remaining_credit IS NULL, 0, CAST(remaining_credit AS DECIMAL(20,2)));
+                        SET remaining_credit = '';
+                    ELSE
+                        SET credit_val = IF(LEFT(remaining_credit, sep_pos - 1) = '' OR LEFT(remaining_credit, sep_pos - 1) IS NULL,
+                                            0, CAST(LEFT(remaining_credit, sep_pos - 1) AS DECIMAL(20,2)));
+                        SET remaining_credit = SUBSTRING(remaining_credit, sep_pos + 1);
+                    END IF;
 
-            -- debit_mvmt
-            SET sep_pos = LOCATE('|', remaining_debit);
-            IF sep_pos = 0 THEN
-                SET debit_val = IF(remaining_debit = '' OR remaining_debit IS NULL, 0, CAST(remaining_debit AS DECIMAL(20,2)));
-                SET remaining_debit = '';
-            ELSE
-                SET debit_val = IF(LEFT(remaining_debit, sep_pos - 1) = '' OR LEFT(remaining_debit, sep_pos - 1) IS NULL,
-                                0, CAST(LEFT(remaining_debit, sep_pos - 1) AS DECIMAL(20,2)));
-                SET remaining_debit = SUBSTRING(remaining_debit, sep_pos + 1);
-            END IF;
+                    -- debit_mvmt
+                    SET sep_pos = LOCATE('|', remaining_debit);
+                    IF sep_pos = 0 THEN
+                        SET debit_val = IF(remaining_debit = '' OR remaining_debit IS NULL, 0, CAST(remaining_debit AS DECIMAL(20,2)));
+                        SET remaining_debit = '';
+                    ELSE
+                        SET debit_val = IF(LEFT(remaining_debit, sep_pos - 1) = '' OR LEFT(remaining_debit, sep_pos - 1) IS NULL,
+                                        0, CAST(LEFT(remaining_debit, sep_pos - 1) AS DECIMAL(20,2)));
+                        SET remaining_debit = SUBSTRING(remaining_debit, sep_pos + 1);
+                    END IF;
 
-            -- Filtrage et ajout au total
-            IF token = 'CURACCOUNT' THEN
-                SET sold_total = sold_total + open_val + credit_val + debit_val;
+                    -- Filtrage et ajout au total
+                    IF token = 'CURACCOUNT' THEN
+                        SET sold_total = sold_total + open_val + credit_val + debit_val;
 
-            ELSEIF token LIKE 'CURACCOUNT-%%' THEN
-                SET date_part = CAST(SUBSTRING(token, LOCATE('-', token) + 1) AS UNSIGNED);
+                    ELSEIF token LIKE 'CURACCOUNT-%%' THEN
+                        SET date_part = CAST(SUBSTRING(token, LOCATE('-', token) + 1) AS UNSIGNED);
 
-                IF date_part <= date_limite THEN
-                    SET sold_total = sold_total + open_val + credit_val + debit_val;
-                END IF;
-            END IF;
+                        IF date_part <= date_limite THEN
+                            SET sold_total = sold_total + open_val + credit_val + debit_val;
+                        END IF;
+                    END IF;
 
-        END WHILE;
+                END WHILE;
 
-        -- Retourne le total converti en chaîne
-        RETURN CAST(sold_total AS CHAR);
-    END
-    """
+                -- Retourne le total converti en chaîne
+                RETURN CAST(sold_total AS CHAR);
+            END
+            """
 
             with self.db.connect() as conn:
                 drop_query = "DROP FUNCTION IF EXISTS solde_account"
@@ -211,11 +293,8 @@ class DavUnique:
               
                     
     def create_table_dav(self, name: str):
-        
         try:
             table_name = f"dav_{name}"
-            
-            
             query = f"""
                 
                 CREATE TABLE {table_name} AS
@@ -306,8 +385,7 @@ class DavUnique:
         
         try:
             table_name = f"epr_{name}"
-            
-            # Solution 1: Sans CTE - direct
+
             query = f"""
                 
                 CREATE TABLE {table_name} AS
@@ -393,14 +471,18 @@ class DavUnique:
                 except Exception as close_err:
                     print(f"[ERREUR] Fermeture connexion (create_table_dav_ultra_fast) : {close_err}")
         
-    def update_statusHistoryInsert(self, name: str):
+        
+    def update_status(self, name: str):
             conn = None
             try:
                 conn = self.db.connect()
                 
                 query = f"""
                         UPDATE history_insert
-                        SET dav_status = true
+                        SET dat_status = TRUE,
+                            dav_status = TRUE,
+                            epr_status = TRUE,
+                            stat_compte = TRUE
                         WHERE label = '{name}';
                 """
                 conn.execute(text(query))
@@ -410,71 +492,14 @@ class DavUnique:
                 return True
                 
             except Exception as e:
-                print(f"[ERREUR] clean_tableDatPreCompute : {e}")
+                print(f"[ERREUR] Erreur update status : {e}")
                 return None
             finally:
                 if conn:
                     try:
                         conn.close()
                     except Exception as close_err:
-                        print(f"[ERREUR] Fermeture connexion (clean_tableDatPreCompute) : {close_err}")
+                        print(f"[ERREUR] Fermeture connexion (updateStatus) : {close_err}")
                 
     
                 
-    def traitement_dav(self, table_name: str):
-        
-        conn = None
-        try:
-            conn = self.db.connect()
-
-            query_nulls = f"""
-            UPDATE {table_name}
-            SET 
-                debit_mvmt   = COALESCE(debit_mvmt, 0),
-                credit_mvmt  = COALESCE(credit_mvmt, 0),
-                open_balance = COALESCE(open_balance, 0);
-            """
-            conn.execute(text(query_nulls))
-
-            query_code_client = f"""
-            UPDATE {table_name}
-            SET code_client = SUBSTRING_INDEX(code_client, '|', 1);
-            """
-            conn.execute(text(query_code_client))
-            
-            query_dedup = f"""
-                DELETE t1 FROM {table_name} t1
-                INNER JOIN {table_name} t2
-                ON t1.Agence = t2.Agence
-                AND t1.code_client = t2.code_client
-                AND t1.Numero_compte = t2.Numero_compte
-                AND t1.Produits = t2.Produits
-                AND t1.id_comp_2 < t2.id_comp_2;
-                """
-            conn.execute(text(query_dedup))
-            conn.commit()
-            
-           
-
-            query_drop_cols = f"""
-            ALTER TABLE {table_name}
-            DROP COLUMN type_sysdate,
-            DROP COLUMN debit_mvmt,
-            DROP COLUMN open_balance,
-            DROP COLUMN credit_mvmt;
-            """
-            conn.execute(text(query_drop_cols))
-            conn.commit()
-            print(f"[INFO] Nettoyage terminé pour {table_name} ✅")
-
-        except Exception as e:
-            print(f"[ERREUR] clean_tableDatPreCompute : {e}")
-            return None
-        finally:
-            if conn:
-                try:
-                    conn.close()
-                except Exception as close_err:
-                    print(f"[ERREUR] Fermeture connexion (clean_tableDatPreCompute) : {close_err}")
-
- 

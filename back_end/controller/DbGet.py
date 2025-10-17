@@ -166,7 +166,7 @@ class DbGet:
             LEFT JOIN 
                 customer_mcbc_live_full AS cust
                     ON cust.id = SUBSTRING_INDEX(arrangement.customer, '|', 1)  
-                    -- ⚡ garde le premier ID client seulement
+                    
 
             LEFT JOIN 
                 eb_cont_bal_mcbc_live_full AS cb
@@ -190,6 +190,8 @@ class DbGet:
             """
 
             conn = self.db.connect()
+            drop_query = f"DROP TABLE IF EXISTS {table_name}"
+            conn.execute(text(drop_query))
             conn.execute(text(query))
             conn.commit() 
 
@@ -207,33 +209,6 @@ class DbGet:
                     print(f"[ERREUR] Fermeture connexion (create_tableDatPreCompute) : {close_err}")
 
 
-    def update_statusHistoryInsert(self, name: str):
-        conn = None
-        try:
-            conn = self.db.connect()
-            
-            query = f"""
-                    UPDATE history_insert
-                    SET dat_status = true
-                    WHERE label = '{name}';
-            """
-            conn.execute(text(query))
-            conn.commit()
-            
-            print(f"[INFO] history_insert mis à jour pour {name} ✅")
-            return True
-            
-        except Exception as e:
-            print(f"[ERREUR] clean_tableDatPreCompute : {e}")
-            return None
-        finally:
-            if conn:
-                try:
-                    conn.close()
-                except Exception as close_err:
-                    print(f"[ERREUR] Fermeture connexion (clean_tableDatPreCompute) : {close_err}")
-            
-   
             
             
     def traitement_dat(self, table_name: str):

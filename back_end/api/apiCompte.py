@@ -50,53 +50,46 @@ def create_dat_precompute(name: str):
 
 
 
-@router.post("/dav/dav_test")
-def dav_test(name:str):
-
+@router.post("/compte/compte_init")
+def initialize(name:str):
     try:
+        if dav_unique.verifie_statu(name):
+            return JSONResponse(
+                status_code=200,
+                content={
+                    "status": "info",
+                    "message": f"Le compte {name} est déjà initialisé",
+                    "already_initialized": True
+                }
+            )
+        dav_unique.add_status_columns()
         dav_unique.create_temp_client()
         dav_unique.create_index()
         dav_unique.create_funct()
+        
+        table_name_dat = db_get.create_tableDatPreCompute(name)
         table_name_dav = dav_unique.create_table_dav(name)
         table_name_epr = dav_unique.create_table_epr(name)
         
-
-        return JSONResponse(content={
-                    "status": "success",
-                    "message": f"Table créée et nettoyée et calculer : {table_name_dav} et {table_name_epr}✅",
-                    "table_name_dav": table_name_dav,
-                    "table_name_epr": table_name_epr    
-        })
-        
-    except Exception as e:
-        return JSONResponse(content={"status": "error", "message": str(e)}, status_code=500)
-    
-    
-#******************* INITIALISATION DAT ET DAV***********************
-@router.post("/dat/initialise/{name}")
-def initialize(name: str):
-    try:
-        table_name_dat = db_get.create_tableDatPreCompute(name)
-        table_name_dav = dav_unique.create_table_dav(name)
-        
-        dav_unique.update_statusHistoryInsert(name)
-        db_get.update_statusHistoryInsert(name)
-        if not table_name_dat or not table_name_dav:
-            raise Exception("Erreur lors de la création de la table DAT et DAV")
+        if not table_name_dat or not table_name_dav or not table_name_epr:
+            raise Exception("Erreur lors de la création des tables DAT, DAV et EPR")
         
         operation.calculeAmtCap(table_name_dat)
         db_get.traitement_dat(table_name_dat)
-        operation_dav.calcule_dav(table_name_dav)
-        dav_unique.traitement_dav(table_name_dav)
+        dav_unique.update_status(name)
+
         return JSONResponse(content={
                     "status": "success",
-                    "message": f"Table créée et nettoyée et calculer : {table_name_dat} et {table_name_dav} ✅",
-                    "table_name_dat": table_name_dat,
-                    "table_name_dav": table_name_dav
+                    "message": f"Table créée et nettoyée et calculer : {table_name_dav} et {table_name_epr} et {table_name_dat}✅",
+                    "table_name_dav": table_name_dav,
+                    "table_name_epr": table_name_epr,
+                    "table_name_dat": table_name_dat   
         })
+        
     except Exception as e:
         return JSONResponse(content={"status": "error", "message": str(e)}, status_code=500)
-        
+    
+    
 #INITIALISATION ESRI
 #create tables esri_precompute
 
