@@ -165,7 +165,6 @@ const exportToExcel = async (type) => {
   }
 
   try {
-    // Récupérer les données directement depuis l'API
     const res = await axios.get(`http://127.0.0.1:8000/api/${config.apiEndpoint}/${selectedTable.value}`)
     const data = res.data.data || []
     const columns = res.data.columns || []
@@ -175,16 +174,14 @@ const exportToExcel = async (type) => {
       return
     }
 
-    // Préparer les données pour l'export (plus efficace)
     const dataToExport = data.map(row => {
       const exportedRow = {}
       columns.forEach(col => {
-        exportedRow[col] = row[col] ?? "" // Utilisation de ?? pour gérer null/undefined
+        exportedRow[col] = row[col] ?? "" 
       })
       return exportedRow
     })
 
-    // Créer et télécharger le fichier Excel
     const wb = XLSX.utils.book_new()
     const ws = XLSX.utils.json_to_sheet(dataToExport)
     XLSX.utils.book_append_sheet(wb, ws, config.sheetName)

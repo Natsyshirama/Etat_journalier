@@ -61,7 +61,7 @@ class DatReport:
 
             return {
                 "columns": columns,
-                "rows": data
+                "data": data
             }
 
         except Exception as e:
