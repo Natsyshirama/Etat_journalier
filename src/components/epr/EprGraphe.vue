@@ -90,7 +90,7 @@ const fetchData = async () => {
   if (!props.tableName || !x.value || !y.value) return
   try {
     const res = await axios.get(
-      `http://127.0.0.1:8000/api/davGraphe/${props.tableName}`,
+      `http://127.0.0.1:8000/api/eprGraphe/${props.tableName}`,
       { params: { x: x.value, y: y.value } }
     )
 
