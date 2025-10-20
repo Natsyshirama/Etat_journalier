@@ -80,11 +80,11 @@ class DavReport:
 
             query = text(f"""
                 SELECT 
-                    COUNT(*) AS nb_lignes,
+                   
                     COUNT(DISTINCT code_client) AS nb_clients,
-                    SUM(montant_dav) AS total_montant_dav,
-                    SUM(debit_dav) AS total_debit_dav,
-                    SUM(credit_dav) AS total_credit_dav
+                    SUM(solde) AS total_montant_dav,
+                    SUM(debit) AS total_debit_dav,
+                    SUM(credit) AS total_credit_dav
                 FROM `{table_name_vrai}`
             """)
             result = conn.execute(query).fetchone()
@@ -118,12 +118,12 @@ class DavReport:
             conn = self.db.connect()
             
             colone_auto= [
-                "code_client", "Agence", "Produits", "montant_dav", "credit_dav", "debit_dav"
+                "code_client", "Agence", "Produits", "solde", "Credit", "Debit"
             ]
             if x not in colone_auto or y not in colone_auto:
                 raise ValueError("Colonnes non autorisées")
             
-            numeric_columns = ["montant_dav", "credit_dav", "debit_dav"]
+            numeric_columns = ["solde", "Credit", "Debit"]
             
             if (x == "Agence" and y == "code_client") or (x == "code_client" and y == "Agence"):
                 select = "Agence, COUNT(DISTINCT code_client) AS value"

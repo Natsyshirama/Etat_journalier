@@ -11,6 +11,7 @@ from controller.OperatioDav import OperatioDav
 from controller.Esri import Esri
 from controller.OperationEsri import OperationEsri
 from controller.DavReport import DavReport
+from controller.EprReport import EprReport
 from controller.ChangeMande import ChangeMande
 from controller.DavUnique import DavUnique
 
@@ -24,6 +25,7 @@ esri = Esri()
 operation_esri = OperationEsri()
 dav_report = DavReport()
 change_mande = ChangeMande()
+epr_report = EprReport()
 
 @router.post("/dat/create_dat_precompute/{name}")
 def create_dat_precompute(name: str):
@@ -165,46 +167,17 @@ def create_change_report_optimized(date_debut: str, date_fin: str):
             content={"status": "error", "message": str(e)}
         )
         
-        
-#creation table et insertion de table arrangement_customer
-@router.post("/dav/create_table_arrCust")
-def create_table_arrCust():
-    
-    try:
-        result = dav_unique.create_table_arrCust()
-        
-        if not result:
-            raise Exception("Erreur lors de la création de la table arrangement_customer")
-        
-        
-        dav_unique.insert_data_arrCust()
-        dav_unique.create_index()
-        
-        return JSONResponse(content={
-                    "status": "success",
-                    "message": f"Table arrangement_customer créée et donnee inserer avec les index ✅"
-        })
-        
-    except Exception as e:
-        return JSONResponse(content={"status": "error", "message": str(e)}, status_code=500)
 
-
-
-###EXPORT EXCEL###
 #exportation des tables
 @router.get("/dat/export_excel")
 def export_excel(table_name: str):
-    """
-    Exporte une table dat_<label> en fichier Excel et permet le téléchargement.
-    """
+    
     try:
-        # Appel de ta fonction exportExcel()
         file_path = operation.exportExcel(table_name)
 
         if not file_path:
             raise Exception("Erreur lors de l'export Excel")
 
-        # Retourne le fichier Excel au client
         return FileResponse(
             file_path,
             media_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
@@ -292,10 +265,6 @@ def get_graphe_dat(
 
 
 
-
-
-
-
 ##"""""""""""HISTORY INSERT""""""""""##
  
 @router.get("/history/liste")
@@ -317,18 +286,10 @@ def liste_history():
 
 
 
-
-
-
-
-
-
 #""""""""""""""""""""""DAV REPORT""""""""""""""""""##
 @router.get("/dav/liste_dav")
 def listeDav():
-    """
-        liste table dav
-    """ 
+   
     try:
         listeDav = dav_report.getListeDav()
         if not listeDav:
@@ -365,7 +326,6 @@ def get_dav_resume(table_name: str):
         safe_summary = {
             
             "table_name": table_name,
-            "nb_lignes": int(summary.get("nb_lignes") or 0),
             "nb_clients": int(summary.get("nb_clients") or 0),
             "total_montant_dav": float(summary.get("total_montant_dav") or 0),
             "total_debit_dav": float(summary.get("total_debit_dav") or 0),
@@ -390,12 +350,82 @@ def get_graphe_dav(
 
     try:
         data = dav_report.get_graphe_dataDav(x, y, table_name)
-        print(data)
+       
         return data
     except ValueError as ve:
         return JSONResponse(status_code=400, content={"error": str(ve)})
     except Exception as e:
         return JSONResponse(status_code=500, content={"error": f"Erreur serveur: {e}"})
+
+
+#***********EPR**********#
+@router.get("/epr/liste_epr")
+def listeEpr():
+   
+    try:
+        listeEpr = epr_report.getListeEpr()
+        if not listeEpr:
+            raise Exception("Aucune table EPR trouvée")
+        
+        return {"tables": listeEpr}
+    
+    except ValueError as ve:
+        return JSONResponse(status_code=400, content={"error": str(ve)})
+    except Exception as e:
+        return JSONResponse(status_code=500, content={"error": f"Erreur serveur: {e}"})
+    
+@router.get("/epr/{table_name}")
+def get_epr_table(table_name: str):
+    """ tablea de epr selectionner
+    """
+    try:
+        data = epr_report.getEpr(table_name)
+        return {"table": table_name, **data}
+    except ValueError as ve:
+        return JSONResponse(status_code=400, content={"error": str(ve)})
+    except Exception as e:
+        return JSONResponse(status_code=500, content={"error": f"Erreur serveur: {e}"})
+    
+@router.get("/epr/{table_name}/resume")
+def get_epr_resume(table_name: str):
+
+    try:
+        summary = epr_report.getResumeEpr(table_name)
+        if not summary:
+            return JSONResponse(status_code=404, content={"error": "Résumé introuvable ou table vide"})
+
+        safe_summary = {
+            
+            "table_name": table_name,
+            "nb_clients": int(summary.get("nb_clients") or 0),
+            "total_montant_epr": float(summary.get("total_montant_epr") or 0),
+            "total_debit_epr": float(summary.get("total_debit_epr") or 0),
+            "total_credit_epr": float(summary.get("total_credit_epr") or 0)
+        }
+
+        return safe_summary
+
+    except ValueError as ve:
+        return JSONResponse(status_code=400, content={"error": str(ve)})
+    except Exception as e:
+        return JSONResponse(status_code=500, content={"error": f"Erreur serveur: {e}"})
+
+@router.get("/eprGraphe/{table_name}")
+def get_graphe_epr(
+    table_name: str,
+    x: str = Query(..., description="Colonne X (ex: client, agence, produit, numero_compte)"),
+    y: str = Query(..., description="Colonne Y (ex: kill, agence, produit, numero_compte)")
+):
+
+    try:
+        data = epr_report.get_graphe_dataEpr(x, y, table_name)
+        
+        return data
+    except ValueError as ve:
+        return JSONResponse(status_code=400, content={"error": str(ve)})
+    except Exception as e:
+        return JSONResponse(status_code=500, content={"error": f"Erreur serveur: {e}"})
+
 
 
 api_router = router

@@ -20,7 +20,7 @@ class EprReport:
                 SELECT table_name
                 FROM information_schema.tables
                 WHERE table_schema = DATABASE()
-                AND table_name LIKE 'Epr_%'
+                AND table_name LIKE 'epr_%'
             """)
 
             result = conn.execute(query)
@@ -29,7 +29,7 @@ class EprReport:
             return tables
 
         except Exception as e:
-            print(f"[ERREUR] getListeDav : {e}")
+            print(f"[ERREUR] getListeEpr : {e}")
             return []
         finally:
             if conn:
@@ -69,7 +69,7 @@ class EprReport:
                 except Exception as close_err:
                     print(f"[ERREUR] Fermeture connexion (getEpr) : {close_err}")
                     
-    def getResumeDav(self, table_name: str):
+    def getResumeEpr(self, table_name: str):
         table_name_vrai = f"epr_{table_name}"
         if not table_name_vrai or not table_name_vrai.startswith("epr_"):
             raise ValueError("Nom de table invalide")
@@ -80,11 +80,11 @@ class EprReport:
 
             query = text(f"""
                 SELECT 
-                    COUNT(*) AS nb_lignes,
+                    
                     COUNT(DISTINCT code_client) AS nb_clients,
-                    SUM(montant_dav) AS total_montant_dav,
-                    SUM(debit_dav) AS total_debit_dav,
-                    SUM(credit_dav) AS total_credit_dav
+                    SUM(solde) AS total_montant_epr,
+                    SUM(Debit) AS total_debit_epr,
+                    SUM(Credit) AS total_credit_epr
                 FROM `{table_name_vrai}`
             """)
             result = conn.execute(query).fetchone()
@@ -118,12 +118,12 @@ class EprReport:
             conn = self.db.connect()
             
             colone_auto= [
-                "code_client", "Agence", "Produits", "montant_epr", "credit_epr", "debit_epr"
+                "code_client", "Agence", "Produits", "solde", "Credit", "Debit"
             ]
             if x not in colone_auto or y not in colone_auto:
                 raise ValueError("Colonnes non autorisées")
             
-            numeric_columns = ["montant_epr", "credit_epr", "debit_epr"]
+            numeric_columns = ["solde", "Credit", "Debit"]
             
             if (x == "Agence" and y == "code_client") or (x == "code_client" and y == "Agence"):
                 select = "Agence, COUNT(DISTINCT code_client) AS value"

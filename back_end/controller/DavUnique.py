@@ -40,6 +40,7 @@ class DavUnique:
             if 'stat_compte' not in existing_columns:
                 columns_to_add.append("ADD COLUMN stat_compte BOOLEAN DEFAULT FALSE")
             
+            
             if columns_to_add:
                 alter_query = f"ALTER TABLE history_insert {', '.join(columns_to_add)};"
                 conn.execute(text(alter_query))
@@ -112,7 +113,7 @@ class DavUnique:
                 conn.commit()
             
             
-            print(f"[INFO] Table temporaire temp_client créée  ✅")
+            print(f"[INFO] Table temporaire temp_client créée ")
             return True
 
         except Exception as e:
@@ -277,7 +278,7 @@ class DavUnique:
                 conn.execute(text(query))
                 conn.commit()
             
-            print(f"[INFO] Function solde_account créée avec succès ✅")
+            print(f"[INFO] Function solde_account créée avec succès ")
             return True
 
         except Exception as e:
@@ -458,18 +459,18 @@ class DavUnique:
                 conn.execute(text(query))
                 conn.commit()
             
-            print(f"[INFO] Table {table_name} créée (ULTRA RAPIDE) ⚡")
+            print(f"[INFO] Table {table_name} créée ")
             return table_name
             
         except Exception as e:
-            print(f"[ERREUR] Version ultra-rapide : {e}")
+            print(f"[ERREUR]creation table epr : {e}")
             return False
         finally:
             if conn:
                 try:
                     conn.close()
                 except Exception as close_err:
-                    print(f"[ERREUR] Fermeture connexion (create_table_dav_ultra_fast) : {close_err}")
+                    print(f"[ERREUR] Fermeture connexion (create_table_epr) : {close_err}")
         
         
     def update_status(self, name: str):
