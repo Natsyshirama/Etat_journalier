@@ -13,7 +13,7 @@
         <strong>Total debit Epr :</strong> {{ resume.total_debit_epr }}
       </v-col>
       <v-col cols="12" md="3">
-        <strong>Total credit Epr :</strong> {{ resume.total_credit_eprv }}
+        <strong>Total credit Epr :</strong> {{ resume.total_credit_epr }}
       </v-col>
     </v-row>
   </v-card>

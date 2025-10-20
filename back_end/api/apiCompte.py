@@ -376,8 +376,6 @@ def listeEpr():
     
 @router.get("/epr/{table_name}")
 def get_epr_table(table_name: str):
-    """ tablea de epr selectionner
-    """
     try:
         data = epr_report.getEpr(table_name)
         return {"table": table_name, **data}

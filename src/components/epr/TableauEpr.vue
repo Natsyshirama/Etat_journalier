@@ -58,7 +58,6 @@ const itemsPerPage = ref(10)
 const pageCount = computed(() =>
   Math.ceil(items.value.length / itemsPerPage.value)
 )
-
 const fetchTableData = async (tableName) => {
   if (!tableName) {
     items.value = []
@@ -66,9 +65,11 @@ const fetchTableData = async (tableName) => {
     return
   }
   try {
-    const res = await axios.get(`http://127.0.0.1:8000/api/epr/${table_name}`)
-    items.value = res.data.rows || []
-    headers.value = res.data.columns.map((col) => ({
+    const res = await axios.get(`http://127.0.0.1:8000/api/epr/${tableName}`)
+    console.log("Réponse API:", res.data)
+
+    items.value = res.data.data || []  // <-- ici
+    headers.value = (res.data.columns || []).map((col) => ({
       title: col,
       key: col
     }))
@@ -78,6 +79,7 @@ const fetchTableData = async (tableName) => {
   }
 }
 
+// Recharger quand tableName change
 watch(
   () => props.tableName,
   (newVal) => {
