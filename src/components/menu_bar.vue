@@ -46,6 +46,32 @@
       <span class="text-md">Exporter</span>
     </v-btn>
 
+    <!-- 📊 Menu exportation pour PAGE DAV -->
+
+     <v-menu v-else-if="isCompte" offset-y>
+      <template v-slot:activator="{ props }">
+        <v-btn v-bind="props" prepend-icon="mdi-share-variant">
+          <template #prepend><v-icon color="success"></v-icon></template>
+          <span class="text-md">Exporter</span>
+        </v-btn>
+      </template>
+      <v-list>
+        <v-list-item @click="exportDAT">
+          <template #prepend><v-icon color="primary">mdi-table</v-icon></template>
+          <v-list-item-title style="font-size: 15px;">DAT</v-list-item-title>
+        </v-list-item>
+        <v-list-item @click="exportDAV">
+          <template #prepend><v-icon color="primary">mdi-chart-bar</v-icon></template>
+          <v-list-item-title style="font-size: 15px;">DAV</v-list-item-title>
+        </v-list-item>
+        <v-list-item @click="exportEPR">
+          <template #prepend><v-icon color="primary">mdi-chart-line</v-icon></template>
+          <v-list-item-title style="font-size: 15px;">EPR</v-list-item-title>
+        </v-list-item>
+      </v-list>
+    </v-menu>
+
+    <!-- Menu pour exportation autre page-->
     <v-menu v-else offset-y>
       <template v-slot:activator="{ props }">
         <v-btn v-bind="props" prepend-icon="mdi-share-variant">
@@ -96,10 +122,12 @@ const historyDates = ref([])
 
 const isEsriPage = computed(() => route.path === '/app/esri')
 const isChangePage = computed(() => route.path === '/app/change')
+const isCompte = computed(() => route.path === '/app/dav')
 
 const toolbarTitle = computed(() => {
   if (isEsriPage.value) return 'ESRI'
   if (isChangePage.value) return 'CHANGE'
+  if (isCompte.value) return 'Encours Compte'
   return 'Encours des crédits'
 })
 
@@ -131,6 +159,23 @@ const exportChangeData = async () => {
   } finally {
     exporting.value = false
   }
+}
+const exportDAT = () => {
+  exporting.value = true
+  console.log('Export DAT déclenché')
+  window.dispatchEvent(new CustomEvent('export-dav-data', { detail: { type: 'DAT' } }))
+}
+
+const exportDAV = () => {
+  exporting.value = true
+  console.log('Export DAV déclenché')
+  window.dispatchEvent(new CustomEvent('export-dav-data', { detail: { type: 'DAV' } }))
+}
+
+const exportEPR = () => {
+  exporting.value = true
+  console.log('Export EPR déclenché')
+  window.dispatchEvent(new CustomEvent('export-dav-data', { detail: { type: 'EPR' } }))
 }
 
 const get_last_import_file = async () => {

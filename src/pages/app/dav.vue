@@ -107,10 +107,10 @@
     </v-alert>
   </v-container>
 </template>
-
 <script setup>
-import { ref, onMounted, watch } from "vue"
+import { ref, onMounted, watch, onUnmounted } from "vue"
 import axios from "axios"
+import * as XLSX from "xlsx"
 
 // Composants DAT
 import ResumerDat from "@/components/dat/ResumerDat.vue"
@@ -122,15 +122,107 @@ import ResumerDav from "@/components/dav/ResumerDav.vue"
 import TableauDav from "@/components/dav/TableauDav.vue"
 import DashboardDav from "@/components/dav/DavGraphe.vue" 
 
-//composent Epr
+// Composants EPR
 import ResumerEpr from "@/components/epr/resumerEpr.vue"
 import TableauEpr from "@/components/epr/TableauEpr.vue"
 import EprGraphe from "@/components/epr/EprGraphe.vue"
 
 const history = ref([])
 const selectedTable = ref(localStorage.getItem("selectedTable") || null)
-const activeTab = ref(0) // 0 = DAT, 1 = DAV
-const displayComponent = ref("tableau") // "tableau" ou "dashboard"
+const activeTab = ref(0)
+const displayComponent = ref("tableau")
+
+// Configuration des types d'export
+const exportConfig = {
+  'DAV': { 
+    apiEndpoint: 'dav', 
+    sheetName: 'DAV Data',
+    fileNamePrefix: 'dav'
+  },
+  'DAT': { 
+    apiEndpoint: 'dat', 
+    sheetName: 'DAT Data',
+    fileNamePrefix: 'dat'
+  },
+  'EPR': { 
+    apiEndpoint: 'epr', 
+    sheetName: 'EPR Data',
+    fileNamePrefix: 'epr'
+  }
+}
+
+// Fonction d'export générique et dynamique
+const exportToExcel = async (type) => {
+  if (!selectedTable.value) {
+    alert('Aucune table sélectionnée')
+    return
+  }
+
+  const config = exportConfig[type]
+  if (!config) {
+    console.error(`Type d'export non supporté: ${type}`)
+    return
+  }
+
+  try {
+    // Récupérer les données directement depuis l'API
+    const res = await axios.get(`http://127.0.0.1:8000/api/${config.apiEndpoint}/${selectedTable.value}`)
+    const data = res.data.data || []
+    const columns = res.data.columns || []
+
+    if (!data.length) {
+      alert('Aucune donnée à exporter')
+      return
+    }
+
+    // Préparer les données pour l'export (plus efficace)
+    const dataToExport = data.map(row => {
+      const exportedRow = {}
+      columns.forEach(col => {
+        exportedRow[col] = row[col] ?? "" // Utilisation de ?? pour gérer null/undefined
+      })
+      return exportedRow
+    })
+
+    // Créer et télécharger le fichier Excel
+    const wb = XLSX.utils.book_new()
+    const ws = XLSX.utils.json_to_sheet(dataToExport)
+    XLSX.utils.book_append_sheet(wb, ws, config.sheetName)
+    
+    const fileName = `${config.fileNamePrefix}_${selectedTable.value}.xlsx`
+    XLSX.writeFile(wb, fileName)
+    
+    console.log(`Export ${type} Excel réussi !`)
+    
+  } catch (error) {
+    console.error(`Erreur lors de l'export ${type} Excel:`, error)
+    alert(`Erreur lors de l'export ${type} Excel`)
+  }
+}
+
+// Gérer l'événement d'export
+const handleExportEvent = (event) => {
+  const type = event.detail.type
+  if (exportConfig[type]) {
+    exportToExcel(type)
+  } else {
+    console.warn('Type d\'export non reconnu:', type)
+  }
+}
+
+// Fonctions spécifiques pour chaque type (pour garder la compatibilité)
+const exportDavToExcel = () => exportToExcel('DAV')
+const exportDatToExcel = () => exportToExcel('DAT')
+const exportEprToExcel = () => exportToExcel('EPR')
+
+onMounted(() => {
+  window.addEventListener('export-dav-data', handleExportEvent)
+  fetchTables() 
+})
+
+onUnmounted(() => {
+  window.removeEventListener('export-dav-data', handleExportEvent)
+})
 
 const fetchTables = async () => {
   try {
@@ -145,10 +237,6 @@ watch(selectedTable, (newVal) => {
   if (newVal) {
     localStorage.setItem("selectedTable", newVal)
   }
-})
-
-onMounted(() => {
-  fetchTables()
 })
 </script>
 

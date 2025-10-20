@@ -40,7 +40,7 @@ const rail = ref(true);
 
 const list_menu = [
   { icon: 'mdi-home-city', title: 'Crédits', to: '/app/credits' },
-  { icon: 'mdi-bank', title: 'DAT', to: '/app/dav ' },
+  { icon: 'mdi-bank', title: 'Encours Compte', to: '/app/dav ' },
   { icon: 'mdi-account', title: 'ESRI', to: '/app/esri ' },
   { icon: 'mdi-swap-horizontal', title: 'CHANGE', to: '/app/change ' },
 
