@@ -124,7 +124,6 @@ watch(() => props.tableName, fetchTableData, { immediate: true })
   background-color: transparent;
 }
 
-/* 🔍 Barre de recherche fixée */
 .table-search-bar {
   position: sticky;
   top: 0;
@@ -133,37 +132,31 @@ watch(() => props.tableName, fetchTableData, { immediate: true })
   border-bottom: 1px solid #333;
 }
 
-/* 📊 Tableau avec scroll vertical */
 .table-scroll {
   flex: 1;
   overflow-y: auto;
 }
 
-/* 📌 En-tête du tableau fixe + design amélioré */
 .fixed-header-table ::v-deep(.v-data-table__wrapper) {
   overflow-y: auto;
   max-height: 500px;
 }
 
-/* 🎨 Style des entêtes */
 .fixed-header-table ::v-deep(th) {
   position: sticky;
   top: 0;
   background: linear-gradient(180deg, #1e1e1e 0%, #2a2a2a 100%);
   font-weight: 600;
-  text-transform: uppercase;     /* lettres majuscules */
+  text-transform: uppercase;    
   letter-spacing: 0.5px;
-  border-bottom: 2px solid #444; /* ligne de séparation nette */
+  border-bottom: 2px solid #444; 
   border-right: 1px solid #333;
   padding: 10px 12px;
   z-index: 15;
-  white-space: nowrap;           /* éviter que le texte se casse */
+  white-space: nowrap;         
 }
 
-/* ✨ Effet survol des entêtes */
 
-
-/* 🔹 Alignement et lisibilité des lignes */
 .fixed-header-table ::v-deep(td) {
   border-bottom: 1px solid #333;
   padding: 8px 12px;
@@ -171,8 +164,6 @@ watch(() => props.tableName, fetchTableData, { immediate: true })
 }
 
 
-
-/* 💡 Survol d’une ligne */
 .fixed-header-table ::v-deep(tr:hover td) {
   cursor: pointer;
 }

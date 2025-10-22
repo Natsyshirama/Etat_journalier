@@ -156,6 +156,16 @@ const fetchChangeData = async () => {
         allocationColumns.value = Object.keys(data.allocation[0])
         allocationRows.value = data.allocation
       }
+ localStorage.setItem(
+  "esriData",
+  JSON.stringify({
+    dateDebut: dateDebut.value,
+    dateFin: dateFin.value,
+    status: status.value,
+    message: message.value,
+  })
+)
+
     } else {
       message.value = data.message || "Erreur lors de la génération du rapport."
     }

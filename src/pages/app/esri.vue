@@ -54,7 +54,10 @@
       ref="tableEsriRef"
     />
   </v-container>
-</template><script setup>
+</template>
+
+
+<script setup>
 import { ref, onMounted, onUnmounted } from "vue"
 import axios from "axios"
 import * as XLSX from "xlsx"
@@ -76,7 +79,6 @@ const fetchEsriData = async () => {
     message.value = "Veuillez remplir toutes les informations."
     return
   }
-
   loading.value = true
   status.value = null
   message.value = ""
@@ -99,6 +101,17 @@ const fetchEsriData = async () => {
     columns.value = data.columns || []
     rows.value = data.rows || []
 
+    // ✅ Sauvegarder seulement après succès
+   localStorage.setItem(
+  "esriData",
+  JSON.stringify({
+    dateDebut: dateDebut.value,
+    dateFin: dateFin.value,
+    status: status.value,
+    message: message.value,
+  })
+)
+
   } catch (err) {
     console.error("Erreur lors du chargement des données ESRI:", err)
     status.value = "error"
@@ -107,6 +120,7 @@ const fetchEsriData = async () => {
     loading.value = false
   }
 }
+
 
 const exportToExcel = () => {
   if (!rows.value.length || !dateDebut.value || !dateFin.value) {
@@ -127,19 +141,19 @@ const exportToExcel = () => {
       return exportedRow
     })
 
-    // Créer un workbook
+    //  workbook
     const wb = XLSX.utils.book_new()
     
-    // Créer une worksheet à partir des données
+    // Cworksheetavec les donne
     const ws = XLSX.utils.json_to_sheet(dataToExport)
     
-    // Ajouter la worksheet au workbook
+    // worksheet au workbook
     XLSX.utils.book_append_sheet(wb, ws, "Données ESRI")
     
-    // Générer le nom du fichier
+    // file name
     const fileName = `esri_${dateDebut.value}_${dateFin.value}.xlsx`
     
-    // Télécharger le fichier
+    // telecharger
     XLSX.writeFile(wb, fileName)
     
     message.value = "Export Excel réussi !"
@@ -154,17 +168,25 @@ const exportToExcel = () => {
   }
 }
 
-// ✅ CORRECTION : Déplacer ces fonctions en dehors de exportToExcel
 const handleExportEvent = () => {
   exportToExcel()
 }
 
-// Écouter l'événement
 onMounted(() => {
+  const saved = localStorage.getItem("esriData")
+  if (saved) {
+    const parsed = JSON.parse(saved)
+    dateDebut.value = parsed.dateDebut || ""
+    dateFin.value = parsed.dateFin || ""
+    status.value = parsed.status || null
+    message.value = parsed.message || ""
+    columns.value = parsed.columns || []
+    rows.value = parsed.rows || []
+  }
+
   window.addEventListener('export-esri-data', handleExportEvent)
 })
 
-// Nettoyer l'événement
 onUnmounted(() => {
   window.removeEventListener('export-esri-data', handleExportEvent)
 })
