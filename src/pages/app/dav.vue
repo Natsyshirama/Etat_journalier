@@ -1,17 +1,5 @@
 <template>
   <v-container class="unified-container" fluid>
-    <!-- Sélecteur de table commun -->
-    <!-- <v-row class="mb-4">
-      <v-col cols="12" md="6">
-        <v-select
-          v-model="selectedTable"
-          :items="history.map(item => item.label)"
-          label="Choisir une table"
-          outlined
-          dense
-        />
-      </v-col>
-    </v-row> -->
 
     <!-- Résumé conditionnel selon l'onglet -->
     <ResumerDat v-if="selectedTable && activeTab === 0" :tableName="selectedTable" />
@@ -131,7 +119,7 @@ import TableauEpr from "@/components/epr/TableauEpr.vue"
 import EprGraphe from "@/components/epr/EprGraphe.vue"
 
 const history = ref([])
-const selectedTable = ref(null)
+const selectedTable =  ref(localStorage.getItem("selectedTable") || null)
 const activeTab = ref(0)
 const displayComponent = ref("tableau")
 
@@ -222,13 +210,13 @@ const handleDateSelection = (event) => {
 }
 onMounted(() => {
   window.addEventListener('export-dav-data', handleExportEvent)
-  window.addEventListener('table-date-selected', handleDateSelection) // ✅ Nouvel écouteur
+  window.addEventListener('table-date-selected', handleDateSelection) //  ecouteur date selection
   fetchTables() 
 })
 
 onUnmounted(() => {
   window.removeEventListener('export-dav-data', handleExportEvent)
-  window.removeEventListener('table-date-selected', handleDateSelection) // ✅ Nettoyage
+  window.removeEventListener('table-date-selected', handleDateSelection)
 })
 
 const fetchTables = async () => {
@@ -245,6 +233,7 @@ watch(() => popupStore.selected_date, (newDate) => {
 
   if (newDate) {
     selectedTable.value = newDate
+    localStorage.setItem("selectedTable", newVal)
     console.log("📅 Table sélectionnée via store:", selectedTable.value)
   }
 }, { immediate: true })
