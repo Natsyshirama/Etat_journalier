@@ -96,8 +96,6 @@ watch(
   position: sticky;
   top: 0;
   z-index: 20;
-  background-color: #121212; /* couleur du fond selon ton thème */
-  padding: 8px;
   border-bottom: 1px solid #333;
 }
 

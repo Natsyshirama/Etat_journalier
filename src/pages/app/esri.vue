@@ -1,6 +1,6 @@
 <template>
   <v-container class="esri-container"  fluid>
-    <!-- En-tête : Sélection période -->
+    
     <v-row class="mb-4">
       <v-col cols="12" md="3">
         <v-text-field
@@ -47,7 +47,6 @@
       {{ message }}
     </v-alert>
 
-    <!-- Tableau des données -->
     <TablesEsri
       v-if="status === 'success' && rows.length"
       :columns="columns"

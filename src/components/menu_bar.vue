@@ -3,7 +3,41 @@
     <!-- Badge date -->
     <div class="flex flex-row justify-end items-center space-x-4">
       <h3 class="mr-5 text-xl">Date d'arrêt</h3>
+      <!--menu DAV-->
+       <v-menu
+        v-if="isCompte"
+        v-model="menu"
+        close-on-content-click
+        offset-y
+        max-width="200"
+        min-width="200"
+      >
+        <template #activator="{ props }">
+          <v-btn v-bind="props" prepend-icon="mdi-calendar-range" variant="outlined">
+            <template #prepend>
+              <v-icon color="success" />
+            </template>
+            <span class="text-2xl">{{ selectedDate }}</span>
+          </v-btn>
+        </template>
+        <v-list style="max-height: 200px; overflow-y: auto;">
+          <v-list-item
+            v-for="date in filteredHistoryDates"
+            :key="date.label"
+            @click="() => selectDate(date.label)"
+            role="button"
+          >
+            <div class="flex" :title="date.stat_of!='init'? 'Base non initialisé':''">
+              <v-icon v-if="date.stat_compte !== 1 " class=" mr-2 text-red-700">mdi-database-alert</v-icon> 
+              <v-icon v-else color="success" class=" mr-2">mdi-database-check</v-icon> 
+              <v-list-item-title>{{ date.label }}</v-list-item-title>
+            </div>
+          </v-list-item>
+        </v-list>
+      </v-menu>
+
       <v-menu
+        v-else
         v-model="menu"
         close-on-content-click
         offset-y
@@ -33,6 +67,7 @@
           </v-list-item>
         </v-list>
       </v-menu>
+    
     </div>
 
     <!-- ✅ Bouton exportation conditionnel -->
@@ -195,6 +230,11 @@ const get_last_import_file = async () => {
   }
 }
 
+const filteredHistoryDates = computed(() => {
+  return historyDates.value.filter(date => date.stat_compte)
+})
+
+
 const formatDateString = (rawDate) => {
   if (!/^\d{8}$/.test(rawDate)) return null
   return `${rawDate.slice(0, 4)}-${rawDate.slice(4, 6)}-${rawDate.slice(6, 8)}`
@@ -207,7 +247,6 @@ const formatDateString = (rawDate) => {
   get_last_import_file()
  })
 
-// 📦 Données à exporter
 const listes_encours_credits = ref([])
 const listes_remboursement_credits = ref([])
 const listes_limit_avm = ref([])
@@ -229,7 +268,6 @@ watch(() => popupStore.limit_caution_actual_data, (val) => {
   listes_limit_caution.value = val
 }, { immediate: true })
 
-// 📤 Fonction générique d’export
 function exportToExcel(data, filenameBase, sheetName = 'Feuille1') {
   if (!data || data.length === 0) {
     alert('Aucune donnée à exporter')
@@ -267,13 +305,15 @@ async function fetchData(baseUrl, date = null) {
   }
 }
 
+//si sur dav emettre une event 
 async function selectDate(date) {
-  
   selectedDate.value = date
-  usePopupStore().selected_date.value = date
+  popupStore.selected_date = date
   menu.value = false
-   
 
+  if (isCompte.value) {
+    window.dispatchEvent(new CustomEvent('table-date-selected', { detail: { date } }))
+  }
 }
 
 

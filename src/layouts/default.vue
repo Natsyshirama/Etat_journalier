@@ -10,7 +10,7 @@
 </template>
 
 <script setup>
-import NavigationDrawer from '@/components/navigation_drawer.vue' // ou '../components/' selon ton arborescence
+import NavigationDrawer from '@/components/navigation_drawer.vue' ;
 import Propover_menu from '@/components/propover_menu.vue';
 import menu_bar from '../components/menu_bar.vue';
 </script>

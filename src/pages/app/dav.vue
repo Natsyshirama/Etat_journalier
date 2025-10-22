@@ -1,7 +1,7 @@
 <template>
   <v-container class="unified-container" fluid>
     <!-- Sélecteur de table commun -->
-    <v-row class="mb-4">
+    <!-- <v-row class="mb-4">
       <v-col cols="12" md="6">
         <v-select
           v-model="selectedTable"
@@ -11,7 +11,7 @@
           dense
         />
       </v-col>
-    </v-row>
+    </v-row> -->
 
     <!-- Résumé conditionnel selon l'onglet -->
     <ResumerDat v-if="selectedTable && activeTab === 0" :tableName="selectedTable" />
@@ -111,6 +111,9 @@
 import { ref, onMounted, watch, onUnmounted } from "vue"
 import axios from "axios"
 import * as XLSX from "xlsx"
+import { usePopupStore } from '@/stores'
+const popupStore = usePopupStore()
+
 
 // Composants DAT
 import ResumerDat from "@/components/dat/ResumerDat.vue"
@@ -128,11 +131,11 @@ import TableauEpr from "@/components/epr/TableauEpr.vue"
 import EprGraphe from "@/components/epr/EprGraphe.vue"
 
 const history = ref([])
-const selectedTable = ref(localStorage.getItem("selectedTable") || null)
+const selectedTable = ref(null)
 const activeTab = ref(0)
 const displayComponent = ref("tableau")
 
-// Configuration des types d'export
+// config
 const exportConfig = {
   'DAV': { 
     apiEndpoint: 'dav', 
@@ -151,7 +154,7 @@ const exportConfig = {
   }
 }
 
-// Fonction d'export générique et dynamique
+// Fonction export
 const exportToExcel = async (type) => {
   if (!selectedTable.value) {
     alert('Aucune table sélectionnée')
@@ -174,7 +177,7 @@ const exportToExcel = async (type) => {
       return
     }
 
-    const dataToExport = data.map(row => {
+    const dataToExport = data.map(row => {//emplacement data avec row ASSURER ordre colonnes
       const exportedRow = {}
       columns.forEach(col => {
         exportedRow[col] = row[col] ?? "" 
@@ -197,9 +200,9 @@ const exportToExcel = async (type) => {
   }
 }
 
-// Gérer l'événement d'export
+// gerer evenement export
 const handleExportEvent = (event) => {
-  const type = event.detail.type
+  const type = event.detail.type //attend le type envoier par menu_bar
   if (exportConfig[type]) {
     exportToExcel(type)
   } else {
@@ -207,18 +210,25 @@ const handleExportEvent = (event) => {
   }
 }
 
-// Fonctions spécifiques pour chaque type (pour garder la compatibilité)
+// Fonctions  pour chaque type 
 const exportDavToExcel = () => exportToExcel('DAV')
 const exportDatToExcel = () => exportToExcel('DAT')
 const exportEprToExcel = () => exportToExcel('EPR')
 
+
+const handleDateSelection = (event) => {
+  selectedTable.value = event.detail.date
+  console.log("📅 Table sélectionnée via event:", selectedTable.value)
+}
 onMounted(() => {
   window.addEventListener('export-dav-data', handleExportEvent)
+  window.addEventListener('table-date-selected', handleDateSelection) // ✅ Nouvel écouteur
   fetchTables() 
 })
 
 onUnmounted(() => {
   window.removeEventListener('export-dav-data', handleExportEvent)
+  window.removeEventListener('table-date-selected', handleDateSelection) // ✅ Nettoyage
 })
 
 const fetchTables = async () => {
@@ -230,11 +240,16 @@ const fetchTables = async () => {
   }
 }
 
-watch(selectedTable, (newVal) => {
-  if (newVal) {
-    localStorage.setItem("selectedTable", newVal)
+watch(() => popupStore.selected_date, (newDate) => {
+    console.log("🔄 Store updated - selected_date:", newDate)
+
+  if (newDate) {
+    selectedTable.value = newDate
+    console.log("📅 Table sélectionnée via store:", selectedTable.value)
   }
-})
+}, { immediate: true })
+
+
 </script>
 
 <style scoped>
