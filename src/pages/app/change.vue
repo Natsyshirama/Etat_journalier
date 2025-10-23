@@ -1,6 +1,5 @@
 <template>
   <v-container class="change-container" fluid>
-    <!-- 🔹 En-tête : Sélection période -->
     <v-row class="mb-4">
       <v-col cols="12" md="3">
         <v-text-field
@@ -112,7 +111,7 @@ const hasData = computed(() =>
   allocationRows.value.length > 0
 )
 
-// 🔹 Récupération des données depuis l'API
+
 const fetchChangeData = async () => {
   if (!dateDebut.value || !dateFin.value) {
     status.value = "error"
@@ -220,6 +219,13 @@ const handleExportEvent = () => {
 }
 
 onMounted(() => {
+    const saved = localStorage.getItem("esriData")
+  if (saved) {
+    const parsed = JSON.parse(saved)
+    dateDebut.value = parsed.dateDebut || ""
+    dateFin.value = parsed.dateFin || ""
+    
+  }
   window.addEventListener('export-change-data', handleExportEvent)
 })
 

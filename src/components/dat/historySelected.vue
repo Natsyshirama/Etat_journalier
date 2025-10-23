@@ -4,38 +4,29 @@
     <v-divider></v-divider>
 
     <v-list>
-  <v-list-item
-    v-for="item in history"
-    :key="item.label"
-    @click="selectHistory(item)"
-    class="d-flex align-center justify-space-between"
-  >
-    <!-- Nom de la table -->
-    <v-list-item-title>{{ item.label }}</v-list-item-title>
-
-    <!-- Statuts -->
-    <div class="d-flex gap-2">
-      <!-- Statut DAT -->
-      <v-chip
-        :color="item.dat_status ? 'green' : 'red'"
-        dark
-        small
+      <v-list-item
+        v-for="item in history"
+        :key="item.label"
+        @click="selectHistory(item)"
+        class="d-flex align-center justify-space-between"
       >
-        DAT
-      </v-chip>
+        <!-- Nom de la table -->
+        <v-list-item-title>{{ item.label }}</v-list-item-title>
 
-      <!-- Statut DAV -->
-      <v-chip
-        :color="item.dav_status ? 'green' : 'red'"
-        dark
-        small
-      >
-        DAV
-      </v-chip>
-    </div>
-  </v-list-item>
-</v-list>
-
+        <!-- Statuts dynamiques -->
+        <div class="d-flex gap-2">
+          <v-chip
+            v-for="status in statusKeys"
+            :key="status.key"
+            :color="item[status.key] ? 'green' : 'red'"
+            dark
+            small
+          >
+            {{ status.label }}
+          </v-chip>
+        </div>
+      </v-list-item>
+    </v-list>
   </v-card>
 </template>
 
@@ -44,6 +35,12 @@ import { ref, onMounted, defineExpose } from "vue"
 import axios from "axios"
 
 const history = ref([])
+
+const statusKeys = [
+  { key: "dat_status", label: "DAT" },
+  { key: "dav_status", label: "DAV" },
+  { key: "epr_status", label: "EPR" },
+]
 
 const fetchHistory = async () => {
   try {
@@ -54,14 +51,10 @@ const fetchHistory = async () => {
   }
 }
 
-// Émettre au parent quand on clique
 const emit = defineEmits(["select"])
-const selectHistory = (item) => {
-  emit("select", item)
-}
+const selectHistory = (item) => emit("select", item)
 
-// Exposer la fonction pour le parent
-defineExpose({ fetchHistory })
+defineExpose({ fetchHistory,history })
 
 onMounted(fetchHistory)
 </script>

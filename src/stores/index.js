@@ -11,6 +11,8 @@ export const usePopupStore = defineStore('popup', () => {
   const loadFile=ref("Préparation ...");
   const list_a_traiter=ref([])
   const selected_date=ref(null)
+  const selected_date_stat_compte=ref(null)
+
   const encours_actual_data=ref([])
   const remboursement_actual_data=ref([])
   const limit_avm_actual_data=ref([]) 
@@ -55,6 +57,7 @@ export const usePopupStore = defineStore('popup', () => {
     user_access,
     list_a_traiter,
     selected_date,
+    selected_date_stat_compte,
     encours_actual_data,
     remboursement_actual_data,
     limit_caution_actual_data, 

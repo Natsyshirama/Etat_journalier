@@ -1,6 +1,20 @@
 <template>
   <v-container class="unified-container" fluid>
 
+    <div v-if="selectedTable && isInitialized === 0" class="text-center py-16">
+      <v-icon color="warning" size="80" class="mb-4">mdi-database-alert</v-icon>
+      <h2 class="text-h5 mb-4">Table non initialisée</h2>
+      <p class="text-body-1 mb-6">La table "{{ selectedTable }}" doit être initialisée avant utilisation.</p>
+      <v-btn 
+        color="primary" 
+        size="large"
+        @click="goToInitializePage"
+        prepend-icon="mdi-cog"
+      >
+        Initialiser la table
+      </v-btn>
+    </div>
+<div v-else>
     <!-- Résumé conditionnel selon l'onglet -->
     <ResumerDat v-if="selectedTable && activeTab === 0" :tableName="selectedTable" />
     <ResumerDav v-if="selectedTable && activeTab === 1" :tableName="selectedTable" />
@@ -81,7 +95,7 @@
         </div>
       </v-window-item>
     </v-window>
-
+</div>
     <!-- Alerte si aucune table sélectionnée -->
     <v-alert
       v-if="!selectedTable"
@@ -96,11 +110,12 @@
   </v-container>
 </template>
 <script setup>
-import { ref, onMounted, watch, onUnmounted } from "vue"
+import { ref, onMounted, watch, onUnmounted , computed} from "vue"
 import axios from "axios"
 import * as XLSX from "xlsx"
 import { usePopupStore } from '@/stores'
 const popupStore = usePopupStore()
+import { useRouter } from 'vue-router'
 
 
 // Composants DAT
@@ -118,10 +133,29 @@ import ResumerEpr from "@/components/epr/resumerEpr.vue"
 import TableauEpr from "@/components/epr/TableauEpr.vue"
 import EprGraphe from "@/components/epr/EprGraphe.vue"
 
+
 const history = ref([])
 const selectedTable =  ref(localStorage.getItem("selectedTable") || null)
 const activeTab = ref(0)
 const displayComponent = ref("tableau")
+const router = useRouter()
+
+//verifier le status
+const isInitialized = computed(() => {
+  return popupStore.selected_date_stat_compte 
+})
+
+
+// Fonction de redirection
+const goToInitializePage = () => {
+  router.push('/app/Initialise')
+}
+
+watch(() => popupStore.selected_date_stat_compte, (newStat) => {
+  isInitialized.value = newStat !== false
+  console.log("📊 Statut d'initialisation:", isInitialized.value)
+})
+
 
 // config
 const exportConfig = {
@@ -206,7 +240,10 @@ const exportEprToExcel = () => exportToExcel('EPR')
 
 const handleDateSelection = (event) => {
   selectedTable.value = event.detail.date
+  popupStore.selected_date_stat_compte = event.detail.stat_compte // ✅ c’est ici qu’il faut changer
   console.log("📅 Table sélectionnée via event:", selectedTable.value)
+  console.log("📅 Table sélectionnée - Initialisée:", isInitialized.value)
+
 }
 onMounted(() => {
   window.addEventListener('export-dav-data', handleExportEvent)
@@ -229,11 +266,11 @@ const fetchTables = async () => {
 }
 
 watch(() => popupStore.selected_date, (newDate) => {
-    console.log("🔄 Store updated - selected_date:", newDate)
+    console.log(" Store updated - selected_date:", newDate)
 
   if (newDate) {
     selectedTable.value = newDate
-    localStorage.setItem("selectedTable", newVal)
+    localStorage.setItem("selectedTable", newDate)
     console.log("📅 Table sélectionnée via store:", selectedTable.value)
   }
 }, { immediate: true })

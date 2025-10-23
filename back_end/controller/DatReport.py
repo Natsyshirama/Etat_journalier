@@ -123,7 +123,7 @@ class DatReport:
             conn = self.db.connect()
 
             query = text("""
-                SELECT label, used, dat_status, dav_status
+                SELECT label, used, dat_status, dav_status, epr_status, stat_compte
                 FROM history_insert
                 ORDER BY used DESC
             """)

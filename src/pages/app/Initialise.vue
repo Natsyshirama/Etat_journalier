@@ -52,7 +52,6 @@ const loading = ref(false)
 const message = ref("")
 const messageType = ref("info")
 
-// Référence vers le composant enfant pour rafraîchir la liste
 const historyRef = ref(null)
 
 const onSelectHistory = (item) => {
@@ -66,7 +65,7 @@ const initializeTable = async () => {
   loading.value = true
   try {
     const res = await axios.post(
-      `http://127.0.0.1:8000/api/dat/initialise/${selectedHistory.value.label}`
+      `http://127.0.0.1:8000/api/compte/compte_init/${selectedHistory.value.label}`
     )
 
     // Vérifier si le backend renvoie status "success"

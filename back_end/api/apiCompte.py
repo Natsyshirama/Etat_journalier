@@ -26,33 +26,9 @@ operation_esri = OperationEsri()
 dav_report = DavReport()
 change_mande = ChangeMande()
 epr_report = EprReport()
+#INITIALISATION COMPTE
 
-@router.post("/dat/create_dat_precompute/{name}")
-def create_dat_precompute(name: str):
-    """
-    Crée une table DAT pré-calculée (DAT_<label>)
-    """
-    try:
-        table_name = db_get.create_tableDatPreCompute(name)
-        db_get.update_statusHistoryInsert(name)
-        if not table_name:
-            raise Exception("Erreur lors de la création de la table DAT")
-        
-       
-        operation.calculeAmtCap(table_name)
-        db_get.traitement_dat(table_name)
-        return JSONResponse(content={
-                    "status": "success",
-                    "message": f"Table créée et nettoyée et calculer : {table_name} ✅",
-                    "table_name": table_name
-        })
-        
-    except Exception as e:
-        return JSONResponse(content={"status": "error", "message": str(e)}, status_code=500)
-
-
-
-@router.post("/compte/compte_init")
+@router.post("/compte/compte_init/{name}")
 def initialize(name:str):
     try:
         if dav_unique.verifie_statu(name):
@@ -102,7 +78,6 @@ def create_esri_precompute( date_debut: str = Query(...), date_fin: str = Query(
         if limit and (date_debut > limit or date_fin > limit):
             raise Exception(f"Les données apres le {limit} ne sont pas encore disponible.")
        
-        # --- Exécuter le traitement ESRI ---
         result_df,columns = operation_esri.process_esri_data_fast(date_debut, date_fin)
 
         if result_df.empty:
@@ -115,10 +90,8 @@ def create_esri_precompute( date_debut: str = Query(...), date_fin: str = Query(
                 status_code=200
             )
 
-        # --- Convertir le DataFrame en liste de dictionnaires ---
         data_json = json.loads(result_df.to_json(orient="records", force_ascii=False))
 
-        # --- Réponse finale ---
         return JSONResponse(
             content={
                 "status": "success",

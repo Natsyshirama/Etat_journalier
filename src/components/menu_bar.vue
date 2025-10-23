@@ -24,7 +24,7 @@
           <v-list-item
             v-for="date in filteredHistoryDates"
             :key="date.label"
-            @click="() => selectDate(date.label)"
+            @click="() => selectDate(date.label, date.stat_compte)"
             role="button"
           >
             <div class="flex" :title="date.stat_of!='init'? 'Base non initialisé':''">
@@ -231,7 +231,7 @@ const get_last_import_file = async () => {
 }
 
 const filteredHistoryDates = computed(() => {
-  return historyDates.value.filter(date => date.stat_compte)
+  return historyDates.value
 })
 
 
@@ -306,13 +306,15 @@ async function fetchData(baseUrl, date = null) {
 }
 
 //si sur dav emettre une event 
-async function selectDate(date) {
+async function selectDate(date,stat_compte) {
   selectedDate.value = date
   popupStore.selected_date = date
+  popupStore.selected_date_stat_compte = stat_compte
+
   menu.value = false
 
   if (isCompte.value) {
-    window.dispatchEvent(new CustomEvent('table-date-selected', { detail: { date } }))
+    window.dispatchEvent(new CustomEvent('table-date-selected', { detail: { date, stat_compte } }))
   }
 }
 

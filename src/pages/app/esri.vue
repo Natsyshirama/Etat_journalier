@@ -79,6 +79,7 @@ const fetchEsriData = async () => {
     message.value = "Veuillez remplir toutes les informations."
     return
   }
+  
   loading.value = true
   status.value = null
   message.value = ""
@@ -101,7 +102,6 @@ const fetchEsriData = async () => {
     columns.value = data.columns || []
     rows.value = data.rows || []
 
-    // ✅ Sauvegarder seulement après succès
    localStorage.setItem(
   "esriData",
   JSON.stringify({
@@ -132,7 +132,6 @@ const exportToExcel = () => {
   exporting.value = true
 
   try {
-    // Préparer les données pour l'export
     const dataToExport = rows.value.map(row => {
       const exportedRow = {}
       columns.value.forEach(col => {
@@ -141,19 +140,14 @@ const exportToExcel = () => {
       return exportedRow
     })
 
-    //  workbook
     const wb = XLSX.utils.book_new()
     
-    // Cworksheetavec les donne
     const ws = XLSX.utils.json_to_sheet(dataToExport)
     
-    // worksheet au workbook
     XLSX.utils.book_append_sheet(wb, ws, "Données ESRI")
     
-    // file name
     const fileName = `esri_${dateDebut.value}_${dateFin.value}.xlsx`
     
-    // telecharger
     XLSX.writeFile(wb, fileName)
     
     message.value = "Export Excel réussi !"
@@ -178,10 +172,7 @@ onMounted(() => {
     const parsed = JSON.parse(saved)
     dateDebut.value = parsed.dateDebut || ""
     dateFin.value = parsed.dateFin || ""
-    status.value = parsed.status || null
-    message.value = parsed.message || ""
-    columns.value = parsed.columns || []
-    rows.value = parsed.rows || []
+    
   }
 
   window.addEventListener('export-esri-data', handleExportEvent)
