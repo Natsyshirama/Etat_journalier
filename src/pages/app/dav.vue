@@ -1,6 +1,7 @@
 <template>
   <v-container class="unified-container" fluid>
 
+    <!-- si pas encore initialiser -->
     <div v-if="selectedTable && isInitialized === 0" class="text-center py-16">
       <v-icon color="warning" size="80" class="mb-4">mdi-database-alert</v-icon>
       <h2 class="text-h5 mb-4">Table non initialisée</h2>
@@ -96,7 +97,6 @@
       </v-window-item>
     </v-window>
 </div>
-    <!-- Alerte si aucune table sélectionnée -->
     <v-alert
       v-if="!selectedTable"
       type="info"
@@ -240,7 +240,7 @@ const exportEprToExcel = () => exportToExcel('EPR')
 
 const handleDateSelection = (event) => {
   selectedTable.value = event.detail.date
-  popupStore.selected_date_stat_compte = event.detail.stat_compte // ✅ c’est ici qu’il faut changer
+  popupStore.selected_date_stat_compte = event.detail.stat_compte 
   console.log("📅 Table sélectionnée via event:", selectedTable.value)
   console.log("📅 Table sélectionnée - Initialisée:", isInitialized.value)
 

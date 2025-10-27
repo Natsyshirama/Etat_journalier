@@ -9,7 +9,7 @@
 
         <!-- Si non initialisé -->
         <v-btn
-          v-if="!selectedHistory.dat_status || !selectedHistory.dav_status"
+          v-if="!selectedHistory.stat_compte"
           color="primary"
           class="mt-4"
           @click="initializeTable"
@@ -18,7 +18,6 @@
           Initialiser                         
         </v-btn>
 
-        <!-- Si déjà initialisé -->
         <v-alert
           v-else
           type="success"
@@ -28,7 +27,6 @@
           Déjà initialisé
         </v-alert>
 
-        <!-- Message de retour après action -->
         <v-alert
           v-if="message"
           :type="messageType"
@@ -56,7 +54,7 @@ const historyRef = ref(null)
 
 const onSelectHistory = (item) => {
   selectedHistory.value = item
-  message.value = "" // reset message à chaque sélection
+  message.value = "" 
 }
 
 const initializeTable = async () => {
@@ -68,29 +66,31 @@ const initializeTable = async () => {
       `http://127.0.0.1:8000/api/compte/compte_init/${selectedHistory.value.label}`
     )
 
-    // Vérifier si le backend renvoie status "success"
     if (res.data.status === "success") {
       message.value = res.data.message || "Initialisation réussie ✅"
       messageType.value = "success"
 
-      // Rafraîchir la liste
       await historyRef.value.fetchHistory()
 
-      // Mettre à jour selectedHistory
       const updated = historyRef.value.history.find(
         h => h.label === selectedHistory.value.label
       )
       if (updated) selectedHistory.value = updated
+       setTimeout(() => {
+        window.location.reload()
+      }, 2000)
+      
     } else {
-      // Si backend renvoie "error" mais status HTTP 200
       message.value = res.data.message || "tss lors de l'initialisation ❌"
       messageType.value = "error"
     }
 
-  } 
-  finally {
+     } catch (err) {
+    message.value = "Erreur de connexion au serveur ⚠️"
+    messageType.value = "error"
+  } finally {
     loading.value = false
-  }
+   }
 }
 
 </script>
