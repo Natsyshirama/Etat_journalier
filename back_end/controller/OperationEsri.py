@@ -199,22 +199,17 @@ class OperationEsri:
                 row_data["Donneur resident"] = row["Donneur resident"]
                 row_data["Date"] = row["Date"]
                 
-                # Adresse basée sur le code pays
                 country_code = row_data.get('Code pays donneur d\'ordre')
                 row_data["Adresse donneur d'ordre"] = self.update_address_based_on_country(country_code)
                 
-                # Code pays numérique
                 row_data["Code pays"] = self.update_country_code(country_code)
                 
                 extracted_data.append(row_data)
 
-            # 3. Convertir en DataFrame
             extracted_df = pd.DataFrame(extracted_data)
 
-            # 4. Nettoyer les codes pays
             extracted_df['Code pays donneur d\'ordre'] = extracted_df['Code pays donneur d\'ordre'].str.strip().str.upper()
 
-            # 5. Réorganiser les colonnes
             desired_order = [
                 'Agence', 'Type', 'Référence', 'Banque', 'Donneur d\'ordre', 'Donneur resident', 
                 'Adresse donneur d\'ordre', 'Bénéficiaire', 'Bénéficiaire résident', 'Adresse Bénéficiaire',

@@ -68,8 +68,7 @@ def initialize(name:str):
         return JSONResponse(content={"status": "error", "message": str(e)}, status_code=500)
     
     
-#INITIALISATION ESRI
-#create tables esri_precompute
+# ESRI
 
 @router.post("/esri/create_esri_precompute")
 def create_esri_precompute( date_debut: str = Query(...), date_fin: str = Query(...)):
@@ -111,19 +110,18 @@ def create_esri_precompute( date_debut: str = Query(...), date_fin: str = Query(
         return JSONResponse(content={"status": "error", "message": str(e)}, status_code=500)
 
 
-
-###########INITIALISATION CHANGE#############
-@router.post("/change/generate_report_optimized")
-def create_change_report_optimized(date_debut: str, date_fin: str):
+#change
+@router.post("/change/generate_report")
+def create_change_report(date_debut: str, date_fin: str):
     try:
         limit = db_get.getHistoryDate()
-        result = change_mande.generate_tables_report(date_debut, date_fin)
         if limit and (date_debut > limit or date_fin > limit):
             raise Exception(f"Les données apres le {limit} ne sont pas encore disponible.")
+        result = change_mande.generate_tables_report(date_debut, date_fin)
+        
         if not result:
             raise Exception("Aucune donnée disponible pour cette période.")
         
-        # Utiliser orient='records' pour une sérialisation plus rapide
         response_data = {
             "status": "success",
             "periode": {"date_debut": date_debut, "date_fin": date_fin},
@@ -139,28 +137,6 @@ def create_change_report_optimized(date_debut: str, date_fin: str):
             status_code=500,
             content={"status": "error", "message": str(e)}
         )
-        
-
-#exportation des tables
-@router.get("/dat/export_excel")
-def export_excel(table_name: str):
-    
-    try:
-        file_path = operation.exportExcel(table_name)
-
-        if not file_path:
-            raise Exception("Erreur lors de l'export Excel")
-
-        return FileResponse(
-            file_path,
-            media_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
-            filename=file_path
-        )
-
-    except Exception as e:
-        return JSONResponse(content={"status": "error", "message": str(e)}, status_code=500)
-
-
 
 
 ##"""""""""""""DAT REPORT""""""""""""""##
@@ -295,7 +271,6 @@ def get_dav_resume(table_name: str):
         if not summary:
             return JSONResponse(status_code=404, content={"error": "Résumé introuvable ou table vide"})
 
-        # Conversion sécurisée en types JSON (int / float)
         safe_summary = {
             
             "table_name": table_name,

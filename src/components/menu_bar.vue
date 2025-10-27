@@ -1,9 +1,7 @@
 <template>
   <v-toolbar color=" " class="bg-transparent" :title="toolbarTitle">
-    <!-- Badge date -->
     <div class="flex flex-row justify-end items-center space-x-4">
       <h3 class="mr-5 text-xl">Date d'arrêt</h3>
-      <!--menu DAV-->
        <v-menu
         v-if="isCompte"
         v-model="menu"

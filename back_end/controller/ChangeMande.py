@@ -137,18 +137,15 @@ class ChangeMande:
     def generate_tables_report(self, date_debut: str, date_fin: str):
        
         try:
-            # Créer la table temporaire unifiée
             if not self.create_unified_temp_table(date_debut, date_fin):
                 return False
             
-            # Récupérer toutes les données
             df_brutes, df_brutes_26, df_synthese_raw = self.get_all_data(date_debut, date_fin)
             
             if df_brutes.empty and df_brutes_26.empty:
                 print("[ATTENTION] Aucune donnée à traiter")
                 return False
             
-            # Traiter la synthèse
             resultat_synthese = self.process_synthese_data(df_synthese_raw)
             
             return {

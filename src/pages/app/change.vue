@@ -33,7 +33,6 @@
       </v-col>
     </v-row>
 
-    <!-- 🔹 Message d'état -->
     <v-alert
       v-if="message"
       :type="status === 'error' ? 'error' : (status === 'warning' ? 'warning' : 'success')"
@@ -44,16 +43,13 @@
       {{ message }}
     </v-alert>
 
-    <!-- 🔹 Onglets pour les différentes tables -->
     <v-tabs v-if="hasData" v-model="activeTab" class="mb-4">
       <v-tab>Synthèse</v-tab>
       <v-tab>État</v-tab>
       <v-tab>Allocation</v-tab>
     </v-tabs>
 
-    <!-- 🔹 Contenu des onglets -->
     <v-window v-if="hasData" v-model="activeTab">
-      <!-- Synthèse -->
       <v-window-item>
         <TableauChange
           :columns="syntheseColumns"
@@ -62,7 +58,6 @@
         />
       </v-window-item>
 
-      <!-- État -->
       <v-window-item>
         <TableauChange
           :columns="etatColumns"
@@ -71,7 +66,6 @@
         />
       </v-window-item>
 
-      <!-- Allocation -->
       <v-window-item>
         <TableauChange
           :columns="allocationColumns"
@@ -87,6 +81,7 @@
 import { ref, computed,onMounted, onUnmounted } from "vue"
 import axios from "axios"
 import * as XLSX from "xlsx"
+import { watch } from "vue"
 import TableauChange from "@/components/change/TableauChange.vue"
 
 const dateDebut = ref("")
@@ -97,7 +92,6 @@ const status = ref(null)
 const message = ref("")
 const activeTab = ref(0)
 
-// 🔹 Données pour chaque tableau
 const syntheseRows = ref([])
 const syntheseColumns = ref([])
 const etatRows = ref([])
@@ -111,6 +105,18 @@ const hasData = computed(() =>
   allocationRows.value.length > 0
 )
 
+const saveToLocalStorage = () => {
+  const dataToSave = {
+    dateDebut: dateDebut.value,
+    dateFin: dateFin.value,
+    status: status.value,
+    message: message.value,
+    synthese: syntheseRows.value,
+    etat: etatRows.value,
+    allocation: allocationRows.value,
+  }
+  localStorage.setItem("changeData", JSON.stringify(dataToSave))
+}
 
 const fetchChangeData = async () => {
   if (!dateDebut.value || !dateFin.value) {
@@ -125,7 +131,7 @@ const fetchChangeData = async () => {
 
   try {
     const res = await axios.post(
-      `http://127.0.0.1:8000/api/change/generate_report_optimized`,
+      `http://127.0.0.1:8000/api/change/generate_report`,
       null,
       {
         params: {
@@ -155,15 +161,8 @@ const fetchChangeData = async () => {
         allocationColumns.value = Object.keys(data.allocation[0])
         allocationRows.value = data.allocation
       }
- localStorage.setItem(
-  "esriData",
-  JSON.stringify({
-    dateDebut: dateDebut.value,
-    dateFin: dateFin.value,
-    status: status.value,
-    message: message.value,
-  })
-)
+
+      saveToLocalStorage()
 
     } else {
       message.value = data.message || "Erreur lors de la génération du rapport."
@@ -171,13 +170,17 @@ const fetchChangeData = async () => {
   } catch (err) {
     console.error("Erreur lors du chargement des données Change:", err)
     status.value = "error"
-    message.value = err.response?.data?.message || "Erreur serveur ou réseau."
-  } finally {
+  if (err.response?.data?.message) {
+    message.value = err.response.data.message
+  } else {
+    message.value = "Erreur serveur ou réseau."
+  }
+
+}finally {
     loading.value = false
   }
 }
 
-// 🔹 Export Excel
 const exportToExcel = () => {
   if (!hasData.value || !dateDebut.value || !dateFin.value) {
     message.value = "Aucune donnée à exporter ou dates manquantes."
@@ -219,11 +222,25 @@ const handleExportEvent = () => {
 }
 
 onMounted(() => {
-    const saved = localStorage.getItem("esriData")
+    const saved = localStorage.getItem("changeData")
   if (saved) {
     const parsed = JSON.parse(saved)
     dateDebut.value = parsed.dateDebut || ""
     dateFin.value = parsed.dateFin || ""
+    status.value = parsed.status || null
+    message.value = parsed.message || ""
+    syntheseRows.value = parsed.synthese || []
+    etatRows.value = parsed.etat || []
+    allocationRows.value = parsed.allocation || []
+    if (parsed.synthese?.length) {
+      syntheseColumns.value = Object.keys(parsed.synthese[0])
+    }
+    if (parsed.etat?.length) {
+      etatColumns.value = Object.keys(parsed.etat[0])
+    }
+    if (parsed.allocation?.length) {
+      allocationColumns.value = Object.keys(parsed.allocation[0])
+    }
     
   }
   window.addEventListener('export-change-data', handleExportEvent)
@@ -232,6 +249,12 @@ onMounted(() => {
 onUnmounted(() => {
   window.removeEventListener('export-change-data', handleExportEvent)
 })
+
+watch(
+  [syntheseRows, etatRows, allocationRows, dateDebut, dateFin],
+  saveToLocalStorage,
+  { deep: true }
+)
 </script>
 
 <style scoped>

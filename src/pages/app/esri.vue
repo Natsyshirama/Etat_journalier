@@ -96,6 +96,14 @@ const fetchEsriData = async () => {
       }
     )
 
+
+    if (res.status === "error") {
+      
+      status.value = "error"
+      message.value = data.message || "Erreur lors du chargement des données."
+      return
+    }
+
     const data = res.data
     status.value = data.status
     message.value = data.message
@@ -114,9 +122,15 @@ const fetchEsriData = async () => {
 
   } catch (err) {
     console.error("Erreur lors du chargement des données ESRI:", err)
+    if (err.response && err.response.data && err.response.data.message) {
+      message.value = err.response.data.message
+    } else {
+      message.value = "Erreur serveur ou réseau."
+    }
+
     status.value = "error"
-    message.value = "Erreur serveur ou réseau."
-  } finally {
+  } 
+  finally {
     loading.value = false
   }
 }

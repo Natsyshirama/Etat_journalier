@@ -1,6 +1,5 @@
 <template>
   <div class="table-wrapper">
-    <!-- 🔍 Barre de recherche -->
     <div class="table-search-bar">
       <v-text-field
         v-model="search"
@@ -12,7 +11,6 @@
       />
     </div>
 
-    <!-- 📊 Tableau scrollable -->
     <div class="table-scroll">
       <v-data-table
         :headers="headers"
@@ -25,7 +23,6 @@
         fixed-header
         height="500px"
       >
-        <!-- 📄 Pagination -->
         <template v-slot:footer>
           <v-pagination
             v-model="page"
@@ -35,7 +32,6 @@
           />
         </template>
 
-        <!-- 🛈 Aucune donnée -->
         <template v-slot:no-data>
           <v-alert type="info" border="left" color="blue" dark>
             Aucune donnée trouvée
@@ -75,7 +71,6 @@ const pageCount = computed(() =>
   Math.ceil(props.rows.length / itemsPerPage.value)
 )
 
-// 🔁 Reset la pagination quand les données changent
 watch(
   () => props.rows,
   () => (page.value = 1)
@@ -91,7 +86,6 @@ watch(
   background-color: transparent;
 }
 
-/* 🔍 Barre de recherche fixée */
 .table-search-bar {
   position: sticky;
   top: 0;
@@ -99,13 +93,11 @@ watch(
   border-bottom: 1px solid #333;
 }
 
-/* 📊 Tableau avec scroll interne */
 .table-scroll {
   flex: 1;
   overflow-y: auto;
 }
 
-/* 📌 En-tête fixe du tableau */
 .fixed-header-table ::v-deep(.v-data-table__wrapper) {
   overflow-y: auto;
   max-height: 500px;
@@ -114,7 +106,7 @@ watch(
 .fixed-header-table ::v-deep(th) {
   position: sticky;
   top: 0;
-  background-color: #1e1e1e; /* couleur du header */
+  background-color: #1e1e1e; 
   z-index: 15;
 }
 </style>
