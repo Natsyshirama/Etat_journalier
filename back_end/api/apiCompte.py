@@ -13,6 +13,7 @@ from controller.OperationEsri import OperationEsri
 from controller.DavReport import DavReport
 from controller.EprReport import EprReport
 from controller.ChangeMande import ChangeMande
+from controller.ChangeMandy import ChangeMandy
 from controller.DavUnique import DavUnique
 
 router = APIRouter()
@@ -26,6 +27,7 @@ operation_esri = OperationEsri()
 dav_report = DavReport()
 change_mande = ChangeMande()
 epr_report = EprReport()
+change_mandy = ChangeMandy()
 #INITIALISATION COMPTE
 
 @router.post("/compte/compte_init/{name}")
@@ -117,7 +119,7 @@ def create_change_report(date_debut: str, date_fin: str):
         limit = db_get.getHistoryDate()
         if limit and (date_debut > limit or date_fin > limit):
             raise Exception(f"Les données apres le {limit} ne sont pas encore disponible.")
-        result = change_mande.generate_tables_report(date_debut, date_fin)
+        result = change_mandy.generate_tables_report(date_debut, date_fin)
         
         if not result:
             raise Exception("Aucune donnée disponible pour cette période.")
@@ -125,9 +127,9 @@ def create_change_report(date_debut: str, date_fin: str):
         response_data = {
             "status": "success",
             "periode": {"date_debut": date_debut, "date_fin": date_fin},
-            "etat": result["etat"].to_dict(orient="records"),
-            "allocation": result["allocation"].to_dict(orient="records"),
-            "synthese": result["synthese"].to_dict(orient="records"),
+            "etat": result["etat"],
+            "allocation": result["allocation"],
+            "synthese": result["synthese"],
         }
 
         return JSONResponse(status_code=200, content=response_data)

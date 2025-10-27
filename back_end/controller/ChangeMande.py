@@ -12,7 +12,6 @@ class ChangeMande:
         self.engine = self.db.engine
         
     def create_unified_temp_table(self, date_debut: str, date_fin: str):
-        """Crée une seule table temporaire unifiée"""
         try:
             query = """
                 CREATE TEMPORARY TABLE IF NOT EXISTS temp_change_unified AS
@@ -70,16 +69,14 @@ class ChangeMande:
                     print(f"[ERREUR] Fermeture connexion : {close_err}")
        
     def get_all_data(self, date_debut: str, date_fin: str):
-        """Récupère toutes les données en une seule connexion"""
+       
         try:
             with self.db.connect() as conn:
-                # Données brutes
                 df_brutes = pd.read_sql(
                     "SELECT * FROM temp_change_unified ", 
                     conn
                 )
                 
-                # Données code 26
                 df_brutes_26 =pd.read_sql(
                     "SELECT * FROM temp_change_unified where transaction_code = 26", 
                     conn)
@@ -117,7 +114,6 @@ class ChangeMande:
             achat_total_mga = df_synthese['ACHAT/MONTANT MGA EUR'].iloc[0] + df_synthese['ACHAT/MONTANT MGA USD'].iloc[0]
             vente_total_mga = df_synthese['VENTE/MONTANT MGA USD'].iloc[0] + df_synthese['VENTE/MONTANT MGA EUR'].iloc[0]
             
-            # Organiser les données de synthèse
             resultat_synthese = pd.DataFrame({
                 'Type de transaction': ['ACHAT', 'VENTE'],
                 'EUR (Montant)': [df_synthese['ACHAT/MONTANT EUR'].iloc[0], df_synthese['VENTE/MONTANT EUR'].iloc[0]],
