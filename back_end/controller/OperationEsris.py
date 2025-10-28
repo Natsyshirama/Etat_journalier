@@ -2,36 +2,10 @@ import re
 from db.db import DB
 from sqlalchemy import text
 
-class OperationEsri:
+class OperationEsris:
     def __init__(self):
         self.db = DB()
         self.engine = self.db.engine
-        
-        self.teller = [
-            '151', '152', '171', '172', 'SIGNATORY', 'USREGS.TP.LEGAL.ID', 'EM.DRAW.CHQ.NO', 'EM.DRAW.CHQ.AMT',
-            'EM.DRAW.ACCT.NO', 'EM.DRAW.BANK', 'EM.DRAW.BRANCH', 'EM.DRAW.BRCH.CODE', 'EM.DRAW.CUST.NAME',
-            'EM.CLEARED.BAL', 'EM.MEMBER.NAME', 'EM.ACCT.WORK.BAL', 'EM.PAY.TO', 'EM.AMT.ARREARS', 'EM.ACCT.NUM',
-            'EM.SAVGS.AMOUNT', 'EM.REPAYMENT', 'EM.INT.REPAYMENT', 'EM.INTEREST.DUE', 'EM.CONS.DISCLOSE',
-            'EM.SAVING.TMP.BAL', 'EM.LOAN.TMP.BAL', 'EM.INT.TMP.BAL', 'EM.ACCT.TYPE', 'L.REFERENCE', 'L.ORD.CUST',
-            'L.ORD.CUST.CTRY', 'L.ORD.CUST.RES', 'L.BEN.NAME', 'L.BEN.ADD', 'L.BEN.RES', 'L.PAY.DETAILS', 'L.INI.CTRY',
-            'L.ECO.CODE', 'L.CCY.REC', 'L.MODE.TXN', 'L.MAT.AGEN', 'L.NOM.PRES', 'L.NIF.PRES', 'L.NUM.STATS', 'L.TYP.IDEN',
-            'L.NUM.IDEN', 'L.NUM.BEN', 'L.NOM.TIER', 'L.ORD.ADD', 'L.NAME.REC', 'L.ADDR', 'L.CIN', 'L.VERSION.NAME'
-        ]
-
-        self.columns_mapping = {
-            'Type': 'EM.ACCT.TYPE',
-            'Référence': 'L.REFERENCE',
-            'Donneur d\'ordre': 'L.ORD.CUST',
-            'Adresse donneur d\'ordre': 'L.ORD.ADD',
-            'Code pays donneur d\'ordre': 'L.ORD.CUST.CTRY',
-            'Bénéficiaire': 'L.BEN.NAME',
-            'Bénéficiaire résident': 'L.BEN.RES',
-            'Adresse Bénéficiaire': 'L.BEN.ADD',
-            'Nature': 'L.PAY.DETAILS',
-            'Code économique': 'L.ECO.CODE',
-            'Sens': 'L.MODE.TXN',
-        }
-
         self.country_addresses = {
            'AD': 'Andorre', 'AE': 'Émirats Arabes Unis', 'AF': 'Afghanistan', 'AG': 'Antigua et Barbuda', 'AI': 'Anguilla',
             'AL': 'Albanie', 'AM': 'Arménie', 'AN': 'Antilles néerlandaises', 'AO': 'Angola', 'AQ': 'Antarctique',
@@ -72,7 +46,6 @@ class OperationEsri:
             'VU': 'Vanuatu', 'WF': 'Îles Wallis-et-Futuna', 'WS': 'Samoa', 'YE': 'Yémen', 'YT': 'Mayotte', 'YU': 'Yougoslavie (obsolète)', 'ZA': 'Afrique du Sud',
             'ZM': 'Zambie', 'ZR': 'Zaïre', 'ZW': 'Zimbabwe'
         }
-
         self.countries_codes = {
             ("AF", "004"), ("ZA", "710"), ("AL", "008"), ("DZ", "12"), ("DE", "276"),
             ("AD", "020"), ("AO", "024"), ("AI", "660"), ("AQ", "010"), ("AG", "028"),
@@ -123,11 +96,35 @@ class OperationEsri:
             ("VU", "548"), ("VA", ""), ("VE", "862"), ("VN", "704"), ("YE", "887"),
             ("YU", ""), ("ZR", ""), ("ZM", "894"), ("ZW", "716")
         }
-
+        self.teller = {
+            '151', '152', '171', '172', 'SIGNATORY', 'USREGS.TP.LEGAL.ID', 'EM.DRAW.CHQ.NO', 'EM.DRAW.CHQ.AMT',
+            'EM.DRAW.ACCT.NO', 'EM.DRAW.BANK', 'EM.DRAW.BRANCH', 'EM.DRAW.BRCH.CODE', 'EM.DRAW.CUST.NAME',
+            'EM.CLEARED.BAL', 'EM.MEMBER.NAME', 'EM.ACCT.WORK.BAL', 'EM.PAY.TO', 'EM.AMT.ARREARS', 'EM.ACCT.NUM',
+            'EM.SAVGS.AMOUNT', 'EM.REPAYMENT', 'EM.INT.REPAYMENT', 'EM.INTEREST.DUE', 'EM.CONS.DISCLOSE',
+            'EM.SAVING.TMP.BAL', 'EM.LOAN.TMP.BAL', 'EM.INT.TMP.BAL', 'EM.ACCT.TYPE', 'L.REFERENCE', 'L.ORD.CUST',
+            'L.ORD.CUST.CTRY', 'L.ORD.CUST.RES', 'L.BEN.NAME', 'L.BEN.ADD', 'L.BEN.RES', 'L.PAY.DETAILS', 'L.INI.CTRY',
+            'L.ECO.CODE', 'L.CCY.REC', 'L.MODE.TXN', 'L.MAT.AGEN', 'L.NOM.PRES', 'L.NIF.PRES', 'L.NUM.STATS', 'L.TYP.IDEN',
+            'L.NUM.IDEN', 'L.NUM.BEN', 'L.NOM.TIER', 'L.ORD.ADD', 'L.NAME.REC', 'L.ADDR', 'L.CIN', 'L.VERSION.NAME'
+        }
+        
+        self.columns_mapping = {
+            'Type': 'EM.ACCT.TYPE',
+            'Référence': 'L.REFERENCE',
+            'Donneur d\'ordre': 'L.ORD.CUST',
+            'Adresse donneur d\'ordre': 'L.ORD.ADD',
+            'Code pays donneur d\'ordre': 'L.ORD.CUST.CTRY',
+            'Bénéficiaire': 'L.BEN.NAME',
+            'Bénéficiaire résident': 'L.BEN.RES',
+            'Adresse Bénéficiaire': 'L.BEN.ADD',
+            'Nature': 'L.PAY.DETAILS',
+            'Code économique': 'L.ECO.CODE',
+            'Sens': 'L.MODE.TXN',
+        }
     def create_reference_tables(self):
         conn = None
         try:
             conn = self.db.connect()
+            
             
             # Table pour les champs teller
             conn.execute(text("DROP TABLE IF EXISTS esri_teller_fields"))
@@ -177,21 +174,12 @@ class OperationEsri:
                     print(f"[ERREUR] Fermeture connexion : {close_err}")
 
     def populate_reference_tables(self):
-        """Remplit les tables de référence avec les données"""
         conn = None
         try:
             conn = self.db.connect()
             
             # Remplir la table teller_fields
-            teller_data = [ '151', '152', '171', '172', 'SIGNATORY', 'USREGS.TP.LEGAL.ID', 'EM.DRAW.CHQ.NO', 'EM.DRAW.CHQ.AMT',
-            'EM.DRAW.ACCT.NO', 'EM.DRAW.BANK', 'EM.DRAW.BRANCH', 'EM.DRAW.BRCH.CODE', 'EM.DRAW.CUST.NAME',
-            'EM.CLEARED.BAL', 'EM.MEMBER.NAME', 'EM.ACCT.WORK.BAL', 'EM.PAY.TO', 'EM.AMT.ARREARS', 'EM.ACCT.NUM',
-            'EM.SAVGS.AMOUNT', 'EM.REPAYMENT', 'EM.INT.REPAYMENT', 'EM.INTEREST.DUE', 'EM.CONS.DISCLOSE',
-            'EM.SAVING.TMP.BAL', 'EM.LOAN.TMP.BAL', 'EM.INT.TMP.BAL', 'EM.ACCT.TYPE', 'L.REFERENCE', 'L.ORD.CUST',
-            'L.ORD.CUST.CTRY', 'L.ORD.CUST.RES', 'L.BEN.NAME', 'L.BEN.ADD', 'L.BEN.RES', 'L.PAY.DETAILS', 'L.INI.CTRY',
-            'L.ECO.CODE', 'L.CCY.REC', 'L.MODE.TXN', 'L.MAT.AGEN', 'L.NOM.PRES', 'L.NIF.PRES', 'L.NUM.STATS', 'L.TYP.IDEN',
-            'L.NUM.IDEN', 'L.NUM.BEN', 'L.NOM.TIER', 'L.ORD.ADD', 'L.NAME.REC', 'L.ADDR', 'L.CIN', 'L.VERSION.NAME'
-       ]
+            teller_data = []
             for i, field in enumerate(self.teller):
                 teller_data.append(f"({i}, '{field}', 'Champ teller {field}')")
             
@@ -202,23 +190,14 @@ class OperationEsri:
             conn.execute(text(insert_teller))
             
             # Remplir la table columns_mapping
-            mapping_data = {
-                'Type': 'EM.ACCT.TYPE',
-                'Référence': 'L.REFERENCE',
-                'Donneur d\'ordre': 'L.ORD.CUST',
-                'Adresse donneur d\'ordre': 'L.ORD.ADD',
-                'Code pays donneur d\'ordre': 'L.ORD.CUST.CTRY',
-                'Bénéficiaire': 'L.BEN.NAME',
-                'Bénéficiaire résident': 'L.BEN.RES',
-                'Adresse Bénéficiaire': 'L.BEN.ADD',
-                'Nature': 'L.PAY.DETAILS',
-                'Code économique': 'L.ECO.CODE',
-                'Sens': 'L.MODE.TXN'
-            }
+            mapping_data = []
+            
             
             for output_col, teller_field in self.columns_mapping.items():
-                mapping_data.append(f"('{output_col}', '{teller_field}', 'Mapping {output_col}')")
-            
+                safe_output_col = output_col.replace("'", "''")
+                safe_teller_field = teller_field.replace("'", "''")
+                desc = f"Mapping {safe_output_col}".replace("'", "''")
+                mapping_data.append(f"('{safe_output_col}', '{safe_teller_field}', '{desc}')")
             insert_mapping = f"""
             INSERT INTO esri_columns_mapping (output_column, teller_field, description) 
             VALUES {','.join(mapping_data)}
@@ -226,50 +205,13 @@ class OperationEsri:
             conn.execute(text(insert_mapping))
             
             # Remplir la table countries
-            countries_data = {
-            'AD': 'Andorre', 'AE': 'Émirats Arabes Unis', 'AF': 'Afghanistan', 'AG': 'Antigua et Barbuda', 'AI': 'Anguilla',
-            'AL': 'Albanie', 'AM': 'Arménie', 'AN': 'Antilles néerlandaises', 'AO': 'Angola', 'AQ': 'Antarctique',
-            'AR': 'Argentine', 'AS': 'Îles Samoa', 'AT': 'Autriche', 'AU': 'Australie', 'AW': 'Aruba', 'AZ': 'Azerbaïdjan',
-            'BA': 'Bosnie-Herzégovine', 'BB': 'La Barbade', 'BD': 'Bangladesh', 'BE': 'Belgique', 'BF': 'Burkina Faso',
-            'BG': 'Bulgarie', 'BH': 'Bahreïn', 'BI': 'Burundi', 'BJ': 'Benin', 'BM': 'Bermudas', 'BN': 'Brunéï', 'BO': 'Bolivie',
-            'BR': 'Brésil', 'BS': 'Bahamas', 'BT': 'Bhoutan', 'BV': 'Îles Bouvet', 'BW': 'Botswana', 'BY': 'Biélorussie',
-            'BZ': 'Bélize', 'CA': 'Canada', 'CC': 'Îles Coco', 'CF': 'République centrafricaine', 'CG': 'Congo', 'CH': 'Suisse',
-            'CI': 'Côte d\'Ivoire', 'CK': 'Îles Cook', 'CL': 'Chili', 'CM': 'Cameroun', 'CN': 'Chine', 'CO': 'Colombie', 'CR': 'Costa Rica',
-            'CS': 'Tchécoslovaquie (obsolète)', 'CU': 'Cuba', 'CV': 'Cap Vert', 'CX': 'Christmas Island', 'CY': 'Chypre', 'CZ': 'Tchèque (République)',
-            'DE': 'Allemagne', 'DJ': 'Djibouti', 'DK': 'Danemark', 'DM': 'Dominique', 'DO': 'République Dominicaine', 'DZ': 'Algérie',
-            'EC': 'Équateur', 'EE': 'Estonie', 'EG': 'Égypte', 'EH': 'Sahara Occidental', 'ER': 'Érythrée', 'ES': 'Espagne', 'ET': 'Éthiopie',
-            'FI': 'Finlande', 'FJ': 'Îles Fidji', 'FK': 'Îles Falkland', 'FM': 'Micronésie', 'FO': 'Îles Féroé', 'FR': 'France', 'FX': 'France (métropolitaine)',
-            'GA': 'Gabon', 'GB': 'Royaume-Uni (UK)', 'GD': 'Grenade', 'GE': 'Géorgie', 'GF': 'Guyane Française', 'GH': 'Ghana', 'GI': 'Gibraltar',
-            'GL': 'Groenland', 'GM': 'Gambie', 'GN': 'Guinée', 'GP': 'Guadeloupe', 'GQ': 'Guinée équatoriale', 'GR': 'Grèce',
-            'GS': 'Géorgie du Sud et îles Sandwich du Sud', 'GT': 'Guatemala', 'GU': 'Guam', 'GW': 'Guinée-Bissau', 'GY': 'Guyane', 'HK': 'Hong Kong',
-            'HM': 'Îles Heard et MacDonald', 'HN': 'Honduras', 'HR': 'Croatie', 'HT': 'Haïti', 'HU': 'Hongrie', 'ID': 'Indonésie', 'IE': 'Irlande',
-            'IL': 'Israël', 'IN': 'Inde', 'IO': 'Océan Indien Anglais', 'IQ': 'Irak', 'IR': 'République islamique d\'Iran', 'IS': 'Islande',
-            'IT': 'Italie', 'JM': 'Jamaïque', 'JO': 'Jordanie', 'JP': 'Japon', 'KE': 'Kenya', 'KG': 'Kirghizistan', 'KH': 'Cambodge', 'KI': 'Kiribati',
-            'KM': 'Comores', 'KN': 'Saint-Kitts-et-Nevis', 'KP': 'Corée du Nord', 'KR': 'Corée du Sud', 'KW': 'Koweït', 'KY': 'Îles Caïmans',
-            'KZ': 'Kazakhstan', 'LA': 'Laos', 'LB': 'Liban', 'LC': 'Sainte-Lucie', 'LI': 'Liechtenstein', 'LK': 'Sri Lanka', 'LR': 'Libéria',
-            'LS': 'Lesotho', 'LT': 'Lituanie', 'LU': 'Luxembourg', 'LV': 'Lettonie', 'LY': 'Libye', 'MA': 'Maroc', 'MC': 'Monaco', 'MD': 'Moldavie',
-            'MG': 'Madagascar', 'MH': 'Îles Marshall', 'MK': 'Macédoine', 'ML': 'Mali', 'MM': 'Birmanie (Myanmar)', 'MN': 'Mongolie', 'MO': 'Macao',
-            'MP': 'Îles Mariannes', 'MQ': 'Martinique', 'MR': 'Mauritanie', 'MS': 'Montserrat', 'MT': 'Malte', 'MU': 'Île Maurice', 'MV': 'Maldives',
-            'MW': 'Malawi', 'MX': 'Mexique', 'MY': 'Malaisie', 'MZ': 'Mozambique', 'NA': 'Namibie', 'NC': 'Nouvelle-Calédonie', 'NE': 'Niger',
-            'NF': 'Île Norfolk', 'NG': 'Nigeria', 'NI': 'Nicaragua', 'NL': 'Pays-Bas', 'NO': 'Norvège', 'NP': 'Népal', 'NR': 'Nauru', 'NU': 'Niue',
-            'NZ': 'Nouvelle-Zélande', 'OM': 'Oman', 'PA': 'Panama', 'PE': 'Pérou', 'PF': 'Polynésie Française', 'PG': 'Papouasie-Nouvelle-Guinée',
-            'PH': 'Philippines', 'PK': 'Pakistan', 'PL': 'Pologne', 'PM': 'Saint-Pierre-et-Miquelon', 'PN': 'Pitcairn', 'PR': 'Porto Rico',
-            'PT': 'Portugal', 'PW': 'Palau', 'PY': 'Paraguay', 'QA': 'Qatar', 'RE': 'Réunion', 'RO': 'Roumanie', 'RU': 'Fédération de Russie',
-            'RW': 'Rwanda', 'SA': 'Arabie Saoudite', 'SB': 'Îles Salomon', 'SC': 'Seychelles', 'SD': 'Soudan', 'SE': 'Suède', 'SG': 'Singapour',
-            'SH': 'Sainte-Hélène', 'SI': 'Slovénie', 'SJ': 'Île Jan Mayen', 'SK': 'Slovaquie (République slovaque)', 'SL': 'Sierra Leone',
-            'SM': 'Saint-Marin', 'SN': 'Sénégal', 'SO': 'Somalie', 'SR': 'Surinam', 'ST': 'Sao Tomé-et-Principe', 'SU': 'Union soviétique (obsolète)',
-            'SV': 'Salvador', 'SY': 'Syrie', 'SZ': 'Swaziland', 'TC': 'Îles Turks-et-Caïques', 'TD': 'Tchad', 'TF': 'Territoires Antarctiques Français',
-            'TG': 'Togo', 'TH': 'Thaïlande', 'TJ': 'Tadjikistan', 'TK': 'Tokelau', 'TM': 'Turkménistan', 'TN': 'Tunisie', 'TO': 'Tonga', 'TP': 'Timor',
-            'TR': 'Turquie', 'TT': 'Trinité-et-Tobago', 'TV': 'Tuvalu', 'TW': 'Taïwan', 'TZ': 'Tanzanie', 'UA': 'Ukraine', 'UG': 'Ouganda', 'UK': 'Royaume-Uni',
-            'UM': 'Petites îles extérieures des États-Unis', 'US': 'États-Unis', 'UY': 'Uruguay', 'UZ': 'Ouzbékistan', 'VA': 'Vatican',
-            'VC': 'Saint-Vincent-et-les-Grenadines', 'VE': 'Vénézuela', 'VG': 'Îles Vierges britanniques', 'VI': 'Îles Vierges des États-Unis', 'VN': 'Vietnam',
-            'VU': 'Vanuatu', 'WF': 'Îles Wallis-et-Futuna', 'WS': 'Samoa', 'YE': 'Yémen', 'YT': 'Mayotte', 'YU': 'Yougoslavie (obsolète)', 'ZA': 'Afrique du Sud',
-            'ZM': 'Zambie', 'ZR': 'Zaïre', 'ZW': 'Zimbabwe'
-            }
+            countries_data =[]
             for country_code, country_name in self.country_addresses.items():
                 # Trouver le code numérique correspondant
                 numeric_code = next((code for c, code in self.countries_codes if c == country_code), '')
-                countries_data.append(f"('{country_code}', '{country_name}', '{numeric_code}')")
+                safe_country_name = country_name.replace("'", "''")
+
+                countries_data.append(f"('{country_code}', '{safe_country_name}', '{numeric_code}')")
             
             insert_countries = f"""
             INSERT INTO esri_countries (country_code, country_name, numeric_code) 
@@ -291,12 +233,14 @@ class OperationEsri:
                 except Exception as close_err:
                     print(f"[ERREUR] Fermeture connexion : {close_err}")
     
-    def create_esri_functions_with_tables(self):
+    def create_esri_functions(self):
         """Crée les fonctions MySQL qui utilisent les tables de référence"""
         conn = None
         try:
             conn = self.db.connect()
             
+            self.create_reference_tables()
+            self.populate_reference_tables()
             # Fonction pour extraire entre TELLER et MCBC (reste la même)
             create_extract_function = """
             CREATE FUNCTION extract_teller_mcbc(local_ref TEXT)
@@ -321,7 +265,9 @@ class OperationEsri:
                 -- Récupérer l'index depuis la table
                 SELECT field_order INTO field_index 
                 FROM esri_teller_fields 
-                WHERE field_name = field_name;
+                WHERE field_name = field_name
+                 LIMIT 1; -- sécurité si doublon
+
                 
                 IF field_index IS NOT NULL AND field_index >= 0 THEN
                     SET field_value = SUBSTRING_INDEX(SUBSTRING_INDEX(local_ref, '|', field_index + 1), '|', -1);
@@ -334,34 +280,37 @@ class OperationEsri:
             
             # Fonction pour obtenir l'adresse du pays depuis la table
             create_country_address_function = """
-            CREATE FUNCTION get_country_address(country_code TEXT)
-            RETURNS TEXT
-            DETERMINISTIC
-            BEGIN
-                DECLARE country_name TEXT;
-                
-                SELECT esri_countries.country_name INTO country_name
-                FROM esri_countries 
-                WHERE country_code = esri_countries.country_code;
-                
-                RETURN IFNULL(country_name, 'Adresse inconnue');
-            END
+            CREATE FUNCTION get_country_address(in_country_code TEXT)
+                RETURNS TEXT
+                DETERMINISTIC
+                BEGIN
+                    DECLARE country_name TEXT;
+
+                    SELECT country_name INTO country_name
+                    FROM esri_countries
+                    WHERE country_code = in_country_code
+                    LIMIT 1;
+
+                    RETURN IFNULL(country_name, 'Adresse inconnue');
+                END
             """
             
             # Fonction pour convertir le code pays depuis la table
             create_country_code_function = """
-            CREATE FUNCTION convert_country_code(country_code TEXT)
-            RETURNS TEXT
-            DETERMINISTIC
-            BEGIN
-                DECLARE numeric_code TEXT;
-                
-                SELECT esri_countries.numeric_code INTO numeric_code
-                FROM esri_countries 
-                WHERE country_code = esri_countries.country_code;
-                
-                RETURN numeric_code;
-            END
+            CREATE FUNCTION convert_country_code(in_country_code TEXT)
+                RETURNS TEXT
+                DETERMINISTIC
+                BEGIN
+                    DECLARE numeric_code TEXT;
+
+                    SELECT numeric_code INTO numeric_code
+                    FROM esri_countries
+                    WHERE country_code = in_country_code
+                    LIMIT 1;
+
+                    RETURN numeric_code;
+                END
+
             """
             
             # Fonction pour récupérer dynamiquement les mappings

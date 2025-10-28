@@ -10,11 +10,13 @@ from controller.Operation import Operation
 from controller.OperatioDav import OperatioDav
 from controller.Esri import Esri
 from controller.OperationEsri import OperationEsri
+from controller.OperationEsris import OperationEsris
 from controller.DavReport import DavReport
 from controller.EprReport import EprReport
 from controller.ChangeMande import ChangeMande
 from controller.ChangeMandy import ChangeMandy
 from controller.DavUnique import DavUnique
+from controller.decaissement import DecaissementOptimise
 
 router = APIRouter()
 dat_report = DatReport()
@@ -28,6 +30,8 @@ dav_report = DavReport()
 change_mande = ChangeMande()
 epr_report = EprReport()
 change_mandy = ChangeMandy()
+operation_esris = OperationEsris()
+decaissement = DecaissementOptimise()
 #INITIALISATION COMPTE
 
 @router.post("/compte/compte_init/{name}")
@@ -70,7 +74,22 @@ def initialize(name:str):
         return JSONResponse(content={"status": "error", "message": str(e)}, status_code=500)
     
     
+@router.post("/compte/decaissement/{name}")
+def create_decaissement(date_limit:str):
+    try:
+        
+        result = decaissement.generate_decaissement_report(date_limit)        
+        
+       
+        if result:
+            print(f"Table créée : {result['table_name']}")
+            print(f"Enregistrements : {result['record_count']}")
+        
+    except Exception as e:
+        return JSONResponse(content={"status": "error", "message": str(e)}, status_code=500)
+    
 # ESRI
+
 
 @router.post("/esri/create_esri_precompute")
 def create_esri_precompute( date_debut: str = Query(...), date_fin: str = Query(...)):
@@ -81,7 +100,7 @@ def create_esri_precompute( date_debut: str = Query(...), date_fin: str = Query(
        
         result_df,columns = operation_esri.process_esri_data_fast(date_debut, date_fin)
 
-        if result_df.empty:
+        if  result_df.empty:
             return JSONResponse(
                 content={
                     "status": "error",
