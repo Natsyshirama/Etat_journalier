@@ -1,5 +1,6 @@
 from sqlalchemy import text
 from db.db import DB
+import pandas as pd
 
 class DecaissementOptimise:
     def __init__(self):
@@ -10,11 +11,13 @@ class DecaissementOptimise:
         """Crée une fonction MySQL pour calculer le montant capital"""
         try:
             query = """
-            CREATE FUNCTION calcul_montant_capital(
+            
+CREATE FUNCTION calcul_montant_capital(
                 type_sysdate TEXT,
                 debit_mvmt TEXT,
                 credit_mvmt TEXT,
-                open_balance TEXT
+                open_balance TEXT,
+                date_limite INT
             )
             RETURNS DECIMAL(20,2)
             DETERMINISTIC
@@ -24,6 +27,7 @@ class DecaissementOptimise:
                 DECLARE remaining_debit TEXT;
                 DECLARE remaining_credit TEXT;
                 DECLARE remaining_open TEXT;
+                DECLARE date_part INT;
                 
                 DECLARE sep_pos INT;
                 DECLARE debit_val DECIMAL(20,2);
@@ -86,14 +90,22 @@ class DecaissementOptimise:
                     END IF;
 
                     -- Calcul pour TOTCOMMITMENT
-                    IF token = 'TOTCOMMITMENT' OR token LIKE 'TOTCOMMITMENT-2024%' OR token LIKE 'TOTCOMMITMENT-2025%' THEN
-                        SET montant_total = montant_total + debit_val + credit_val + open_val;
+                    IF token = 'TOTCOMMITMENT' THEN
+                        SET montant_total = montant_total + open_val + credit_val + debit_val;
+
+                    ELSEIF token LIKE 'TOTCOMMITMENT-%%' THEN
+                        SET date_part = CAST(SUBSTRING(token, LOCATE('-', token) + 1) AS UNSIGNED);
+
+                        IF date_part <= date_limite THEN
+                            SET montant_total = montant_total + open_val + credit_val + debit_val;
+                        END IF;
                     END IF;
 
                 END WHILE;
 
                 RETURN montant_total;
-            END
+                
+                END
             """
 
             with self.db.connect() as conn:
@@ -112,7 +124,6 @@ class DecaissementOptimise:
             return False
 
     def create_frais_dossier_function(self):
-        """Crée une fonction MySQL pour calculer les frais de dossier"""
         try:
             query = """
             CREATE FUNCTION calcul_frais_dossier(
@@ -148,43 +159,17 @@ class DecaissementOptimise:
             print(f"[ERREUR] création function calcul_frais_dossier : {e}")
             return False
 
-    def create_temp_clients_table(self):
-        """Crée une table temporaire pour les clients optimisée"""
-        try:
-            query = """
-                CREATE TEMPORARY TABLE temp_clients_decaissement AS
-                SELECT 
-                    id,
-                    CONCAT(short_name, ' ', name_1) AS nom_complet,
-                    industry,
-                    gender,
-                    sector
-                FROM customer_mcbc_live_full
-            """
-            
-            with self.db.connect() as conn:
-                drop_query = "DROP TEMPORARY TABLE IF EXISTS temp_clients_decaissement"
-                conn.execute(text(drop_query))
-                conn.commit()
-
-                conn.execute(text(query))
-                conn.commit()
-            
-            print("[INFO] Table temporaire clients créée avec succès ✅")
-            return True
-            
-        except Exception as e:
-            print(f"[ERREUR] create_temp_clients_table : {e}")
-            return False
 
     def create_indexes(self):
-        """Crée les index optimisés"""
         indexes = [
             "CREATE INDEX IF NOT EXISTS idx_arrangement_id ON aa_arrangement_mcbc_live_full (id(255))",
             "CREATE INDEX IF NOT EXISTS idx_arrangement_customer ON aa_arrangement_mcbc_live_full (customer(255))",
             "CREATE INDEX IF NOT EXISTS idx_arrangement_linked_appl ON aa_arrangement_mcbc_live_full (linked_appl_id(255))",
             "CREATE INDEX IF NOT EXISTS idx_account_opening_date ON account_mcbc_live_full (opening_date)",
-            "CREATE INDEX IF NOT EXISTS idx_em_arrangement ON em_lo_application_mcbc_live_full (arrangement_id(255))"
+            "CREATE INDEX IF NOT EXISTS idx_em_arrangement ON em_lo_application_mcbc_live_full (arrangement_id(255))",
+            "CREATE INDEX IF NOT EXISTS idx_charge_id_prefix ON aa_arr_charge_mcbc_live_full (id)",
+            "CREATE INDEX IF NOT EXISTS idx_charge_rate ON aa_arr_charge_mcbc_live_full (charge_rate)"
+
         ]
         
         try:
@@ -201,7 +186,6 @@ class DecaissementOptimise:
             return False
 
     def create_decaissement_table(self, date_limite: str):
-        """Crée la table finale de décaissement"""
         try:
             table_name = f"decaissement_{date_limite}"
             
@@ -239,12 +223,13 @@ class DecaissementOptimise:
                         cb.type_sysdate, 
                         cb.debit_mvmt,  
                         cb.credit_mvmt,  
-                        cb.open_balance
+                        cb.open_balance,
+                        {date_limite}
                     ) AS montant_capital,
                     chg.charge_rate,
                     -- Calcul des frais de dossier avec la fonction
                     calcul_frais_dossier(
-                        calcul_montant_capital(cb.type_sysdate, cb.debit_mvmt, cb.credit_mvmt, cb.open_balance),
+                        calcul_montant_capital(cb.type_sysdate, cb.debit_mvmt, cb.credit_mvmt, cb.open_balance,{date_limite}),
                         chg.charge_rate
                     ) AS frais_de_dossier,
                     CASE
@@ -257,7 +242,7 @@ class DecaissementOptimise:
                     aa_account_details_mcbc_live_full AS acc_det
                     ON acc_det.id = arr.id
                 LEFT JOIN 
-                    temp_clients_decaissement AS cust
+                    temp_clients AS cust
                     ON cust.id = SUBSTRING_INDEX(arr.customer, '|', 1)
                 LEFT JOIN 
                     eb_cont_bal_mcbc_live_full AS cb
@@ -274,9 +259,9 @@ class DecaissementOptimise:
                 WHERE 
                     arr.product_line = 'LENDING'
                     AND arr.arr_status IN ('AUTH', 'CURRENT')
-                    AND acc.opening_date >= '{date_limite}'
-                    AND em.proc_status = 'DISBURSED'
-                GROUP BY arr.linked_appl_id LIMIT 100;
+                    AND acc.opening_date >= '20241125'
+                    AND em.proc_status = 'DISBURSED' limit 100; 
+                
             """
             
             with self.db.connect() as conn:
@@ -309,82 +294,123 @@ class DecaissementOptimise:
             # Créer les index
             if not self.create_indexes():
                 print("[ATTENTION] Problème avec les index, continuation...")
-            
-            # Créer la table temporaire clients
-            if not self.create_temp_clients_table():
-                return False
-            
+                        
             # Créer la table finale
             table_name = self.create_decaissement_table(date_limite)
             
             if not table_name:
                 return False
             
-            # Vérifier les résultats
+            # Fonction pour supprimer les doublons dans les noms
+            def remove_duplicate_name(name):
+                if pd.isnull(name):
+                    return name
+                words = name.strip().split()
+                half = len(words) // 2
+                if len(words) % 2 == 0 and words[:half] == words[half:]:
+                    return ' '.join(words[:half])
+                return name
+
+            # Vérifier et traiter les doublons avec pandas
             with self.db.connect() as conn:
-                # Compter les enregistrements
+                # Charger les données dans un DataFrame pandas
+                df_query = f"SELECT * FROM {table_name}"
+                df = pd.read_sql(df_query, conn)
+                
+                # Afficher le nombre initial d'enregistrements
+                initial_count = len(df)
+                print(f"[INFO] Nombre initial d'enregistrements : {initial_count}")
+                
+                # Vérifier les doublons avant traitement
+                duplicates_before = df.duplicated(subset=['Numero_compte']).sum()
+                if duplicates_before > 0:
+                    print(f"[INFO] {duplicates_before} doublons détectés dans Numero_compte avant traitement")
+                
+                # Appliquer le nettoyage seulement aux clients Morale (categorie != 'Particulier')
+                if 'categorie' in df.columns and 'Nom_compte' in df.columns:
+                    df.loc[df['categorie'] != 'Particulier', 'Nom_compte'] = (
+                        df.loc[df['categorie'] != 'Particulier', 'Nom_compte']
+                        .apply(remove_duplicate_name)
+                    )
+                    print("[INFO] Nettoyage des noms en double appliqué aux clients Morale")
+                
+                # Supprimer les doublons basés sur Numero_compte
+                df = df.drop_duplicates(subset=['Numero_compte'], keep='first')
+                
+                # Afficher le nombre d'enregistrements après suppression des doublons
+                final_count = len(df)
+                duplicates_removed = initial_count - final_count
+                print(f"[INFO] {duplicates_removed} doublons supprimés")
+                print(f"[INFO] Nombre final d'enregistrements : {final_count}")
+                
+                # Vérifier les doublons après traitement
+                duplicates_after = df.duplicated(subset=['Numero_compte']).sum()
+                if duplicates_after == 0:
+                    print("[INFO] Aucun doublon restant dans Numero_compte ✅")
+                else:
+                    print(f"[ATTENTION] {duplicates_after} doublons restants après traitement")
+                
+                # Recréer la table avec les données nettoyées
+                # Supprimer l'ancienne table
+                conn.execute(text(f"DROP TABLE IF EXISTS {table_name}"))
+                
+                # Créer une nouvelle table avec les données nettoyées
+                df.to_sql(table_name, conn, index=False, if_exists='replace')
+                conn.commit()
+                
+                # Compter les enregistrements finaux dans la base de données
                 count_query = f"SELECT COUNT(*) FROM {table_name}"
                 result = conn.execute(text(count_query))
-                count = result.fetchone()[0]
-                
-                # Vérifier les doublons
-                duplicate_query = f"""
-                    SELECT Numero_compte, COUNT(*) 
-                    FROM {table_name} 
-                    GROUP BY Numero_compte 
-                    HAVING COUNT(*) > 1
-                """
-                duplicates = conn.execute(text(duplicate_query)).fetchall()
-                
-            print(f"[INFO] Rapport généré avec succès : {count} enregistrements")
-            if duplicates:
-                print(f"[ATTENTION] {len(duplicates)} doublons détectés dans Numero_compte")
-            else:
-                print("[INFO] Aucun doublon détecté dans Numero_compte ✅")
+                db_count = result.fetchone()[0]
+            
+            print(f"[INFO] Rapport généré avec succès : {db_count} enregistrements uniques")
             
             return {
                 "status": "success",
                 "table_name": table_name,
-                "record_count": count,
-                "duplicates_count": len(duplicates)
+                "record_count": db_count,
+                "duplicates_count": duplicates_before,
+                "duplicates_removed": duplicates_removed,
+                "initial_count": initial_count,
+                "final_count": final_count
             }
             
         except Exception as e:
             print(f"[ERREUR] generate_decaissement_report : {e}")
             return False
 
-    def cleanup(self, table_name: str = None):
-        """Nettoie les ressources temporaires"""
-        try:
-            with self.db.connect() as conn:
-                # Supprimer les fonctions
-                functions_to_drop = [
-                    "calcul_montant_capital",
-                    "calcul_frais_dossier"
-                ]
+    # def cleanup(self, table_name: str = None):
+    #     """Nettoie les ressources temporaires"""
+    #     try:
+    #         with self.db.connect() as conn:
+    #             # Supprimer les fonctions
+    #             functions_to_drop = [
+    #                 "calcul_montant_capital",
+    #                 "calcul_frais_dossier"
+    #             ]
                 
-                for function in functions_to_drop:
-                    try:
-                        conn.execute(text(f"DROP FUNCTION IF EXISTS {function}"))
-                    except Exception as e:
-                        print(f"[ATTENTION] Impossible de supprimer {function} : {e}")
+    #             for function in functions_to_drop:
+    #                 try:
+    #                     conn.execute(text(f"DROP FUNCTION IF EXISTS {function}"))
+    #                 except Exception as e:
+    #                     print(f"[ATTENTION] Impossible de supprimer {function} : {e}")
                 
-                # Supprimer les tables temporaires
-                temp_tables = [
-                    "temp_clients_decaissement"
-                ]
+    #             # Supprimer les tables temporaires
+    #             temp_tables = [
+    #                 "temp_clients_decaissement"
+    #             ]
                 
-                if table_name:
-                    temp_tables.append(table_name)
+    #             if table_name:
+    #                 temp_tables.append(table_name)
                 
-                for table in temp_tables:
-                    try:
-                        conn.execute(text(f"DROP TABLE IF EXISTS {table}"))
-                    except Exception as e:
-                        print(f"[ATTENTION] Impossible de supprimer {table} : {e}")
+    #             for table in temp_tables:
+    #                 try:
+    #                     conn.execute(text(f"DROP TABLE IF EXISTS {table}"))
+    #                 except Exception as e:
+    #                     print(f"[ATTENTION] Impossible de supprimer {table} : {e}")
                 
-                conn.commit()
-                print("[INFO] Nettoyage effectué avec succès ✅")
+    #             conn.commit()
+    #             print("[INFO] Nettoyage effectué avec succès ✅")
                 
-        except Exception as e:
-            print(f"[ERREUR] cleanup : {e}")
+    #     except Exception as e:
+    #         print(f"[ERREUR] cleanup : {e}")

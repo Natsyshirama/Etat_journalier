@@ -44,6 +44,7 @@ class DbGet:
             "CREATE INDEX IF NOT EXISTS idx_contract_balance_type_sysdate ON eb_cont_bal_mcbc_live_full(type_sysdate(255))",
 
             # Table aa_arr_interest_mcbc_live_full
+            "CREATE INDEX idx_interest_id ON aa_arr_interest_mcbc_live_full (id(255))",
             "CREATE INDEX IF NOT EXISTS idx_interest_id_comp_1 ON aa_arr_interest_mcbc_live_full(id_comp_1(255))",
             "CREATE INDEX IF NOT EXISTS idx_interest_id_comp_2 ON aa_arr_interest_mcbc_live_full(id_comp_2(255))",
             "CREATE INDEX IF NOT EXISTS idx_interest_effective_rate ON aa_arr_interest_mcbc_live_full(effective_rate(255))",
@@ -51,7 +52,10 @@ class DbGet:
             # Table account_mcbc_live_full
             "CREATE INDEX IF NOT EXISTS idx_account_id ON account_mcbc_live_full(id(255))",
             "CREATE INDEX IF NOT EXISTS idx_account_opening_date ON account_mcbc_live_full(opening_date(255))",
+
             # Table em_lo_application_mcbc_live_full
+            "CREATE INDEX IF NOT EXISTS idx_em_arrangement_id ON em_lo_application_mcbc_live_full (arrangement_id)",
+
             "CREATE INDEX IF NOT EXISTS idx_em_proc_status ON em_lo_application_mcbc_live_full(proc_status(255))",
             
             # Table teller_mcbc_his_full
