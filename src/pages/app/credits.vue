@@ -317,6 +317,7 @@ onUnmounted(() => {
   window.removeEventListener('table-date-stat-of-selected', handleDateStatOfSelection)
 })
 
+
  
 </script>
 
