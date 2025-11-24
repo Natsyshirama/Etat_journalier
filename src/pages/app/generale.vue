@@ -258,7 +258,7 @@
           <div>
             {{ item[header.key] !== undefined && item[header.key] !== null ? item[header.key] : '' }}
             <div v-if="index > 0 && item.ecart && item.ecart['ecart_' + header.key] !== 0">
-              <small style="color: #1976d2;">
+              <small :style="{ color: item.ecart['ecart_' + header.key] > 0 ? '#43a047' : '#e53935' }">
                 ({{ item.ecart['ecart_' + header.key] > 0 ? '+' : '' }}{{ (item.ecart['ecart_' + header.key]).toFixed(2) }})
               </small>
             </div>
@@ -278,11 +278,7 @@
           <v-data-table
             class="elevation-2 fade-in full-table table-dat data-table-fixed"
             :headers="headersDat.filter(h => visibleColumns.dat.includes(h.key))"
-            :items="resultsDat.map(item => {
-              const filtered = {};
-              visibleColumns.dat.forEach(col => filtered[col] = item[col]);
-              return filtered;
-            })"
+            :items="resultsDat"
             density="comfortable"
             hide-default-footer
             :items-per-page="-1"
@@ -291,6 +287,23 @@
             <template #top>
               <h3 class="text-h6 font-weight-bold mb-2 table-title table-title-dat">DAT</h3>
             </template>
+            <template #item="{ item, index }">
+      <tr>
+        <td
+          v-for="header in headersDat.filter(h => visibleColumns.dat.includes(h.key))"
+          :key="header.key"
+        >
+          <div>
+            {{ item[header.key] !== undefined && item[header.key] !== null ? item[header.key] : '' }}
+            <div v-if="index > 0 && item.ecart && item.ecart['ecart_' + header.key] !== 0">
+              <small :style="{ color: item.ecart['ecart_' + header.key] > 0 ? '#43a047' : '#e53935' }">
+                ({{ item.ecart['ecart_' + header.key] > 0 ? '+' : '' }}{{ (item.ecart['ecart_' + header.key]).toFixed(2) }})
+              </small>
+            </div>
+          </div>
+        </td>
+      </tr>
+    </template>
           </v-data-table>
         </v-col>
 
@@ -303,11 +316,7 @@
           <v-data-table
             class="elevation-2 fade-in full-table table-epr data-table-fixed"
             :headers="headersEpr.filter(h => visibleColumns.epr.includes(h.key))"
-            :items="resultsEpr.map(item => {
-              const filtered = {};
-              visibleColumns.epr.forEach(col => filtered[col] = item[col]);
-              return filtered;
-            })"
+            :items="resultsEpr"
             density="comfortable"
             hide-default-footer
             :items-per-page="-1"
@@ -316,6 +325,23 @@
             <template #top>
               <h3 class="text-h6 font-weight-bold mb-2 table-title table-title-epr">EPR</h3>
             </template>
+            <template #item="{ item, index }">
+      <tr>
+        <td
+          v-for="header in headersEpr.filter(h => visibleColumns.epr.includes(h.key))"
+          :key="header.key"
+        >
+          <div>
+            {{ item[header.key] !== undefined && item[header.key] !== null ? item[header.key] : '' }}
+            <div v-if="index > 0 && item.ecart && item.ecart['ecart_' + header.key] !== 0">
+              <small :style="{ color: item.ecart['ecart_' + header.key] > 0 ? '#43a047' : '#e53935' }">
+                ({{ item.ecart['ecart_' + header.key] > 0 ? '+' : '' }}{{ (item.ecart['ecart_' + header.key]).toFixed(2) }})
+              </small>
+            </div>
+          </div>
+        </td>
+      </tr>
+    </template>
           </v-data-table>
         </v-col>
       </v-row>
@@ -423,14 +449,22 @@ const rechercher = async () => {
 
   if (type === 'dat') {
     infoDat.value = res.data.map(item => item.date_agence)
-    resultsDat.value = res.data.map(item => item.data)
+    // Pour DAT
+    resultsDat.value = res.data.map(item => ({
+      ...item.data,
+      ecart: item.ecart
+    }))
     headersDat.value = generateHeaders(resultsDat.value)
     visibleColumns.value.dat = headersDat.value.map(h => h.key)
   }
 
   if (type === 'epr') {
     infoEpr.value = res.data.map(item => item.date_agence)
-    resultsEpr.value = res.data.map(item => item.data)
+    // Pour EPR
+    resultsEpr.value = res.data.map(item => ({
+      ...item.data,
+      ecart: item.ecart
+    }))
     headersEpr.value = generateHeaders(resultsEpr.value)
     visibleColumns.value.epr = headersEpr.value.map(h => h.key)
   }
