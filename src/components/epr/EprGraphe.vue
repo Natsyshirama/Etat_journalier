@@ -93,7 +93,10 @@ const fetchData = async () => {
   try {
     const res = await axios.get(
       `${api}/api/eprGraphe/${props.tableName}`,
-      { params: { x: x.value, y: y.value } }
+      { 
+        
+      headers: { Authorization: `Bearer ${localStorage.getItem('access_token')}` },
+    params: { x: x.value, y: y.value } }
     )
 
     console.log("Réponse API :", res.data)

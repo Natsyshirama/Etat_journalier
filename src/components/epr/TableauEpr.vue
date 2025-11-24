@@ -70,7 +70,9 @@ const fetchTableData = async (tableName) => {
     return
   }
   try {
-    const res = await axios.get(`${api}/api/epr/${tableName}`)
+    const res = await axios.get(`${api}/api/epr/${tableName}`, {
+      headers: { Authorization: `Bearer ${localStorage.getItem('access_token')}` }
+    })
     console.log("Réponse API:", res.data)
 
     items.value = res.data.data || []

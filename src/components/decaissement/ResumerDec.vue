@@ -76,7 +76,9 @@ const resume = ref(null)
 const fetchResume = async (tableName) => {
   if (!tableName) return
   try {
-    const res = await axios.get(`${api}/api/decaissement/${tableName}/resume`)
+    const res = await axios.get(`${api}/api/decaissement/${tableName}/resume`, {
+      headers: { Authorization: `Bearer ${localStorage.getItem('access_token')}` }
+    })
     resume.value = res.data
   } catch (err) {
     console.error("Erreur lors du chargement du résumé:", err)

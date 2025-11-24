@@ -222,9 +222,13 @@ def listeDta():
         return JSONResponse(status_code=500, content={"error": f"Erreur serveur: {e}"})
 
 @router.get("/dat/{table_name}")
-def get_dat_table(table_name: str):
+def get_dat_table(request: Request,table_name: str):
    
     try:
+        current_user = user.get_current_user(request)
+        if current_user.get("privillege") not in ["user","admin", "superadmin"]:
+            raise HTTPException(status_code=403, detail="Accès refusé : privilège insuffisant")
+
         data = dat_report.getDat(table_name)
         return {"table": table_name, **data}
     except ValueError as ve:
@@ -234,9 +238,13 @@ def get_dat_table(table_name: str):
 
 
 @router.get("/dat/{table_name}/resume")
-def get_dat_resume(table_name: str):
+def get_dat_resume(request: Request,table_name: str):
 
     try:
+        current_user = user.get_current_user(request)
+        if current_user.get("privillege") not in ["user","admin", "superadmin"]:
+            raise HTTPException(status_code=403, detail="Accès refusé : privilège insuffisant")
+
         summary = dat_report.getResumeDat(table_name)
         if not summary:
             return JSONResponse(status_code=404, content={"error": "Résumé introuvable ou table vide"})
@@ -261,12 +269,17 @@ def get_dat_resume(table_name: str):
 
 @router.get("/datGraphe/{table_name}")
 def get_graphe_dat(
+    request: Request,
     table_name: str,
     x: str = Query(..., description="Colonne X (ex: kill, agence, produit, numero_compte)"),
     y: str = Query(..., description="Colonne Y (ex: kill, agence, produit, numero_compte)")
 ):
 
     try:
+        current_user = user.get_current_user(request)
+        if current_user.get("privillege") not in ["user","admin", "superadmin"]:
+            raise HTTPException(status_code=403, detail="Accès refusé : privilège insuffisant")
+
         data = dat_report.get_graphe_data(x, y, table_name)
         print(data)
         return data
@@ -315,10 +328,14 @@ def listeDav():
         return JSONResponse(status_code=500, content={"error": f"Erreur serveur: {e}"})
 
 @router.get("/dav/{table_name}")
-def get_dav_table(table_name: str):
+def get_dav_table(request: Request,table_name: str):
     """ tablea de dav selectionner
     """
     try:
+        current_user = user.get_current_user(request)
+        if current_user.get("privillege") not in ["user","admin", "superadmin"]:
+            raise HTTPException(status_code=403, detail="Accès refusé : privilège insuffisant")
+
         data = dav_report.getDav(table_name)
         return {"table": table_name, **data}
     except ValueError as ve:
@@ -327,9 +344,13 @@ def get_dav_table(table_name: str):
         return JSONResponse(status_code=500, content={"error": f"Erreur serveur: {e}"})
     
 @router.get("/dav/{table_name}/resume")
-def get_dav_resume(table_name: str):
+def get_dav_resume(request: Request,table_name: str):
 
     try:
+        current_user = user.get_current_user(request)
+        if current_user.get("privillege") not in ["user","admin", "superadmin"]:
+            raise HTTPException(status_code=403, detail="Accès refusé : privilège insuffisant")
+
         summary = dav_report.getResumeDav(table_name)
         if not summary:
             return JSONResponse(status_code=404, content={"error": "Résumé introuvable ou table vide"})
@@ -352,8 +373,12 @@ def get_dav_resume(table_name: str):
     
 
 @router.get("/resume/all/{type_table}")
-def get_all_resume(type_table: str):
+def get_all_resume(request:Request,type_table: str):
     try:
+        current_user = user.get_current_user(request)
+        if current_user.get("privillege") not in ["user","admin", "superadmin"]:
+            raise HTTPException(status_code=403, detail="Accès refusé : privilège insuffisant")
+
         summaries = dav_report.getAllResumeDav(type_table)
         if not summaries:
             return JSONResponse(status_code=404, content={"error": f"Aucune table trouvée pour le type {type_table}"})
@@ -378,6 +403,7 @@ def getTotalResumer(type_table: str):
 
 @router.get("/resume/total-produit/{type_table}")
 def get_total_par_produit(
+    request: Request,
     type_table: str,
     agence: str = None,
     date_debut: str = None,
@@ -385,6 +411,10 @@ def get_total_par_produit(
     single_date_if_all = None
 ):
     try:
+        current_user = user.get_current_user(request)
+        if current_user.get("privillege") not in ["user","admin", "superadmin"]:
+            raise HTTPException(status_code=403, detail="Accès refusé : privilège insuffisant")
+
         total = dav_report.getTotalParProduit(
             type_table=type_table,
             agence=agence,
@@ -415,12 +445,17 @@ def get_total_par_produit(
 
 @router.get("/davGraphe/{table_name}")
 def get_graphe_dav(
+    request: Request,
     table_name: str,
     x: str = Query(..., description="Colonne X (ex: client, agence, produit, numero_compte)"),
     y: str = Query(..., description="Colonne Y (ex: kill, agence, produit, numero_compte)")
 ):
 
     try:
+        current_user = user.get_current_user(request)
+        if current_user.get("privillege") not in ["user","admin", "superadmin"]:
+            raise HTTPException(status_code=403, detail="Accès refusé : privilège insuffisant")
+
         data = dav_report.get_graphe_dataDav(x, y, table_name)
        
         return data
@@ -447,8 +482,14 @@ def listeEpr():
         return JSONResponse(status_code=500, content={"error": f"Erreur serveur: {e}"})
     
 @router.get("/epr/{table_name}")
-def get_epr_table(table_name: str):
+def get_epr_table(
+    request: Request,
+    table_name: str):
     try:
+        current_user = user.get_current_user(request)
+        if current_user.get("privillege") not in ["user","admin", "superadmin"]:
+            raise HTTPException(status_code=403, detail="Accès refusé : privilège insuffisant")
+
         data = epr_report.getEpr(table_name)
         return {"table": table_name, **data}
     except ValueError as ve:
@@ -457,9 +498,15 @@ def get_epr_table(table_name: str):
         return JSONResponse(status_code=500, content={"error": f"Erreur serveur: {e}"})
     
 @router.get("/epr/{table_name}/resume")
-def get_epr_resume(table_name: str):
+def get_epr_resume(
+    request: Request,
+    table_name: str):
 
     try:
+        current_user = user.get_current_user(request)
+        if current_user.get("privillege") not in ["user","admin", "superadmin"]:
+            raise HTTPException(status_code=403, detail="Accès refusé : privilège insuffisant")
+
         summary = epr_report.getResumeEpr(table_name)
         if not summary:
             return JSONResponse(status_code=404, content={"error": "Résumé introuvable ou table vide"})
@@ -482,12 +529,17 @@ def get_epr_resume(table_name: str):
 
 @router.get("/eprGraphe/{table_name}")
 def get_graphe_epr(
+    request: Request,
     table_name: str,
     x: str = Query(..., description="Colonne X (ex: client, agence, produit, numero_compte)"),
     y: str = Query(..., description="Colonne Y (ex: kill, agence, produit, numero_compte)")
 ):
 
     try:
+        current_user = user.get_current_user(request)
+        if current_user.get("privillege") not in ["user","admin", "superadmin"]:
+            raise HTTPException(status_code=403, detail="Accès refusé : privilège insuffisant")
+
         data = epr_report.get_graphe_dataEpr(x, y, table_name)
         
         return data
@@ -513,8 +565,14 @@ def listeDecaissement():
         return JSONResponse(status_code=500, content={"error": f"Erreur serveur: {e}"})
 
 @router.get("/decaissement/{table_name}")
-def get_decaissement_table(table_name: str):
+def get_decaissement_table(
+    request: Request,
+    table_name: str):
     try:
+        current_user = user.get_current_user(request)
+        if current_user.get("privillege") not in ["user","admin", "superadmin"]:
+            raise HTTPException(status_code=403, detail="Accès refusé : privilège insuffisant")
+
         data = decaissement_report.getDecaissement(table_name)
         return {"table": table_name, **data}
     except ValueError as ve:
@@ -523,9 +581,15 @@ def get_decaissement_table(table_name: str):
         return JSONResponse(status_code=500, content={"error": f"Erreur serveur: {e}"})
 
 @router.get("/decaissement/{table_name}/resume")
-def get_decaissement_resume(table_name: str):
+def get_decaissement_resume(
+    request: Request,
+    table_name: str):
 
     try:
+        current_user = user.get_current_user(request)
+        if current_user.get("privillege") not in ["user","admin", "superadmin"]:
+            raise HTTPException(status_code=403, detail="Accès refusé : privilège insuffisant")
+
         summary = decaissement_report.getResumeDecaissement(table_name)
         if not summary:
             return JSONResponse(status_code=404, content={"error": "Résumé introuvable ou table vide"})
@@ -548,12 +612,17 @@ def get_decaissement_resume(table_name: str):
     
 @router.get("/decaissementGraphe/{table_name}")   
 def get_graphe_decaissement(
+    request: Request,  
     table_name: str,
     x: str = Query(..., description="Colonne X (ex: client, agence, produit, numero_compte)"),
     y: str = Query(..., description="Colonne Y (ex: kill, agence, produit, numero_compte)")
 ):
 
     try:
+        current_user = user.get_current_user(request)
+        if current_user.get("privillege") not in ["user","admin", "superadmin"]:
+            raise HTTPException(status_code=403, detail="Accès refusé : privilège insuffisant")
+
         data = decaissement_report.get_grapheDec(x, y, table_name)
         
         return data
