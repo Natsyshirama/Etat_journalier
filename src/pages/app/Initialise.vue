@@ -1,4 +1,8 @@
 <template>
+  <v-alert v-if="!isAllowed" type="error" class="mt-8">
+  Accès refusé : vous n'avez pas les droits nécessaires.
+</v-alert>
+<div v-else>
   <v-container class="init-container" fluid>
     
     <!-- Bloc historique -->
@@ -74,11 +78,14 @@
     </v-row>
 
   </v-container>
+  </div>
 </template>
 
 <script setup>
 import { ref ,inject,onMounted } from "vue"
 import axios from "axios"
+import { usePopupStore } from '@/stores'
+import { computed } from "vue"
 import HistorySelected from "@/components/dat/HistorySelected.vue"
 import { useRoute } from "vue-router"
 
@@ -106,7 +113,11 @@ const initializeTable = async () => {
 
   try {
     const res = await axios.post(
-      `${api}/api/compte/compte_init/${selectedHistory.value.label}`
+      `${api}/api/compte/compte_init/${selectedHistory.value.label}`,
+      {},
+      {
+        headers: { Authorization: `Bearer ${localStorage.getItem('access_token')}` }
+      }
     )
 
     if (res.data.status === "success") {
@@ -135,6 +146,12 @@ const initializeTable = async () => {
     loading.value = false
   }
 }
+const popupStore = usePopupStore()
+
+const isAllowed = computed(() => {
+  const privilege = popupStore.user_access?.access || localStorage.getItem('privillege') || ''
+  return ['admin', 'superadmin'].includes(privilege)
+})
 
 onMounted(async () => {
   await historyRef.value.fetchHistory()

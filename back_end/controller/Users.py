@@ -343,9 +343,9 @@ class Users:
             privillege = payload.get("privillege")
             id = payload.get("id")
  
+            print("user:", username, "id:", id, "privillege:", privillege   )
 
             return {"username": username, "id": id, "privillege": privillege}
-
         except jwt.ExpiredSignatureError:
             raise HTTPException(status_code=401, detail="Session expirée")
         except jwt.JWTError:

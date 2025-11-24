@@ -14,7 +14,7 @@
         <v-btn
           v-for="option in periodOptions"
           :key="option.value"
-          :color="selectedPeriod === option.value ? 'primary' : 'grey'"
+          :color="selectedPeriod === option.value ? 'success' : 'grey'"
           class="ml-2"
           size="small"
           @click="selectedPeriod = option.value"
@@ -182,7 +182,6 @@ const fetchData = async (type) => {
       datasets: datasets.map(ds => ({
         ...ds,
         borderWidth: 3,
-        pointBackgroundColor: "#fff",
         pointBorderColor: ds.borderColor,
         fill: true,
         tension: 0.3,
@@ -194,7 +193,6 @@ const fetchData = async (type) => {
   }
 }
 
-// Filtrage des données selon la période sélectionnée
 const filteredChartData = computed(() => {
   if (!chartData.value) return null
   let nb = chartData.value.labels.length
@@ -202,7 +200,7 @@ const filteredChartData = computed(() => {
   else if (selectedPeriod.value === "5d") nb = 5
   else if (selectedPeriod.value === "1mo") nb = 30
   else if (selectedPeriod.value === "1y") nb = 365
-  else if (selectedPeriod.value === "") nb = chartData.value.labels.length // max: tout
+  else if (selectedPeriod.value === "") nb = chartData.value.labels.length 
 
   // Prend les nb derniers points (si moins, prend tout)
   const start = Math.max(0, chartData.value.labels.length - nb)
@@ -224,7 +222,7 @@ fetchData(selectedType.value)
   margin: 0;
   padding: 16px;
   box-sizing: border-box;
-  background-color:#040404;
+  background-color:#000000;
 }
 .chart-container {
   width: 100%;

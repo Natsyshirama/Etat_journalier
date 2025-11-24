@@ -1,4 +1,4 @@
-from fastapi import APIRouter, HTTPException, Query
+from fastapi import APIRouter, HTTPException, Query,Request,Depends
 from fastapi.responses import JSONResponse, StreamingResponse, FileResponse
 from typing import List, Optional
 import json
@@ -14,6 +14,8 @@ from controller.ChangeMandy import ChangeMandy
 from controller.DavUnique import DavUnique
 from controller.decaissementReport import decaissementReport
 from controller.decaissement import DecaissementOptimise
+from controller.Users import Users
+
 
 router = APIRouter()
 dat_report = DatReport()
@@ -26,11 +28,25 @@ epr_report = EprReport()
 change_mandy = ChangeMandy()
 decaissement = DecaissementOptimise()
 decaissement_report = decaissementReport()
+user= Users()
+
 #INITIALISATION COMPTE
+def get_user_from_request(request: Request):
+    return user.get_current_user(request)
+
+# --- ROUTE PROTÉGÉE ---
+@router.get("/protected")
+def protected(user_: str = Depends(get_user_from_request)):
+    return user_
 
 @router.post("/compte/compte_init/{name}")
-def initialize(name:str):
+def initialize(request: Request, 
+               name:str):
     try:
+        current_user = user.get_current_user(request)
+        if current_user.get("privillege") not in ["admin", "superadmin"]:
+            raise HTTPException(status_code=403, detail="Accès refusé : privilège insuffisant")
+
         createStatus = dav_unique.add_status_columns()
         if not createStatus:
             raise Exception("Erreur lors de l'ajout des colonnes de statut")
@@ -84,7 +100,9 @@ def initialize(name:str):
                     "table_name_dat": table_name_dat,
                     #  "table_name_dec": table_name_dec.get("table_name") if isinstance(table_name_dec, dict) else table_name_dec,
         })
-        
+    
+    except HTTPException as e:
+        raise e
     except Exception as e:
         return JSONResponse(content={"status": "error", "message": str(e)}, status_code=500)
     
