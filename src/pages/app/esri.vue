@@ -76,6 +76,7 @@ import { ref, onMounted, onUnmounted,inject } from "vue"
 import axios from "axios"
 import * as XLSX from "xlsx"
 import TablesEsri from "@/components/esri/TableauEsri.vue"
+import { usePopupStore } from '@/stores'
 
 const dateDebut = ref("")
 const dateFin = ref("")
@@ -104,7 +105,8 @@ const fetchEsriData = async () => {
     const res = await axios.post(
       `${api}/api/esri/create_esri_precompute`,
       null,
-      {
+      { 
+        headers: { Authorization: `Bearer ${localStorage.getItem('access_token')}` },
         params: {
           date_debut: dateDebut.value,
           date_fin: dateFin.value,

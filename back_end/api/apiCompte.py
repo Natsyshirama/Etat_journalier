@@ -126,8 +126,12 @@ def create_decaissement(date_limit:str):
 
 
 @router.post("/esri/create_esri_precompute")
-def create_esri_precompute( date_debut: str = Query(...), date_fin: str = Query(...)):
+def create_esri_precompute( request: Request, date_debut: str = Query(...), date_fin: str = Query(...)):
     try:
+        current_user = user.get_current_user(request)
+        if current_user.get("privillege") not in ["user","admin", "superadmin"]:
+            raise HTTPException(status_code=403, detail="Accès refusé : privilège insuffisant")
+
         limit = db_get.getHistoryDate()
         if limit and (date_debut > limit or date_fin > limit):
             raise Exception(f"Les données apres le {limit} ne sont pas encore disponible.")
