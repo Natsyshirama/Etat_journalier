@@ -376,6 +376,8 @@ class DavReport:
                 if not filtered_tables:
                     return []
 
+                previous_data = None  # Stocker les données précédentes pour calculer l'écart
+
                 for table_name in sorted(filtered_tables):
                     table_date = table_name.replace(f"{type_table}_", "")
                     where = []
@@ -426,27 +428,62 @@ class DavReport:
                             date_agence_data["agence"] = agence
                         
                         if type_table == "dav" or type_table == "epr":
+                            current_data = {
+                                "nb_clients": int(result[0] or 0),
+                                "total_montant": float(result[1] or 0),
+                                "total_debit": float(result[2] or 0),
+                                "total_credit": float(result[3] or 0)
+                            }
+                            
+                            # Calculer l'écart si on a des données précédentes
+                            ecart_data = {}
+                            if previous_data:
+                                for key, current_value in current_data.items():
+                                    previous_value = previous_data.get(key, 0)
+                                    ecart = current_value - previous_value
+                                    ecart_data[f"ecart_{key}"] = ecart
+                            else:
+                                # Première ligne, écarts à 0
+                                for key in current_data.keys():
+                                    ecart_data[f"ecart_{key}"] = 0
+                            
                             results.append({
                                 "date_agence": date_agence_data,
-                                "data": {
-                                    "nb_clients": int(result[0] or 0),
-                                    "total_montant": float(result[1] or 0),
-                                    "total_debit": float(result[2] or 0),
-                                    "total_credit": float(result[3] or 0)
-                                }
+                                "data": current_data,
+                                "ecart": ecart_data
                             })
+                            
+                            previous_data = current_data  # Mettre à jour pour la prochaine itération
+                            
                         elif type_table == "dat":
+                            current_data = {
+                                "nb_clients": int(result[0] or 0),
+                                "total_montant": float(result[1] or 0),
+                                "total_credit": float(result[2] or 0)
+                            }
+                            
+                            # Calculer l'écart si on a des données précédentes
+                            ecart_data = {}
+                            if previous_data:
+                                for key, current_value in current_data.items():
+                                    previous_value = previous_data.get(key, 0)
+                                    ecart = current_value - previous_value
+                                    ecart_data[f"ecart_{key}"] = ecart
+                            else:
+                                # Première ligne, écarts à 0
+                                for key in current_data.keys():
+                                    ecart_data[f"ecart_{key}"] = 0
+                            
                             results.append({
                                 "date_agence": date_agence_data,
-                                "data": {
-                                    "nb_clients": int(result[0] or 0),
-                                    "total_montant": float(result[1] or 0),
-                                    "total_credit": float(result[2] or 0)
-                                }
+                                "data": current_data,
+                                "ecart": ecart_data
                             })
+                            
+                            previous_data = current_data  # Mettre à jour pour la prochaine itération
 
             return results
-
+        
         except Exception as e:
             print(f"[ERREUR] getTotalParProduit : {e}")
             return {"status": "error", "message": str(e)}

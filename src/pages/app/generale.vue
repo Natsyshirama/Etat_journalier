@@ -92,26 +92,7 @@
   
   <div class="d-flex flex-wrap gap-4">
     <!-- Colonnes pour DATE & AGENCE -->
-<template v-if="(infoDav.length || infoDat.length || infoEpr.length)">
-  <div class="column-group">
-    <div class="group-title mb-2" style="background:#424242; color:white;">
-      Info (Date & Agence)
-    </div>
 
-    <div class="d-flex flex-wrap gap-2">
-      <v-checkbox
-        v-for="col in ['date','agence']"
-        :key="col"
-        v-model="visibleColumns.info"
-        :label="col.toUpperCase()"
-        :value="col"
-        density="compact"
-        hide-details
-        class="column-checkbox"
-      />
-    </div>
-  </div>
-</template>
 
     <!-- Colonnes pour DAV -->
     <template v-if="visibleTables.includes('dav') && resultsDav.length">
@@ -169,6 +150,26 @@
         </div>
       </div>
     </template>
+    <template v-if="(infoDav.length || infoDat.length || infoEpr.length)">
+  <div class="column-group">
+    <div class="group-title mb-2" style="background:#424242; color:white;">
+      Info (Date & Agence)
+    </div>
+
+    <div class="d-flex flex-wrap gap-2">
+      <v-checkbox
+        v-for="col in ['date','agence']"
+        :key="col"
+        v-model="visibleColumns.info"
+        :label="col.toUpperCase()"
+        :value="col"
+        density="compact"
+        hide-details
+        class="column-checkbox"
+      />
+    </div>
+  </div>
+</template>
   </div>
 </div>
 
@@ -239,11 +240,7 @@
           <v-data-table
             class="elevation-2 fade-in full-table table-dav data-table-fixed"
             :headers="headersDav.filter(h => visibleColumns.dav.includes(h.key))"
-            :items="resultsDav.map(item => {
-              const filtered = {};
-              visibleColumns.dav.forEach(col => filtered[col] = item[col]);
-              return filtered;
-            })"
+            :items="resultsDav"
             density="comfortable"
             hide-default-footer
             :items-per-page="-1"
@@ -252,6 +249,23 @@
             <template #top>
               <h3 class="text-h6 font-weight-bold mb-2 table-title table-title-dav">DAV</h3>
             </template>
+            <template #item="{ item, index }">
+      <tr>
+        <td
+          v-for="header in headersDav.filter(h => visibleColumns.dav.includes(h.key))"
+          :key="header.key"
+        >
+          <div>
+            {{ item[header.key] !== undefined && item[header.key] !== null ? item[header.key] : '' }}
+            <div v-if="index > 0 && item.ecart && item.ecart['ecart_' + header.key] !== 0">
+              <small style="color: #1976d2;">
+                ({{ item.ecart['ecart_' + header.key] > 0 ? '+' : '' }}{{ (item.ecart['ecart_' + header.key]).toFixed(2) }})
+              </small>
+            </div>
+          </div>
+        </td>
+      </tr>
+    </template>
           </v-data-table>
         </v-col>
 
@@ -349,7 +363,7 @@ const visibleColumns = ref({
   epr: []
 })
 
-const visibleTables = ref(['dav', 'dat', 'epr'])
+const visibleTables = ref(['date','dav', 'dat', 'epr'])
 
 const isAllAgence = computed(() => agence.value === 'all')
 const hasResults = computed(() => 
@@ -359,12 +373,13 @@ const hasResults = computed(() =>
 
 const generateHeaders = (data) => {
   if (!data.length) return []
-
-  return Object.keys(data[0]).map(key => ({
-    title: key.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase()),
-    key,
-    align: key.includes('total') || key.includes('montant') ? 'end' : 'start'
-  }))
+  return Object.keys(data[0])
+    .filter(key => key !== 'ecart') // <-- Ajoute ce filtre
+    .map(key => ({
+      title: key.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase()),
+      key,
+      align: key.includes('total') || key.includes('montant') ? 'end' : 'start'
+    }))
 }
 
 
@@ -397,7 +412,11 @@ const rechercher = async () => {
       if (Array.isArray(res.data) && res.data.length) {
   if (type === 'dav') {
     infoDav.value = res.data.map(item => item.date_agence)
-    resultsDav.value = res.data.map(item => item.data)
+    // On stocke data ET ecart dans chaque item
+    resultsDav.value = res.data.map(item => ({
+      ...item.data,
+      ecart: item.ecart
+    }))
     headersDav.value = generateHeaders(resultsDav.value)
     visibleColumns.value.dav = headersDav.value.map(h => h.key)
   }
@@ -439,7 +458,7 @@ const rechercher = async () => {
   }
 }
 </script>
-
+  
 <style scoped>
 /* Vos styles existants restent les mêmes */
 .full-container {
@@ -526,15 +545,12 @@ const rechercher = async () => {
 
 /* Bordures colorées pour chaque tableau */
 .table-dav {
-  border: 2px solid #1976d2;
 }
 
 .table-dat {
-  border: 2px solid #43a047;
 }
 
 .table-epr {
-  border: 2px solid #fbc02d;
 }
 
 .column-group {
