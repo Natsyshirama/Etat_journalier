@@ -48,7 +48,7 @@
             <v-icon class="mr-2">mdi-cash-multiple</v-icon>
             <div>
               <div class="text-caption text-green">Total Capital</div>
-              <div class="text-h6 font-weight-bold">{{ resume.total_montant_capital }}</div>
+              <div class="text-h6 font-weight-bold">{{ Number(resume.total_montant_capital).toLocaleString('fr-FR', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) }}</div>
             </div>
           </div>
         </v-card>
@@ -60,7 +60,7 @@
             <v-icon class="mr-2">mdi-bank-transfer</v-icon>
             <div>
               <div class="text-caption text-teal">Total Paiement</div>
-              <div class="text-h6 font-weight-bold">{{ resume.total_montant_pay_total }}</div>
+              <div class="text-h6 font-weight-bold">{{ Number(resume.total_montant_pay_total).toLocaleString('fr-FR', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) }}</div>
             </div>
           </div>
         </v-card>

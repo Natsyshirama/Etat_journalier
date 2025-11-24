@@ -37,7 +37,7 @@
             <v-icon class="mr-2">mdi-cash-multiple</v-icon>
             <div>
               <div class="text-caption text-blue">Total Montant Capital</div>
-              <div class="text-h6 font-weight-bold">{{ resume.total_montant_capital }}</div>
+              <div class="text-h6 font-weight-bold">{{ Number(resume.total_montant_capital).toLocaleString('fr-FR', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) }}</div>
             </div>
           </div>
         </v-card>
@@ -49,7 +49,7 @@
             <v-icon class="mr-2">mdi-file-document-outline</v-icon>
             <div>
               <div class="text-caption text-green">Total Frais de dossier</div>
-              <div class="text-h6 font-weight-bold">{{ resume.total_frais_de_dossier }}</div>
+<div class="text-h6 font-weight-bold">{{ Number(resume.total_frais_de_dossier).toLocaleString('fr-EN', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) }}</div>
             </div>
           </div>
         </v-card>
