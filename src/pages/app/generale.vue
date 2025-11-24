@@ -427,6 +427,8 @@ const rechercher = async () => {
 
     for (const type of types) {
       const res = await axios.get(`${api}/api/resume/total-produit/${type}`, {
+              headers: { Authorization: `Bearer ${localStorage.getItem('access_token')}` },
+
         params: {
           agence: agence.value,
           single_date_if_all: singleDate.value,
