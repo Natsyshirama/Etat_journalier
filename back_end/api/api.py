@@ -115,6 +115,10 @@ def get_users(request: Request):
 
     return user.getListeUser()
 
+@router.get("/users/pending_count")
+def get_pending_count():
+    return user.get_pending_validation_count()
+
 @router.get("/user/{user_id}")
 def get_users(request: Request, user_id: int):
     current_user = user.get_current_user(request)
@@ -486,5 +490,9 @@ async def get_pa_class(date: str = Query(...)):
         print(f"[ERREUR route get_encours_credits] {e}")
         raise HTTPException(status_code=500, detail=str(e))
 
+
+@router.get("/users/pending_count")
+def get_pending_count():
+    return user.get_pending_validation_count()
 
 api_router = router

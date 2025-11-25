@@ -356,3 +356,17 @@ class Users:
     def logout(self, response: Response):
         response.delete_cookie("access_token")
         return {"message": "Déconnexion réussie"}
+    
+    #user non valider
+    def get_pending_validation_count(self):
+        conn = None
+        try:
+            conn = self.db.connect()
+            query = text("SELECT COUNT(*) AS count FROM users WHERE validate_status = FALSE")
+            result = conn.execute(query).fetchone()
+            return {"count": result[0] if result else 0}
+        except Exception as e:
+            raise HTTPException(status_code=500, detail=f"Erreur lors du comptage des validations : {e}")
+        finally:
+            if conn:
+                conn.close()

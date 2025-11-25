@@ -12,20 +12,28 @@
       v-else
       :user-id="selectedUserId"
       @back="selectedUserId = null"
+      @user-validated="handleUserValidated"
     />
   </div>
   </v-container>
+  
 </template>
 
 <script setup>
-import { ref, onMounted ,inject} from 'vue'
+import { ref, onMounted ,inject, getCurrentInstance} from 'vue'
 import UsersComponent from '@/components/sessions/users.vue'
 import userId from '@/components/sessions/userId.vue'
 import axios from 'axios'
-const api = inject('api') 
+import { useNotificationStore } from '@/stores/notification'
 
+const api = inject('api') 
 const users = ref([])
 const selectedUserId = ref(null)
+
+const notificationStore = useNotificationStore()
+
+
+const { proxy } = getCurrentInstance()
 
 const fetchUsers = async () => {
   try {
@@ -41,6 +49,11 @@ const fetchUsers = async () => {
 const handleSelectUser = (id) => {
   console.log('Selected user id:', id)
   selectedUserId.value = id
+}
+
+const handleUserValidated = async () => {
+  await notificationStore.fetchDemandesValidation(api)
+  await fetchUsers()
 }
 
 onMounted(fetchUsers)

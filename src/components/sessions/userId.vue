@@ -335,6 +335,7 @@ const showDialog = ref(false)
 const selectedRole = ref('user')
 const adminPassword = ref('')
 
+const emit = defineEmits(['back', 'user-validated'])
 
 
 const confirmValidation = async () => {
@@ -356,7 +357,7 @@ const confirmValidation = async () => {
     successMsg.value = `Utilisateur validé avec le rôle "${selectedRole.value}"`
 
     await fetchUser()
-
+    emit('user-validated')
   } catch (e) {
     errorMsg.value = "Erreur : Mot de passe incorrect ou privilège insuffisant"
   } finally {
