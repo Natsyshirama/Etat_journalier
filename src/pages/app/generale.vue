@@ -371,7 +371,6 @@ const infoDav = ref([])
 const infoDat = ref([])
 const infoEpr = ref([])
 
-// Headers séparés par type
 const headersDav = ref([])
 const headersDat = ref([])
 const headersEpr = ref([])
@@ -380,9 +379,8 @@ const headersInfo = computed(() => [
   { title: 'Agence', key: 'agence' }
 ])
 
-// Colonnes visibles séparées par type
 const visibleColumns = ref({
-    info: ['date', 'agence'], // Par défaut, Date et Agence sont sélectionnées
+    info: ['date', 'agence'],
 
   dav: [],
   dat: [],
@@ -419,7 +417,6 @@ const rechercher = async () => {
   headersDat.value = []
   headersEpr.value = []
   
-  // Réinitialiser les colonnes visibles
   visibleColumns.value = {info: ['date', 'agence'], dav: [], dat: [], epr: [] }
 
   try {
@@ -440,7 +437,6 @@ const rechercher = async () => {
       if (Array.isArray(res.data) && res.data.length) {
   if (type === 'dav') {
     infoDav.value = res.data.map(item => item.date_agence)
-    // On stocke data ET ecart dans chaque item
     resultsDav.value = res.data.map(item => ({
       ...item.data,
       ecart: item.ecart
@@ -451,7 +447,6 @@ const rechercher = async () => {
 
   if (type === 'dat') {
     infoDat.value = res.data.map(item => item.date_agence)
-    // Pour DAT
     resultsDat.value = res.data.map(item => ({
       ...item.data,
       ecart: item.ecart
@@ -462,7 +457,6 @@ const rechercher = async () => {
 
   if (type === 'epr') {
     infoEpr.value = res.data.map(item => item.date_agence)
-    // Pour EPR
     resultsEpr.value = res.data.map(item => ({
       ...item.data,
       ecart: item.ecart
@@ -496,7 +490,6 @@ const rechercher = async () => {
 </script>
   
 <style scoped>
-/* Vos styles existants restent les mêmes */
 .full-container {
   width: 100%;
   height: 100vh;
@@ -511,7 +504,6 @@ const rechercher = async () => {
   border-radius: 0 !important;
 }
 
-/* Styles uniformes pour tous les tableaux */
 .data-table-fixed {
   width: 100%;
 } 
@@ -527,7 +519,6 @@ const rechercher = async () => {
   border-radius: 8px;
 }
 
-/* Styles communs pour toutes les cellules de tableau */
 :deep(.table-dav .v-data-table__td),
 :deep(.table-dav .v-data-table__th),
 :deep(.table-dat .v-data-table__td),
@@ -542,7 +533,6 @@ const rechercher = async () => {
   text-overflow: ellipsis;
 }
 
-/* Assurer que tous les tableaux ont la même hauteur et largeur */
 :deep(.v-data-table) {
   table-layout: fixed;
   width: 100%;
@@ -579,7 +569,6 @@ const rechercher = async () => {
   background-color: #1976d2;
 }
 
-/* Bordures colorées pour chaque tableau */
 .table-dav {
 }
 
@@ -621,8 +610,7 @@ const rechercher = async () => {
   margin: 2px 0;
 }
 
-/* Espacement entre les groupes */
-.gap-4 {
+*.gap-4 {
   gap: 16px;
 }
 

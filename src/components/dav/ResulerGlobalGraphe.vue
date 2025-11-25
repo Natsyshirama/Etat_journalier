@@ -135,7 +135,9 @@ watch(selectedType, async (newType) => {
 
 const fetchData = async (type) => {
   try {
-    const res = await axios.get(`${api}/api/resume/all/${type}`)
+    const res = await axios.get(`${api}/api/resume/all/${type}`, {
+      headers: { Authorization: `Bearer ${localStorage.getItem('access_token')}` }
+    })
     const data = res.data || []
 
     if (!data.length) {
