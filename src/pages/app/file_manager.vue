@@ -68,6 +68,54 @@
 
     <import_progress v-if="show_progress_import">
     </import_progress>
+
+    <!-- Dialog pour l'exportation -->
+    <v-dialog v-model="exportDialog" max-width="900">
+      <template #activator="{ props }">
+  <v-btn
+    color="primary"
+    v-bind="props"
+    prepend-icon="mdi-export"
+    class="export-floating"
+  >
+    Export Multi
+  </v-btn>
+</template>
+
+      <v-card>
+        <v-card-title>Export Multi-fichiers</v-card-title>
+        <v-card-text>
+          <v-row>
+            <v-col cols="12">
+              <v-select
+                v-model="exportType"
+                :items="['dav', 'dat', 'epr', 'decaissement', 'all']"
+                label="Type de données"
+                required
+              />
+            </v-col>
+            <v-col cols="6">
+              <v-text-field v-model="exportDateDebut" label="Date début" type="date" required />
+            </v-col>
+            <v-col cols="6">
+              <v-text-field v-model="exportDateFin" label="Date fin" type="date" required />
+            </v-col>
+            <v-col cols="12">
+              <v-select
+                v-model="exportFormat"
+                :items="['csv', 'excel']"
+                label="Format"
+                required
+              />
+            </v-col>
+          </v-row>
+        </v-card-text>
+        <v-card-actions>
+          <v-btn color="primary" @click="exportMulti">Exporter</v-btn>
+          <v-btn text @click="exportDialog = false">Fermer</v-btn>
+        </v-card-actions>
+      </v-card>
+    </v-dialog>
   </div>
 </template>
 
@@ -401,13 +449,44 @@ const show_popup=()=>{
 
 }
 
+const exportDialog = ref(false)
+const exportType = ref('dav')
+const exportDateDebut = ref('')
+const exportDateFin = ref('')
+const exportFormat = ref('csv')
 
+const exportMulti = async () => {
+  if (!exportDateDebut.value || !exportDateFin.value) {
+    alert('Veuillez choisir une période')
+    return
+  }
+  const params = new URLSearchParams({
+    type: exportType.value,
+    date_debut: exportDateDebut.value.replaceAll('-', ''),
+    date_fin: exportDateFin.value.replaceAll('-', ''),
+    format: exportFormat.value
+  })
+  const url = `${api}/api/export/multi?${params.toString()}`
+  window.open(url, '_blank')
+  exportDialog.value = false
+}
 
 </script>
 
 
 
 <style scoped>
+.export-floating {
+  position: absolute;
+  top: 13px;
+  right: 02px;
+  z-index: 500;
+  font-weight: bold;
+    width: 230px;
+
+}
+
+
 .custom_title{
 
   font-size: 12px;

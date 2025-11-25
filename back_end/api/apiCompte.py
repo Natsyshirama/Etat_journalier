@@ -631,4 +631,71 @@ def get_graphe_decaissement(
     except Exception as e:
         return JSONResponse(status_code=500, content={"error": f"Erreur serveur: {e}"})
     
+import pandas as pd
+from fastapi import APIRouter, Query, Response
+import io
+import zipfile
+@router.get("/export/multi")
+def export_multi(
+    type: str = Query(..., description="Type de données (dav, dat, epr, decaissement, all)"),
+    date_debut: str = Query(..., description="Date de début (YYYYMMDD)"),
+    date_fin: str = Query(..., description="Date de fin (YYYYMMDD)"),
+    format: str = Query("csv", description="Format d'export (csv, excel)")
+):
+    # Récupérer les données selon le type
+    types = ['dav', 'dat', 'epr', 'decaissement'] if type == "all" else [type]
+    zip_buffer = io.BytesIO()
+    with zipfile.ZipFile(zip_buffer, "w", zipfile.ZIP_DEFLATED) as zip_file:
+        for t in types:
+            if t == "dav":
+                report = DavReport()
+            elif t == "dat":
+                report = DatReport()
+            elif t == "epr":
+                report = EprReport()
+            elif t == "decaissement":
+                report = decaissementReport()
+            else:
+                continue
+
+            # Liste des tables dans la plage
+            tables = report.getListeDav() if t == "dav" else \
+                     report.getListeDat() if t == "dat" else \
+                     report.getListeEpr() if t == "epr" else \
+                     report.getListeDecaissement() if t == "decaissement" else []
+
+            # Filtrer les tables par date
+            filtered_tables = [
+                table for table in tables
+                if len(table) > len(t) + 1 and date_debut <= table.replace(f"{t}_", "") <= date_fin
+            ]
+
+            for table_name in filtered_tables:
+                # Récupérer les données de la table
+                data = report.getDav(table_name.replace("dav_", ""))["data"] if t == "dav" else \
+                       report.getDat(table_name.replace("dat_", ""))["data"] if t == "dat" else \
+                       report.getEpr(table_name.replace("epr_", ""))["data"] if t == "epr" else \
+                       report.getDecaissement(table_name.replace("decaissement_", ""))["data"] if t == "decaissement" else []
+
+                if not data:
+                    continue
+
+                df = pd.DataFrame(data)
+                file_name = f"{table_name}.{format if format == 'csv' else 'xlsx'}"
+                buffer = io.BytesIO() if format == "excel" else io.StringIO()
+                if format == "excel":
+                    with pd.ExcelWriter(buffer, engine='xlsxwriter') as writer:
+                        df.to_excel(writer, index=False)
+                    buffer.seek(0)
+                    zip_file.writestr(file_name, buffer.read())
+                else:
+                    df.to_csv(buffer, index=False)
+                    zip_file.writestr(file_name, buffer.getvalue())
+    zip_buffer.seek(0)
+    return StreamingResponse(
+        zip_buffer,
+        media_type="application/zip",
+        headers={"Content-Disposition": "attachment; filename=export_multi.zip"}
+    )
+
 api_router2 = router
