@@ -479,10 +479,10 @@ const exportMulti = async () => {
 .export-floating {
   position: absolute;
   top: 13px;
-  right: 02px;
+  right: 70px;
   z-index: 500;
   font-weight: bold;
-    width: 230px;
+    width: 150px;
 
 }
 

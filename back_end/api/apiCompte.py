@@ -642,7 +642,6 @@ def export_multi(
     date_fin: str = Query(..., description="Date de fin (YYYYMMDD)"),
     format: str = Query("csv", description="Format d'export (csv, excel)")
 ):
-    # Récupérer les données selon le type
     types = ['dav', 'dat', 'epr', 'decaissement'] if type == "all" else [type]
     zip_buffer = io.BytesIO()
     with zipfile.ZipFile(zip_buffer, "w", zipfile.ZIP_DEFLATED) as zip_file:
