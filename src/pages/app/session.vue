@@ -42,7 +42,6 @@ const fetchUsers = async () => {
     })
     users.value = response.data.users
   } catch (e) {
-    // gestion d'erreur
   }
 }
 

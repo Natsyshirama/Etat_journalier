@@ -94,6 +94,7 @@ const filteredMenu = computed(() => {
   }
   return list_menu.filter(item => item.access !== 'superadmin' && item.access !== 'admin');
 });
+
 onMounted(() => {
   notificationStore.fetchDemandesValidation(api)
 })
