@@ -185,6 +185,7 @@ const isCompte = computed(() => route.path === '/app/dav')
 const isSession = computed(() => route.path === '/app/session')
 const isInitialise = computed(() => route.path === '/app/Initialise')
 const isgenerale = computed(() => route.path === '/app/generale')
+const isFilemanager = computed(() => route.path === '/app/file_manager')
 
 
 const toolbarTitle = computed(() => {
@@ -194,8 +195,9 @@ const toolbarTitle = computed(() => {
   if (isSession.value) return 'Gestion des utilisateurs'
   if (isInitialise.value) return 'Initialisation Compte'
   if (isgenerale.value) return 'Vue'
+  if (isFilemanager.value) return 'Gestionnaire de fichiers'
 
-  return 'Encours des crédits'
+ 
 })
 
 

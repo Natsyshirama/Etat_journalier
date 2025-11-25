@@ -42,6 +42,9 @@
 
 <script setup>
 import { ref,inject } from "vue"
+import { useNotificationStore } from '@/stores/notification'
+const notificationStore = useNotificationStore()
+
 
 const api = inject('api') 
 const activeTab = ref("signIn") // par défaut "Connexion"
@@ -97,6 +100,8 @@ const handleSubmit = async () => {
       if (!response.ok) {
         throw new Error(data.detail || "Erreur lors de l'inscription");
       }
+      
+      await notificationStore.fetchDemandesValidation(api);
 
       location.replace('/app/credits');
     }
