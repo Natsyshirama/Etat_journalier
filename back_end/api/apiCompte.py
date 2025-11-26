@@ -657,20 +657,17 @@ def export_multi(
             else:
                 continue
 
-            # Liste des tables dans la plage
             tables = report.getListeDav() if t == "dav" else \
                      report.getListeDat() if t == "dat" else \
                      report.getListeEpr() if t == "epr" else \
                      report.getListeDecaissement() if t == "decaissement" else []
 
-            # Filtrer les tables par date
             filtered_tables = [
                 table for table in tables
                 if len(table) > len(t) + 1 and date_debut <= table.replace(f"{t}_", "") <= date_fin
             ]
 
             for table_name in filtered_tables:
-                # Récupérer les données de la table
                 data = report.getDav(table_name.replace("dav_", ""))["data"] if t == "dav" else \
                        report.getDat(table_name.replace("dat_", ""))["data"] if t == "dat" else \
                        report.getEpr(table_name.replace("epr_", ""))["data"] if t == "epr" else \
@@ -679,7 +676,7 @@ def export_multi(
                 if not data:
                     continue
 
-                df = pd.DataFrame(data)
+                df = pd.DataFrame(data) 
                 file_name = f"{table_name}.{format if format == 'csv' else 'xlsx'}"
                 buffer = io.BytesIO() if format == "excel" else io.StringIO()
                 if format == "excel":
@@ -694,7 +691,7 @@ def export_multi(
     return StreamingResponse(
         zip_buffer,
         media_type="application/zip",
-        headers={"Content-Disposition": "attachment; filename=export_multi.zip"}
+        headers={"Content-Disposition": f"attachment; filename=EM_{date_debut}_{date_fin}.zip"}
     )
 
 api_router2 = router

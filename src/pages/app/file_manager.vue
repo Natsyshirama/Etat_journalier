@@ -73,7 +73,7 @@
     <v-dialog v-model="exportDialog" max-width="900">
       <template #activator="{ props }">
   <v-btn
-    color="primary"
+    color="success"
     v-bind="props"
     prepend-icon="mdi-export"
     class="export-floating"

@@ -197,7 +197,7 @@ const toolbarTitle = computed(() => {
   if (isgenerale.value) return 'Vue'
   if (isFilemanager.value) return 'Gestionnaire de fichiers'
 
- 
+ return 'Encours Credits'
 })
 
 

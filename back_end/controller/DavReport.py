@@ -69,33 +69,7 @@ class DavReport:
                 except Exception as close_err:
                     print(f"[ERREUR] Fermeture connexion (getDav) : {close_err}")
     
-    def get_data_for_export(self, date_debut, date_fin):
-        """
-        Récupère toutes les données des tables dav_YYYYMMDD comprises entre date_debut et date_fin.
-        """
-        conn = self.db.connect()
-        try:
-            # Chercher toutes les tables dav_YYYYMMDD dans la plage
-            tables_query = text("SHOW TABLES LIKE 'dav_%'")
-            all_tables = [row[0] for row in conn.execute(tables_query).fetchall()]
-            # Filtrer les tables par date
-            filtered_tables = [
-                t for t in all_tables
-                if len(t) > 4 and date_debut <= t.replace("dav_", "") <= date_fin
-            ]
-            all_data = []
-            for table_name in filtered_tables:
-                query = text(f"SELECT *, '{table_name}' as table_name FROM `{table_name}`")
-                result = conn.execute(query)
-                columns = list(result.keys())
-                for row in result.fetchall():
-                    all_data.append(dict(zip(columns, row)))
-            return all_data
-        except Exception as e:
-            print(f"[ERREUR] get_data_for_export : {e}")
-            return []
-        finally:
-            conn.close()
+    
          
     def getResumeDav(self, table_name: str):
         table_name_vrai = f"dav_{table_name}"
