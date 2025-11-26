@@ -478,7 +478,7 @@ const exportMulti = async () => {
 <style scoped>
 .export-floating {
   position: absolute;
-  top: 13px;
+  top: 14px;
   right: 70px;
   z-index: 500;
   font-weight: bold;

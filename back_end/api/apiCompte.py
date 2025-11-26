@@ -630,7 +630,7 @@ def get_graphe_decaissement(
         return JSONResponse(status_code=400, content={"error": str(ve)})
     except Exception as e:
         return JSONResponse(status_code=500, content={"error": f"Erreur serveur: {e}"})
-    
+
 import pandas as pd
 from fastapi import APIRouter, Query, Response
 import io
@@ -642,6 +642,27 @@ def export_multi(
     date_fin: str = Query(..., description="Date de fin (YYYYMMDD)"),
     format: str = Query("csv", description="Format d'export (csv, excel)")
 ):
+    # 1. Récupérer les bornes dans history_insert
+    db = DB()
+    conn = db.connect()
+    try:
+        result = conn.execute(text("SELECT MIN(label), MAX(label) FROM history_insert")).fetchone()
+        min_date, max_date = result[0], result[1]
+    finally:
+        conn.close()
+
+    # 2. Vérifier les bornes
+    if date_debut < min_date:
+        raise HTTPException(
+            status_code=400,
+            detail=f"La date de début ({date_debut}) est antérieure à la date la plus ancienne disponible ({min_date})."
+        )
+    if date_fin > max_date:
+        raise HTTPException(
+            status_code=400,
+            detail=f"La date de fin ({date_fin}) est postérieure à la date la plus récente disponible ({max_date})."
+        )
+
     types = ['dav', 'dat', 'epr', 'decaissement'] if type == "all" else [type]
     zip_buffer = io.BytesIO()
     with zipfile.ZipFile(zip_buffer, "w", zipfile.ZIP_DEFLATED) as zip_file:
