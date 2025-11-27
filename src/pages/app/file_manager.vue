@@ -537,14 +537,13 @@ const triggerImport = async () => {
     importError.value = "Erreur réseau ou serveur"
   }
 }
-
 const extractDate = (filename) => {
-  const match = filename.match(/\d{8}/);  // 8 chiffres
+  const match = filename.match(/\d{8}/);  // 8 chiffres pour la date
   return match ? match[0] : null;
 };
+
 const downloadFile = async (item) => {
   const date = extractDate(item.title);
-
   if (!date) {
     console.error("Impossible d'extraire la date du nom du fichier");
     return;
@@ -555,25 +554,44 @@ const downloadFile = async (item) => {
       `${api}/api/download-file?filename=${encodeURIComponent(item.title)}&date=${date}`
     );
 
-    console.log(response)
-
     if (!response.ok) {
       throw new Error("Erreur API");
     }
 
-    const blob = await response.blob();
-    const url = URL.createObjectURL(blob);
+    // Récupérer le contenu en stream
+    const reader = response.body.getReader();
+    const contentLength = +response.headers.get('Content-Length') || 0;
+    let receivedLength = 0;
+    const chunks = [];
 
+    while (true) {
+      const { done, value } = await reader.read();
+      if (done) break;
+      chunks.push(value);
+      receivedLength += value.length;
+
+      // Affichage de la progression
+      if (contentLength) {
+        const percent = ((receivedLength / contentLength) * 100).toFixed(2);
+        console.log(`Téléchargé : ${percent}%`);
+        // Ici tu peux mettre à jour une barre de progression dans ton UI
+      }
+    }
+
+    // Créer le Blob final et déclencher le téléchargement
+    const blob = new Blob(chunks);
+    const url = URL.createObjectURL(blob);
     const a = document.createElement("a");
     a.href = url;
     a.download = item.title;
     a.click();
-
     URL.revokeObjectURL(url);
+
   } catch (err) {
     console.error("Erreur téléchargement :", err);
   }
 };
+
 
 
 </script>
