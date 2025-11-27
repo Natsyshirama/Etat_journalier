@@ -28,16 +28,20 @@
         <v-card title="Explorateur de fichier">
           <div style="max-height: 400px; overflow-y: auto; padding: 0 30px;">
             <v-treeview v-if="list_file.length" v-model:opened="open" :items="list_file" density="compact" item-value="title" activatable open-on-click >
-              <template v-slot:prepend="{ item, isOpen }">
+              <template v-slot:prepend="{ item, isOpen }" >
                 <v-icon v-if="!item.file" :icon="isOpen ? 'mdi-folder-open' : 'mdi-folder'" />
                 <v-icon v-else icon="mdi-file-chart-outline" style=" font-size: 15px;" />
                 <button v-if="!item.file" style="position:absolute; margin-left: 400px;" @click.stop="chargerDossier(item,isActive)" >
                   <v-icon icon="mdi mdi-database " size="24" style=" position: relative; margin-left: -20px; margin-top: 7px; " />
-                  <v-icon :id="'refresh' + item.title.replaceAll(/[^a-zA-Z0-9_-]/g, '_')" icon="mdi mdi mdi-sync " size="12" style=" position: relative; margin-top: 20px;margin-left:-7px; background-color: black;border-radius: 15px;" />
+                  <v-icon :id="'refresh' + item.title.replaceAll(/[^a-zA-Z0-9_-]/g, '_')" icon="mdi mdi-sync " size="12" style=" position: relative; margin-top: 20px;margin-left:-7px; background-color: black;border-radius: 15px;" />
+                </button>
+                <button  v-if="item.file"  style="position:absolute; margin-left: 380px;"  @click.stop="downloadFile(item)" >  
+                  <v-icon :id="'download' + item.title.replaceAll(/[^a-zA-Z0-9_-]/g, '_')" icon="mdi mdi-download" size="17" style="position: relative; margin-top: -7px; margin-left:-40px; background-color: transparent; border-radius: 15px;"  />
                 </button>
               </template>
               <template #title="{ item }">
-                <span :class="item.file ? 'custom_title' : ''">{{ item.title }}</span>
+                <span :class="item.file ? 'custom_title' : ''">{{CastString( item.title )}} </span>
+                
               </template>
             </v-treeview>
           </div>
@@ -183,6 +187,11 @@ const normalizeTree = (data) => {
     })) : []
   }));
 };
+
+const CastString = (str) => {
+  if (str.length <= 40) return str
+  else return str.substring(0, 37) + '...' 
+}
 
 const handleFileUpload = (event) => {
   const files = event.target.files;
@@ -528,6 +537,44 @@ const triggerImport = async () => {
     importError.value = "Erreur réseau ou serveur"
   }
 }
+
+const extractDate = (filename) => {
+  const match = filename.match(/\d{8}/);  // 8 chiffres
+  return match ? match[0] : null;
+};
+const downloadFile = async (item) => {
+  const date = extractDate(item.title);
+
+  if (!date) {
+    console.error("Impossible d'extraire la date du nom du fichier");
+    return;
+  }
+
+  try {
+    const response = await fetch(
+      `${api}/api/download-file?filename=${encodeURIComponent(item.title)}&date=${date}`
+    );
+
+    console.log(response)
+
+    if (!response.ok) {
+      throw new Error("Erreur API");
+    }
+
+    const blob = await response.blob();
+    const url = URL.createObjectURL(blob);
+
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = item.title;
+    a.click();
+
+    URL.revokeObjectURL(url);
+  } catch (err) {
+    console.error("Erreur téléchargement :", err);
+  }
+};
+
 
 </script>
 

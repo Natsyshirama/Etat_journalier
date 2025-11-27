@@ -10,7 +10,9 @@ from decimal import Decimal
 import json
 import time
 import asyncio 
-import io  
+
+from fastapi.responses import FileResponse
+import io  ,os
 from controller.DavUnique import DavUnique
 dav_unique = DavUnique()   
  
@@ -495,4 +497,19 @@ async def get_pa_class(date: str = Query(...)):
 def get_pending_count():
     return user.get_pending_validation_count()
 
+
+
+# BASE_DIR basé sur l'emplacement du fichier Python actuel
+BASE_DIR = os.path.join(os.path.dirname(__file__))
+@router.get("/download-file")
+def download_file(filename: str, date: str):
+    base_dir = os.path.dirname(BASE_DIR) 
+    path = os.path.join(base_dir, "load_file", date, filename)
+     
+    print(">>> Chemin construit :", path)
+
+    if not os.path.exists(path):
+        raise HTTPException(status_code=404, detail="Fichier introuvable")
+
+    return FileResponse(path, filename=filename)
 api_router = router
