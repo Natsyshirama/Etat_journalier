@@ -34,7 +34,7 @@ user= Users()
 def get_user_from_request(request: Request):
     return user.get_current_user(request)
 
-# --- ROUTE PROTÉGÉE ---
+# --- ROUTE PROTÉGEE ---
 @router.get("/protected")
 def protected(user_: str = Depends(get_user_from_request)):
     return user_
@@ -82,7 +82,7 @@ def initialize(request: Request,
         table_name_dat = db_get.create_tableDatPreCompute(name)
         table_name_dav = dav_unique.create_table_dav(name)
         table_name_epr = dav_unique.create_table_epr(name)
-        # table_name_dec = decaissement.generate_decaissement_report(name)        
+        table_name_dec = decaissement.generate_decaissement_report(name)        
 
         
         if not table_name_dat or not table_name_dav or not table_name_epr :
@@ -98,7 +98,7 @@ def initialize(request: Request,
                     "table_name_dav": table_name_dav,
                     "table_name_epr": table_name_epr,
                     "table_name_dat": table_name_dat,
-                    #  "table_name_dec": table_name_dec.get("table_name") if isinstance(table_name_dec, dict) else table_name_dec,
+                    "table_name_dec": table_name_dec.get("table_name") if isinstance(table_name_dec, dict) else table_name_dec,
         })
     
     except HTTPException as e:
@@ -631,6 +631,7 @@ def get_graphe_decaissement(
     except Exception as e:
         return JSONResponse(status_code=500, content={"error": f"Erreur serveur: {e}"})
 
+
 import pandas as pd
 from fastapi import APIRouter, Query, Response
 import io
@@ -642,7 +643,6 @@ def export_multi(
     date_fin: str = Query(..., description="Date de fin (YYYYMMDD)"),
     format: str = Query("csv", description="Format d'export (csv, excel)")
 ):
-    # 1. Récupérer les bornes dans history_insert
     db = DB()
     conn = db.connect()
     try:
@@ -651,7 +651,6 @@ def export_multi(
     finally:
         conn.close()
 
-    # 2. Vérifier les bornes
     if date_debut < min_date:
         raise HTTPException(
             status_code=400,
@@ -715,4 +714,65 @@ def export_multi(
         headers={"Content-Disposition": f"attachment; filename=EM_{date_debut}_{date_fin}.zip"}
     )
 
+
+from fastapi import UploadFile, File
+import pandas as pd
+import re
+
+@router.post("/import/multi")
+async def import_multi(files: List[UploadFile] = File(...)):
+    db = DB()
+    conn = db.connect()
+    errors = []
+    success = []
+    import numpy as np
+    import pandas as pd
+    import re
+
+    pattern = re.compile(r"^(dav|dat|epr|decaissement)_(\d{8})\.csv$")
+    for file in files:
+        match = pattern.match(file.filename)
+        if not match:
+            errors.append(f"Nom de fichier invalide : {file.filename}")
+            continue
+        type_table, date_str = match.groups()
+        table_name = f"{type_table}_{date_str}"
+        try:
+            # Lire le CSV avec encodage
+            df = pd.read_csv(file.file, encoding='utf-8')
+            
+            
+            # Nettoyer les colonnes
+            df.columns = [col.strip().replace(" ", "_").replace("é", "e").replace("è", "e").replace("à", "a") for col in df.columns]
+            df = df.replace({np.nan: None})
+            
+            if df.empty:
+                errors.append(f"Fichier vide ou mal lu : {file.filename}")
+                continue
+            
+            # ...avant la boucle d'insertion...
+            print("Colonnes du DataFrame:", df.columns)
+            print("Première ligne:", df.iloc[0].to_dict() if not df.empty else "DataFrame vide")
+            columns = ", ".join([f"`{col}` TEXT" for col in df.columns])
+            create_sql = f"CREATE TABLE IF NOT EXISTS `{table_name}` ({columns})"
+            conn.execute(text(create_sql))
+            for row in df.to_dict(orient="records"):
+                try:
+                    for k, v in row.items():
+                        if v is not None and (str(v).lower() == "nan" or v == ""):
+                            row[k] = None
+                    cols = ", ".join([f"`{col}`" for col in row.keys()])
+                    vals = ", ".join([f":{col}" for col in row.keys()])
+                    insert_sql = text(f"INSERT INTO `{table_name}` ({cols}) VALUES ({vals})")
+                    conn.execute(insert_sql, row)
+                    conn.commit()
+
+                except Exception as e:
+                    print(f"Erreur insertion ligne: {row}\n{e}")
+                    errors.append(f"Erreur insertion ligne: {e}")
+            success.append(f"Import réussi : {file.filename}")
+        except Exception as e:
+            errors.append(f"Erreur import {file.filename} : {e}")
+    conn.close()
+    return {"success": success, "errors": errors}
 api_router2 = router
