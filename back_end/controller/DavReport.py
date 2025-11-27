@@ -68,7 +68,9 @@ class DavReport:
                     conn.close()
                 except Exception as close_err:
                     print(f"[ERREUR] Fermeture connexion (getDav) : {close_err}")
-                    
+    
+    
+         
     def getResumeDav(self, table_name: str):
         table_name_vrai = f"dav_{table_name}"
         if not table_name_vrai or not table_name_vrai.startswith("dav_"):
@@ -274,6 +276,226 @@ class DavReport:
             raise ValueError("Type de table invalide. Utiliser 'dav', 'dat' ou 'epr', 'decaissement'.")
 
         return total_resumer
+
+
+    def getTotalParProduit(self, type_table: str, agence: str = None,
+                       date_debut: str = None, date_fin: str = None,
+                       single_date_if_all: str = "20251028"):
+       
+        AGENCES_DISPO = [
+            "MG0010009","MG0010004","MG0010024","MG0010052","MG0010011",
+            "MG0010012","MG0010010","MG0011001","MG0010003","MG0010022",
+            "MG0010053","MG0010013","MG0010041","MG0010023"
+        ]
+
+        type_table = type_table.lower().strip()
+        if type_table not in ["dav", "dat", "epr"]:
+            raise ValueError("Type invalide. Valeurs possibles : 'dav', 'dat', 'epr'.")
+
+        conn = None
+        try:
+            conn = self.db.connect()
+
+            # Récupérer toutes les tables du type
+            tables_query = text(f"SHOW TABLES LIKE '{type_table}_%'")
+            all_tables = [row[0] for row in conn.execute(tables_query).fetchall()]
+            if not all_tables:
+                return []
+
+            results = []
+
+            if agence and agence.lower() == "all":
+                # On prend une seule date
+                agence = agence.strip()
+
+                table_name = f"{type_table}_{single_date_if_all}"
+                if table_name not in all_tables:
+                    return {"message": f"Aucune table trouvée pour la date {single_date_if_all}"}
+
+                for ag in AGENCES_DISPO:
+                    if type_table == "dav":
+                        sql = f"""
+                            SELECT 
+                                COUNT(DISTINCT code_client) AS nb_clients,
+                                SUM(solde) AS total_montant,
+                                SUM(debit) AS total_debit,
+                                SUM(credit) AS total_credit
+                            FROM `{table_name}`
+                            WHERE Agence = :agence
+                        """
+                    elif type_table == "dat":
+                        sql = f"""
+                            SELECT 
+                                COUNT(DISTINCT code_client) AS nb_clients,
+                                SUM(montant_capital) AS total_montant,
+                                SUM(montant_pay_total) AS total_credit
+                            FROM `{table_name}`
+                            WHERE Agence = :agence
+                        """
+                    elif type_table == "epr":
+                        sql = f"""
+                            SELECT 
+                                COUNT(DISTINCT code_client) AS nb_clients,
+                                SUM(solde) AS total_montant,
+                                SUM(Debit) AS total_debit,
+                                SUM(Credit) AS total_credit
+                            FROM `{table_name}`
+                            WHERE Agence = :agence
+                        """
+                    result = conn.execute(text(sql), {"agence": ag}).fetchone()
+                    if result:
+                        date_agence_data = {"date": single_date_if_all}
+                        
+                        if agence and agence.lower() == "all":
+                            date_agence_data["agence"] = ag
+                        
+                        if type_table == "dav" or type_table == "epr":
+                            results.append({
+                                "date_agence": date_agence_data,
+                                "data": {
+                                    "nb_clients": int(result[0] or 0),
+                                    "total_montant": float(result[1] or 0),
+                                    "total_debit": float(result[2] or 0),
+                                    "total_credit": float(result[3] or 0)
+                                }
+                            })
+                        elif type_table == "dat":
+                            results.append({
+                                "date_agence": date_agence_data,
+                                "data": {
+                                    "nb_clients": int(result[0] or 0),
+                                    "total_montant": float(result[1] or 0),
+                                    "total_credit": float(result[2] or 0)
+                                }
+                            })
+            else:
+                # Filtrer les tables par plage de dates
+                if date_debut and date_fin:
+                    filtered_tables = [t for t in all_tables if date_debut <= t.replace(f"{type_table}_", "") <= date_fin]
+                else:
+                    filtered_tables = all_tables
+
+                if not filtered_tables:
+                    return []
+
+                previous_data = None  # Stocker les données précédentes pour calculer l'écart
+
+                for table_name in sorted(filtered_tables):
+                    table_date = table_name.replace(f"{type_table}_", "")
+                    where = []
+                    params = {}
+                    if agence:
+                        where.append("Agence = :agence")
+                        params["agence"] = agence
+                    where_clause = " AND ".join(where)
+                    if where_clause:
+                        where_clause = "WHERE " + where_clause
+
+                    if type_table == "dav":
+                        sql = f"""
+                            SELECT 
+                                COUNT(DISTINCT code_client) AS nb_clients,
+                                SUM(solde) AS total_montant,
+                                SUM(debit) AS total_debit,
+                                SUM(credit) AS total_credit
+                            FROM `{table_name}`
+                            {where_clause}
+                        """
+                    elif type_table == "dat":
+                        sql = f"""
+                            SELECT 
+                                COUNT(DISTINCT code_client) AS nb_clients,
+                                SUM(montant_capital) AS total_montant,
+                                SUM(montant_pay_total) AS total_credit
+                            FROM `{table_name}`
+                            {where_clause}
+                        """
+                    elif type_table == "epr":
+                        sql = f"""
+                            SELECT 
+                                COUNT(DISTINCT code_client) AS nb_clients,
+                                SUM(solde) AS total_montant,
+                                SUM(Debit) AS total_debit,
+                                SUM(Credit) AS total_credit
+                            FROM `{table_name}`
+                            {where_clause}
+                        """
+                    result = conn.execute(text(sql), params).fetchone()
+                    if result:
+                        # Construire l'objet date_agence conditionnellement
+                        date_agence_data = {"date": table_date}
+                        
+                        # Ajouter agence seulement si elle a une valeur
+                        if agence:
+                            date_agence_data["agence"] = agence
+                        
+                        if type_table == "dav" or type_table == "epr":
+                            current_data = {
+                                "nb_clients": int(result[0] or 0),
+                                "total_montant": float(result[1] or 0),
+                                "total_debit": float(result[2] or 0),
+                                "total_credit": float(result[3] or 0)
+                            }
+                            
+                            # Calculer l'écart si on a des données précédentes
+                            ecart_data = {}
+                            if previous_data:
+                                for key, current_value in current_data.items():
+                                    previous_value = previous_data.get(key, 0)
+                                    ecart = current_value - previous_value
+                                    ecart_data[f"ecart_{key}"] = ecart
+                            else:
+                                # Première ligne, écarts à 0
+                                for key in current_data.keys():
+                                    ecart_data[f"ecart_{key}"] = 0
+                            
+                            results.append({
+                                "date_agence": date_agence_data,
+                                "data": current_data,
+                                "ecart": ecart_data
+                            })
+                            
+                            previous_data = current_data  # Mettre à jour pour la prochaine itération
+                            
+                        elif type_table == "dat":
+                            current_data = {
+                                "nb_clients": int(result[0] or 0),
+                                "total_montant": float(result[1] or 0),
+                                "total_credit": float(result[2] or 0)
+                            }
+                            
+                            # Calculer l'écart si on a des données précédentes
+                            ecart_data = {}
+                            if previous_data:
+                                for key, current_value in current_data.items():
+                                    previous_value = previous_data.get(key, 0)
+                                    ecart = current_value - previous_value
+                                    ecart_data[f"ecart_{key}"] = ecart
+                            else:
+                                # Première ligne, écarts à 0
+                                for key in current_data.keys():
+                                    ecart_data[f"ecart_{key}"] = 0
+                            
+                            results.append({
+                                "date_agence": date_agence_data,
+                                "data": current_data,
+                                "ecart": ecart_data
+                            })
+                            
+                            previous_data = current_data  # Mettre à jour pour la prochaine itération
+
+            return results
+        
+        except Exception as e:
+            print(f"[ERREUR] getTotalParProduit : {e}")
+            return {"status": "error", "message": str(e)}
+
+        finally:
+            if conn:
+                conn.close()
+
+
+
 
 
                     

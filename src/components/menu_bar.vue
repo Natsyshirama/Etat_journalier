@@ -165,6 +165,7 @@ import { ref, watch, onMounted,inject,computed } from 'vue'
 import { useRoute } from 'vue-router'
 import { usePopupStore } from '../stores'
 import * as XLSX from 'xlsx'
+import { useRouter } from 'vue-router'
 
 
 const route = useRoute()
@@ -173,6 +174,7 @@ const selectedDate = ref('Chargement en cours...')
 const menu = ref(false)
 const popupStore = usePopupStore()
 const exporting = ref(false)
+const router = useRouter()
 
 const historyDates  = ref([])
 
@@ -180,12 +182,22 @@ const historyDates  = ref([])
 const isEsriPage = computed(() => route.path === '/app/esri')
 const isChangePage = computed(() => route.path === '/app/change')
 const isCompte = computed(() => route.path === '/app/dav')
+const isSession = computed(() => route.path === '/app/session')
+const isInitialise = computed(() => route.path === '/app/Initialise')
+const isgenerale = computed(() => route.path === '/app/generale')
+const isFilemanager = computed(() => route.path === '/app/file_manager')
+
 
 const toolbarTitle = computed(() => {
   if (isEsriPage.value) return 'ESRI'
   if (isChangePage.value) return 'Change'
   if (isCompte.value) return 'Encours Compte'
-  return 'Encours des crédits'
+  if (isSession.value) return 'Gestion des utilisateurs'
+  if (isInitialise.value) return 'Initialisation Compte'
+  if (isgenerale.value) return 'Vue'
+  if (isFilemanager.value) return 'Gestionnaire de fichiers'
+
+ return 'Encours Credits'
 })
 
 
@@ -348,13 +360,18 @@ async function selectDate(date,stat_compte) {
   selectedDate.value = date
   popupStore.selected_date = date
   popupStore.selected_date_stat_compte = stat_compte
-  usePopupStore().selected_date = date
+  localStorage.setItem("selectedTable", date) // <-- Ajout ici
+
   menu.value = false
    
  if (isCompte.value) {
-    window.dispatchEvent(new CustomEvent('table-date-selected', { detail: { date, stat_compte } }))
+    if (stat_compte === 0) {
+      router.push({ name: 'Initialise', query: { label: date } })
+    } else {
+      window.dispatchEvent(new CustomEvent('table-date-selected', { detail: { date, stat_compte } }))
+    }
   }
-}
+}  
 async function selectDateStatOf(date, stat_of) {
   selectedDate.value = date
 
@@ -374,9 +391,22 @@ async function selectDateStatOf(date, stat_of) {
 
 
 watch(historyDates, (val) => {
-  if (Array.isArray(val) && val.length > 0) { 
-    selectedDate.value = val[0].label
-    console.log("📅 Date sélectionnée automatiquement :", selectedDate.value)
+  if (Array.isArray(val) && val.length > 0) {
+    // Trie les dates du plus récent au plus ancien
+    const sorted = [...val].sort((a, b) => b.label.localeCompare(a.label))
+    const lastDate = sorted[0].label
+    const lastStatCompte = sorted[0].stat_compte
+
+    selectedDate.value = lastDate
+    popupStore.selected_date = lastDate
+    popupStore.selected_date_stat_compte = lastStatCompte
+    localStorage.setItem("selectedTable", lastDate)
+
+    // Émet l'événement pour synchroniser la sélection
+    if (isCompte.value) {
+      window.dispatchEvent(new CustomEvent('table-date-selected', { detail: { date: lastDate, stat_compte: lastStatCompte } }))
+    }
+    console.log("📅 Dernière date sélectionnée automatiquement :", lastDate)
   }
 }, { immediate: true })
 </script>

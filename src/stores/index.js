@@ -1,4 +1,4 @@
-// stores/usePopupStore.js
+  // stores/usePopupStore.js
 import { defineStore } from 'pinia'
 import { ref } from 'vue'
 
@@ -59,4 +59,10 @@ export const useExportStore = defineStore('export', {
       
     }
   }
+})
+
+export const useNotificationStore = defineStore('notification', () => {
+  const demandesValidation = ref(0)
+  const setDemandesValidation = (val) => { demandesValidation.value = val }
+  return { demandesValidation, setDemandesValidation }
 })

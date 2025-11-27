@@ -1,9 +1,9 @@
 <template>  
 <!-- <div v-if="!selected_dat " class="flex h-full w-full items-center justify-center">
     <h3>Chargement ...</h3>
-</div> -->
+</div> -->  
 
-<div v-if="!popupStore.selected_date_stat_of || popupStore.selected_date_stat_of === 'NULL'">
+<div v-if=" isAllowed && (!popupStore.selected_date_stat_of || popupStore.selected_date_stat_of === 'NULL')">
   <v-btn @click="runAllSteps()"
           class="me-2 text-none ml-10 text-white"
           color="#00DF76"
@@ -81,6 +81,7 @@
       </v-col>
 </div> 
 
+ 
 <div class="  flex-col overflow-auto h-[91vh]   text-white hide-scrollbar" v-else>
     <div class="flex flex-col px-3 gap-2 hide-scrollbar">
       <div class="h-[70vh]">
@@ -94,15 +95,12 @@
         <Data_table_view class="w-full" />
       </div>
     </div> 
-
-    
-
 </div>
- 
+
 </template>
 
 <script setup> 
-import { ref, watch,inject,onMounted,onUnmounted } from 'vue' 
+import { ref, watch,inject,onMounted,onUnmounted ,computed} from 'vue' 
 import { usePopupStore } from '../../stores'
 import sparkLineVue from '../../components/sparkLines/sparkLineVue.vue';
 import Data_viewer from '../../components/Data_Cart_view.vue';
@@ -192,6 +190,10 @@ const runAllSteps = async () => {
 
 
 
+const isAllowed = computed(() => {
+  const privilege = popupStore.user_access?.access || localStorage.getItem('privillege') || ''
+  return ['admin', 'superadmin'].includes(privilege)
+})
 
 const runStep = (index) => {
   return new Promise((resolve, reject) => {

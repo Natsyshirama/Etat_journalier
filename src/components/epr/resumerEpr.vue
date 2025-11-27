@@ -1,19 +1,70 @@
 <!-- src/components/dat/Resumer.vue -->
 <template>
-  <v-card v-if="resume" class="mb-4 pa-4" outlined>
-    <v-row>
-      
+  <v-card
+    v-if="resume"
+    class="mb-6 pa-6 rounded-xl"
+    elevation="3"
+  >
+<h3 class="text-h6 mb-4 font-weight-bold d-flex align-center">
+  <span>Résumé du EPR</span>
+  <v-chip
+    v-if="props.tableName"
+    color="yellow"
+    class="ml-4"
+    size="grand"
+    label
+    style="font-size:1.2rem;font-weight:500;"
+  >
+    {{ props.tableName }}
+  </v-chip>
+</h3>
+    <v-row dense>
       <v-col cols="12" md="3">
-        <strong>Nombre de clients :</strong> {{ resume.nb_clients }}
+        <v-card variant="tonal" color="primary" class="pa-3 rounded-lg">
+          <div class="d-flex align-center">
+            <v-icon class="mr-2">mdi-account-group</v-icon>
+            <div>
+              <div class="text-caption text-primary">Nombre de clients</div>
+              <div class="text-h6 font-weight-bold">{{ resume.nb_clients }}</div>
+            </div>
+          </div>
+        </v-card>
       </v-col>
+
       <v-col cols="12" md="3">
-        <strong>Total montant Epr :</strong> {{ resume.total_montant_epr }}
+        <v-card variant="tonal" color="blue" class="pa-3 rounded-lg">
+          <div class="d-flex align-center">
+            <v-icon class="mr-2">mdi-cash</v-icon>
+            <div>
+              <div class="text-caption text-blue">Total Montant EPR</div>
+              <div class="text-h6 font-weight-bold">{{ Number(resume.total_montant_epr).toLocaleString('fr-FR', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) }}</div>
+            </div>
+          </div>
+        </v-card>
       </v-col>
+
       <v-col cols="12" md="3">
-        <strong>Total debit Epr :</strong> {{ resume.total_debit_epr }}
+        <v-card variant="tonal" color="red" class="pa-3 rounded-lg">
+          <div class="d-flex align-center">
+            <v-icon class="mr-2">mdi-arrow-down-bold-circle</v-icon>
+            <div>
+              <div class="text-caption text-red">Total Débit EPR</div>
+              <div class="text-h6 font-weight-bold">{{Number(resume.total_debit_epr).toLocaleString('fr-FR', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) }}</div>
+            </div>
+          </div>
+        </v-card>
       </v-col>
+
       <v-col cols="12" md="3">
-        <strong>Total credit Epr :</strong> {{ resume.total_credit_epr }}
+        <v-card variant="tonal" color="green" class="pa-3 rounded-lg">
+          <div class="d-flex align-center">
+            <v-icon class="mr-2">mdi-arrow-up-bold-circle</v-icon>
+            <div>
+              <div class="text-caption text-green">Total Crédit EPR</div>
+              <div class="text-h6 font-weight-bold">{{Number( resume.total_credit_epr).toLocaleString('fr-FR', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) }}</div>
+            </div>
+          </div>
+        </v-card>
       </v-col>
     </v-row>
   </v-card>
@@ -23,33 +74,27 @@
 import { ref, watch, inject } from "vue"
 import axios from "axios"
 
-// Props venant de dat.vue
 const props = defineProps({
   tableName: {
     type: String,
     required: true
   }
 })
-const api = inject('api') 
 
-
+const api = inject("api")
 const resume = ref(null)
 
 const fetchResume = async (tableName) => {
   if (!tableName) return
   try {
-    const res = await axios.get(`${api}/api/epr/${tableName}/resume`)
+    const res = await axios.get(`${api}/api/epr/${tableName}/resume`, {
+      headers: { Authorization: `Bearer ${localStorage.getItem('access_token')}` }
+    })
     resume.value = res.data
   } catch (err) {
     console.error("Erreur lors du chargement du résumé:", err)
   }
 }
 
-watch(
-  () => props.tableName,
-  (newVal) => {
-    fetchResume(newVal)
-  },
-  { immediate: true }
-)
+watch(() => props.tableName, fetchResume, { immediate: true })
 </script>

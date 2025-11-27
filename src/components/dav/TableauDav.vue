@@ -72,7 +72,9 @@ const fetchTableData = async (tableName) => {
     return
   }
   try {
-    const res = await axios.get(`${api}/api/dav/${tableName}`)
+    const res = await axios.get(`${api}/api/dav/${tableName}`, {
+      headers: { Authorization: `Bearer ${localStorage.getItem('access_token')}` }
+    })
     items.value = res.data.data || []
     headers.value = (res.data.columns || []).map(col => ({
       title: col,

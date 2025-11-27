@@ -17,13 +17,11 @@
     </div>
 <div v-else>
   <ResumeGlobalGraphe />
-    <!-- Résumé conditionnel selon l'onglet -->
     <ResumerDat v-if="selectedTable && activeTab === 0" :tableName="selectedTable" />
     <ResumerDav v-if="selectedTable && activeTab === 1" :tableName="selectedTable" />
     <ResumerEpr v-if="selectedTable && activeTab === 2" :tableName="selectedTable" />
     <ResumerDec v-if="selectedTable && activeTab === 3" :tableName="selectedTable" />
 
-    <!-- Onglets DAT/DAV -->
     <v-tabs v-model="activeTab" class="mb-4">
       <v-tab>DAT</v-tab>
       <v-tab>DAV</v-tab>
@@ -279,10 +277,17 @@ const handleDateSelection = (event) => {
   console.log("📅 Table sélectionnée - Initialisée:", isInitialized.value)
 
 }
+
 onMounted(() => {
+  // Synchronise la sélection au chargement
+  const savedTable = localStorage.getItem("selectedTable")
+  if (savedTable) {
+    selectedTable.value = savedTable
+    popupStore.selected_date = savedTable
+  }
   window.addEventListener('export-dav-data', handleExportEvent)
-  window.addEventListener('table-date-selected', handleDateSelection) //  ecouteur date selection
-  fetchTables() 
+  window.addEventListener('table-date-selected', handleDateSelection)
+  fetchTables()
 })
 
 onUnmounted(() => {
@@ -292,12 +297,20 @@ onUnmounted(() => {
 
 const fetchTables = async () => {
   try {
-    const res = await axios.get("http://127.0.0.1:8000/api/history/liste")
+    const res = await axios.get(`${api}/api/history/liste`)
     history.value = res.data.history || []
   } catch (err) {
     console.error("Erreur lors du chargement de l'history:", err)
   }
 }
+
+watch(selectedTable, (newVal) => {
+  if (newVal) {
+    console.log("Table persistée :", localStorage.getItem("selectedTable"))
+    localStorage.setItem("selectedTable", newVal)
+    popupStore.selected_date = newVal
+  }
+})
 
 watch(() => popupStore.selected_date, (newDate) => {
     console.log(" Store updated - selected_date:", newDate)
@@ -306,6 +319,8 @@ watch(() => popupStore.selected_date, (newDate) => {
     selectedTable.value = newDate
     localStorage.setItem("selectedTable", newDate)
     console.log("📅 Table sélectionnée via store:", selectedTable.value)
+        console.log("Nom de la table utilisée :", selectedTable.value, typeof selectedTable.value)
+
   }
 }, { immediate: true })
 
@@ -318,8 +333,5 @@ watch(() => popupStore.selected_date, (newDate) => {
   overflow-y: auto;
   padding-bottom: 20px;
   padding: 0 10px; 
-}
-.unified-container::-webkit-scrollbar {
-  display: none; 
 }
 </style>

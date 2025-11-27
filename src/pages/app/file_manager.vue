@@ -68,7 +68,76 @@
 
     <import_progress v-if="show_progress_import">
     </import_progress>
+
+    <!-- Dialog pour l'exportation -->
+    <v-dialog v-model="exportDialog" max-width="900">
+      <template #activator="{ props }">
+  <v-btn
+    color="success"
+    v-bind="props"
+    prepend-icon="mdi-export"
+    class="export-floating"
+  >
+    Export Multi
+  </v-btn>
+</template>
+
+      <v-card>
+        <v-card-title>Export Multi-fichiers</v-card-title>
+        <v-card-text>
+          <v-row>
+            <v-col cols="12">
+              <v-select
+                v-model="exportType"
+                :items="['dav', 'dat', 'epr', 'decaissement', 'all']"
+                label="Type de données"
+                required
+              />
+            </v-col>
+            <v-col cols="6">
+              <v-text-field v-model="exportDateDebut" label="Date début" type="date" required />
+            </v-col>
+            <v-col cols="6">
+              <v-text-field v-model="exportDateFin" label="Date fin" type="date" required />
+            </v-col>
+            <v-col cols="12">
+              <v-select
+                v-model="exportFormat"
+                :items="['csv', 'excel']"
+                label="Format"
+                required
+              />
+            </v-col>
+          </v-row>
+        </v-card-text>
+        <v-card-actions>
+          <v-btn color="primary" @click="exportMulti">Exporter</v-btn>
+          <v-btn text @click="exportDialog = false">Fermer</v-btn>
+        </v-card-actions>
+      </v-card>
+    </v-dialog>
+    <!-- Ajoute dans ton template, par exemple dans file_manager.vue -->
+ 
+    <v-dialog v-model="importDialog" max-width="900">
+      <template #activator="{ props }">
+        <v-btn color="primary" v-bind="props" prepend-icon="mdi-upload"
+         class="export-floating_import">Importer Fichiers</v-btn>
+      </template>
+      <v-card>
+          <v-card-title>Importer des fichiers</v-card-title>
+          <v-card-text>
+            <input type="file" multiple accept=".csv" @change="handleImportFiles" ref="importFilesInput" />
+            <v-alert v-if="importError" type="error" class="mt-2">{{ importError }}</v-alert>
+            <v-alert v-if="importSuccess" type="success" class="mt-2">{{ importSuccess }}</v-alert>
+          </v-card-text>
+          <v-card-actions>
+            <v-btn color="primary" @click="triggerImport">Importer</v-btn>
+            <v-btn text @click="importDialog = false">Fermer</v-btn>
+          </v-card-actions>
+      </v-card>
+    </v-dialog>
   </div>
+
 </template>
 
 <script setup>
@@ -186,7 +255,7 @@ const load_database = async (refresh, files, folder,date_string) => {
 
   var index_table=0;
   try {
-    const response = await fetch('http://192.168.1.212:8000/api/create_multiple_table', {
+    const response = await fetch(`${api}/api/create_multiple_table`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -291,7 +360,7 @@ const uploadFile = async (folder_name) => {
   formData.append('app', app_type.value);
   formData.append('folder_name', folder_name);
   try {
-    const response = await fetch('http://192.168.1.212:8000/api/upload_multiple_files', {
+    const response = await fetch(`${api}/api/upload_multiple_files`, {
       method: 'POST',
       body: formData,
     });
@@ -401,13 +470,89 @@ const show_popup=()=>{
 
 }
 
+const exportDialog = ref(false)
+const exportType = ref('dav')
+const exportDateDebut = ref('')
+const exportDateFin = ref('')
+const exportFormat = ref('csv')
 
+const exportMulti = async () => {
+  if (!exportDateDebut.value || !exportDateFin.value) {
+    alert('Veuillez choisir une période')
+    return
+  }
+  const params = new URLSearchParams({
+    type: exportType.value,
+    date_debut: exportDateDebut.value.replaceAll('-', ''),
+    date_fin: exportDateFin.value.replaceAll('-', ''),
+    format: exportFormat.value
+  })
+  const url = `${api}/api/export/multi?${params.toString()}`
+  window.open(url, '_blank')
+  exportDialog.value = false
+}
+
+
+const importDialog = ref(false)
+const importError = ref("")
+const importSuccess = ref("")
+const importFilesInput = ref(null)
+const selectedFiles = ref([])
+
+const handleImportFiles = (event) => {
+  selectedFiles.value = Array.from(event.target.files)
+}
+
+const triggerImport = async () => {
+  importError.value = ""
+  importSuccess.value = ""
+  if (!selectedFiles.value.length) {
+    importError.value = "Veuillez sélectionner au moins un fichier."
+    return
+  }
+  const formData = new FormData()
+  selectedFiles.value.forEach(file => formData.append("files", file))
+  try {
+    const res = await fetch(`${api}/api/import/multi`, {
+      method: "POST",
+      body: formData
+    })
+    const data = await res.json()
+    if (data.errors && data.errors.length) {
+      importError.value = data.errors.join("\n")
+    }
+    if (data.success && data.success.length) {
+      importSuccess.value = data.success.join("\n")
+    }
+  } catch (e) {
+    importError.value = "Erreur réseau ou serveur"
+  }
+}
 
 </script>
 
 
 
 <style scoped>
+.export-floating {
+  position: absolute;
+  top: 14px;
+  right: 70px;
+  z-index: 500;
+  font-weight: bold;
+    width: 150px;
+
+}
+.export-floating_import {
+  position: absolute;
+  top: 100px;
+  right: 70px;
+  z-index: 500;
+  font-weight: bold;
+    width: 250px;
+
+}
+
 .custom_title{
 
   font-size: 12px;
