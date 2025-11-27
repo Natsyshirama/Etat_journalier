@@ -499,28 +499,30 @@ def get_pending_count():
 
 
 
-# BASE_DIR basé sur l'emplacement du fichier Python actuel
-BASE_DIR = os.path.join(os.path.dirname(__file__))
+
+BASE_DIR = os.path.join(os.path.dirname(__file__), "..")  # remonte d'un niveau pour enlever api
+
 @router.get("/download-file")
 def download_file(filename: str, date: str):
-    # Remonter d'un niveau pour enlever 'api'
-    base_dir = os.path.dirname(BASE_DIR)
-    path = os.path.join(base_dir, "load_file", date, filename)
+    path = os.path.join(BASE_DIR, "load_file", date, filename)
     print(">>> Chemin construit :", path)
 
     if not os.path.exists(path):
         raise HTTPException(status_code=404, detail="Fichier introuvable")
 
-    # Fonction pour lire le fichier par chunks
+    file_size = os.path.getsize(path)
+
     def iter_file():
-        with open(path, mode="rb") as f:
-            while chunk := f.read(1024*1024):  # 1 Mo par chunk
+        with open(path, "rb") as f:
+            while chunk := f.read(1024 * 1024):  # 1 Mo par chunk
                 yield chunk
 
-    # StreamingResponse pour un téléchargement réactif
     return StreamingResponse(
         iter_file(),
         media_type="application/octet-stream",
-        headers={"Content-Disposition": f"attachment; filename={filename}"}
+        headers={
+            "Content-Disposition": f"attachment; filename={filename}",
+            "Content-Length": str(file_size)
+        }
     )
 api_router = router

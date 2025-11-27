@@ -538,18 +538,20 @@ const triggerImport = async () => {
   }
 }
 const extractDate = (filename) => {
-  const match = filename.match(/\d{8}/);  // 8 chiffres pour la date
+  const match = filename.match(/\d{8}/);
   return match ? match[0] : null;
 };
 
 const downloadFile = async (item) => {
   const date = extractDate(item.title);
   if (!date) {
-    console.error("Impossible d'extraire la date du nom du fichier");
+    console.error("Impossible d'extraire la date");
     return;
   }
 
   try {
+    console.log("Préparation du téléchargement...");
+
     const response = await fetch(
       `${api}/api/download-file?filename=${encodeURIComponent(item.title)}&date=${date}`
     );
@@ -558,11 +560,12 @@ const downloadFile = async (item) => {
       throw new Error("Erreur API");
     }
 
-    // Récupérer le contenu en stream
     const reader = response.body.getReader();
-    const contentLength = +response.headers.get('Content-Length') || 0;
+    const contentLength = +response.headers.get("Content-Length") || 0;
     let receivedLength = 0;
     const chunks = [];
+
+    console.log("Téléchargement en cours...");
 
     while (true) {
       const { done, value } = await reader.read();
@@ -570,15 +573,12 @@ const downloadFile = async (item) => {
       chunks.push(value);
       receivedLength += value.length;
 
-      // Affichage de la progression
       if (contentLength) {
         const percent = ((receivedLength / contentLength) * 100).toFixed(2);
         console.log(`Téléchargé : ${percent}%`);
-        // Ici tu peux mettre à jour une barre de progression dans ton UI
       }
     }
 
-    // Créer le Blob final et déclencher le téléchargement
     const blob = new Blob(chunks);
     const url = URL.createObjectURL(blob);
     const a = document.createElement("a");
@@ -587,11 +587,12 @@ const downloadFile = async (item) => {
     a.click();
     URL.revokeObjectURL(url);
 
+    console.log("Téléchargement terminé ✅");
+
   } catch (err) {
     console.error("Erreur téléchargement :", err);
   }
 };
-
 
 
 </script>
