@@ -13,7 +13,7 @@
                 <div class="   w-full flex-col flex items-center justify-center"  >    
                     <v-progress-circular :model-value="percentage" :rotate="360" :size="150" :width="1.5" color="green">
                       <div class="flex flex-col items-center justify-center" > 
-                        <span  class=" text-xl font-bold" v-if="percentage!=0">{{'100.00%'?'100%':percentage}}</span>
+                        <span  class=" text-xl font-bold" v-if="percentage!=0">{{!'100.00%'?'100%':percentage}}</span>
                         <span v-else class=" animate-ping"> Chargement ...</span>
                         <span title="Temps de chargement" class="  text-stone-100 font-bold" v-text=" percentage=='100.00%'?'Fait':'Encours'"></span>
                       </div>
@@ -616,6 +616,7 @@ const downloadFile = async (item) => {
         if(percent==100){
           setTimeout(() => {
             dialog.value = false
+            percentage.value=0
           }, 500);
         }
         console.log(`Téléchargé : ${percent}%`);
