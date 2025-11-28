@@ -355,7 +355,8 @@ class DavReport:
                                 "data": {
                                     "nb_clients": int(result[0] or 0),
                                     "total_montant": round(float(result[1] or 0),2),
-                                    "total_debit": round(float(result[2] or 0),2)
+                                    "total_debit": round(float(result[2] or 0),2),
+                                    "total_credit": round(float(result[3] or 0),2)
                                 }
                             })
                         elif type_table == "dat":
@@ -432,7 +433,8 @@ class DavReport:
                             current_data = {
                                 "nb_clients": int(result[0] or 0),
                                 "total_montant": round(float(result[1] or 0),2),
-                                "total_debit": round(float(result[2] or 0),2)
+                                "total_debit": round(float(result[2] or 0),2),
+                                "total_credit": round(float(result[3] or 0),2)
                             }
                             
                             # Calculer l'écart si on a des données précédentes

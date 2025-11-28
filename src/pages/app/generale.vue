@@ -84,6 +84,17 @@
           <v-icon left>mdi-magnify</v-icon>
            recherche
         </v-btn>
+
+        <v-btn
+    color="secondary"
+    size="large"
+    rounded="lg"
+    @click="goToAnalyseEncours"
+    class="px-8"
+  >
+    <v-icon left>mdi-chart-bar</v-icon>
+    Analyser Dépôts
+  </v-btn>
       </div>
 
       <!-- SELECTION DES COLONNES PAR TYPE -->
@@ -273,7 +284,7 @@
           :key="header.key"
         >
           <div>
-            {{ item[header.key] !== undefined && item[header.key] !== null ? item[header.key] : '' }}
+            {{ item[header.key] !== undefined && item[header.key] !== null ? formatNumber(item[header.key]) : '' }}
             <div v-if="index > 0 && item.ecart && item.ecart['ecart_' + header.key] !== 0">
               <small :style="{ color: item.ecart['ecart_' + header.key] > 0 ? '#43a047' : '#e53935' }">
                 ({{ item.ecart['ecart_' + header.key] > 0 ? '+' : '' }}{{ (item.ecart['ecart_' + header.key]).toFixed(2) }})
@@ -311,7 +322,7 @@
           :key="header.key"
         >
           <div>
-            {{ item[header.key] !== undefined && item[header.key] !== null ? item[header.key] : '' }}
+            {{ item[header.key] !== undefined && item[header.key] !== null ? formatNumber(item[header.key] ): '' }}
             <div v-if="index > 0 && item.ecart && item.ecart['ecart_' + header.key] !== 0">
               <small :style="{ color: item.ecart['ecart_' + header.key] > 0 ? '#43a047' : '#e53935' }">
                 ({{ item.ecart['ecart_' + header.key] > 0 ? '+' : '' }}{{ (item.ecart['ecart_' + header.key]).toFixed(2) }})
@@ -349,7 +360,7 @@
           :key="header.key"
         >
           <div>
-            {{ item[header.key] !== undefined && item[header.key] !== null ? item[header.key] : '' }}
+            {{ item[header.key] !== undefined && item[header.key] !== null ? formatNumber(item[header.key] ): '' }}
             <div v-if="index > 0 && item.ecart && item.ecart['ecart_' + header.key] !== 0">
               <small :style="{ color: item.ecart['ecart_' + header.key] > 0 ? '#43a047' : '#e53935' }">
                 ({{ item.ecart['ecart_' + header.key] > 0 ? '+' : '' }}{{ (item.ecart['ecart_' + header.key]).toFixed(2) }})
@@ -364,7 +375,7 @@
         <v-col
       v-if="visibleTables.includes('encours_depot') && Array.isArray(resultsEncoursDepot) && resultsEncoursDepot.length"
       cols="12"
-      md="1"
+      md="2"
     >
       <v-data-table
         class="elevation-2 fade-in full-table table-encours data-table-fixed"
@@ -406,6 +417,13 @@
 <script setup>
 import { ref, inject, computed } from "vue"
 import axios from "axios"
+import { useRouter } from 'vue-router'
+const router = useRouter()
+
+
+const goToAnalyseEncours = () => {
+  router.push('/app/depotAnalyse')
+}
 
 const api = inject("api")
 
@@ -438,14 +456,13 @@ const headersInfo = computed(() => [
 ])
 
 const visibleColumns = ref({
-    info: ['date', 'agence'],
-
-  dav: [],
-  dat: [],
-  epr: [],
-    encours_depot: [] // Nouveau
-
+  info: ['date', 'agence'],
+  dav: ['total_debit'], // Cache nb_clients et total_montant par défaut
+  dat: ['total_montant'], // Cache nb_clients et total_montant par défaut  
+  epr: ['total_debit'], // Cache nb_clients et total_montant par défaut
+  encours_depot: ['encours_depot']
 })
+
 
 const visibleTables = ref(['date','dav', 'dat', 'epr', 'encours_depot'])
 
@@ -458,11 +475,11 @@ const hasResults = computed(() =>
 const generateHeaders = (data) => {
   if (!data.length) return []
   return Object.keys(data[0])
-    .filter(key => key !== 'ecart') // <-- Ajoute ce filtre
+    .filter(key => key !== 'ecart')
     .map(key => ({
       title: key.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase()),
       key,
-      align: key.includes('total') || key.includes('montant') ? 'end' : 'start'
+      align: key.includes('total') || key.includes('montant') || key.includes('encours') ? 'end' : 'start'
     }))
 }
 
@@ -569,7 +586,13 @@ const rechercher = async () => {
     resultsEncoursDepot.value = [] // Nouveau reset
 
   
-  visibleColumns.value = {info: ['date', 'agence'], dav: [], dat: [], epr: [] }
+    visibleColumns.value = {
+    info: ['date', 'agence'],
+    dav: ['total_debit'], // Seul total_debit visible par défaut
+    dat: ['total_montant'], // Seul total_credit visible par défaut
+    epr: ['total_debit'], // Seul total_debit visible par défaut
+    encours_depot: ['encours_depot']
+  }
 
   try {
     let types = typeTable.value === 'all' ? ['dav', 'dat', 'epr'] : [typeTable.value]
@@ -594,7 +617,6 @@ const rechercher = async () => {
       ecart: item.ecart
     }))
     headersDav.value = generateHeaders(resultsDav.value)
-    visibleColumns.value.dav = headersDav.value.map(h => h.key)
   }
 
   if (type === 'dat') {
@@ -604,7 +626,6 @@ const rechercher = async () => {
       ecart: item.ecart
     }))
     headersDat.value = generateHeaders(resultsDat.value)
-    visibleColumns.value.dat = headersDat.value.map(h => h.key)
   }
 
   if (type === 'epr') {
@@ -614,7 +635,6 @@ const rechercher = async () => {
       ecart: item.ecart
     }))
     headersEpr.value = generateHeaders(resultsEpr.value)
-    visibleColumns.value.epr = headersEpr.value.map(h => h.key)
   }
 }
 
