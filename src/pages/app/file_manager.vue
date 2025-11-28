@@ -1,5 +1,35 @@
 <template>
   <div id="upload-container">
+             
+            <div class="text-center pa-4">
+              <v-dialog
+                v-model="dialog"
+                max-width="200"
+                max-height="400"
+                persistent  
+                style=" background-color: #000000EE;"           
+              >
+              
+                <div class="   w-full flex-col flex items-center justify-center"  >    
+                    <v-progress-circular :model-value="percentage" :rotate="360" :size="150" :width="1.5" color="green">
+                      <div class="flex flex-col items-center justify-center" > 
+                        <span  class=" text-xl font-bold" v-if="percentage!=0">{{!'100.00%'?'100%':percentage}}</span>
+                        <span v-else class=" animate-ping"> Chargement ...</span>
+                        <span title="Temps de chargement" class="  text-stone-100 font-bold" v-text=" percentage=='100.00%'?'Fait':'Encours'"></span>
+                      </div>
+                    </v-progress-circular> 
+
+                    <div>
+                      <span class="white underline">Telechargement</span>
+                      <div class="flex flex-row  text-green-500 mt-2">
+                         <v-icon icon="mdi-file-chart-outline ml-2 mr-5"></v-icon>
+                        {{download_file_name}}
+                      </div>
+                    </div>
+                </div  > 
+              </v-dialog>
+            </div> 
+
     <popup_view v-if="usePopupStore().show_notification.status" style=" z-index: 10000;"></popup_view>
     <v-card class="upload-box" outlined>
       <v-icon size="48" class="upload-icon">mdi-cloud-upload</v-icon>
@@ -22,22 +52,25 @@
     <v-dialog max-width="500">
       <template v-slot:activator="{ props: activatorProps }">
         <v-btn @click="showFiles" id="history" v-bind="activatorProps" icon="mdi-history" variant="flat"></v-btn>
-      </template>
-
+      </template>      
       <template v-slot:default="{ isActive }">
         <v-card title="Explorateur de fichier">
           <div style="max-height: 400px; overflow-y: auto; padding: 0 30px;">
             <v-treeview v-if="list_file.length" v-model:opened="open" :items="list_file" density="compact" item-value="title" activatable open-on-click >
-              <template v-slot:prepend="{ item, isOpen }">
+              <template v-slot:prepend="{ item, isOpen }" >
                 <v-icon v-if="!item.file" :icon="isOpen ? 'mdi-folder-open' : 'mdi-folder'" />
                 <v-icon v-else icon="mdi-file-chart-outline" style=" font-size: 15px;" />
                 <button v-if="!item.file" style="position:absolute; margin-left: 400px;" @click.stop="chargerDossier(item,isActive)" >
                   <v-icon icon="mdi mdi-database " size="24" style=" position: relative; margin-left: -20px; margin-top: 7px; " />
-                  <v-icon :id="'refresh' + item.title.replaceAll(/[^a-zA-Z0-9_-]/g, '_')" icon="mdi mdi mdi-sync " size="12" style=" position: relative; margin-top: 20px;margin-left:-7px; background-color: black;border-radius: 15px;" />
+                  <v-icon :id="'refresh' + item.title.replaceAll(/[^a-zA-Z0-9_-]/g, '_')" icon="mdi mdi-sync " size="12" style=" position: relative; margin-top: 20px;margin-left:-7px; background-color: black;border-radius: 15px;" />
+                </button>
+                <button  v-if="item.file"  style="position:absolute; margin-left: 380px;"  @click.stop="downloadFile(item)" >  
+                  <v-icon :id="'download' + item.title.replaceAll(/[^a-zA-Z0-9_-]/g, '_')" icon="mdi mdi-download" size="17" style="position: relative; margin-top: -7px; margin-left:-40px; background-color: transparent; border-radius: 15px;"  />
                 </button>
               </template>
               <template #title="{ item }">
-                <span :class="item.file ? 'custom_title' : ''">{{ item.title }}</span>
+                <span :class="item.file ? 'custom_title' : ''">{{CastString( item.title )}} </span>
+                
               </template>
             </v-treeview>
           </div>
@@ -65,6 +98,8 @@
         </v-card-actions>
       </v-card>
     </v-dialog>
+
+
 
     <import_progress v-if="show_progress_import">
     </import_progress>
@@ -136,6 +171,8 @@
           </v-card-actions>
       </v-card>
     </v-dialog>
+
+    
   </div>
 
 </template>
@@ -148,7 +185,8 @@ import Cookies from 'js-cookie'
 import import_progress from '../../components/loading/import_progress.vue'
 import { VTreeview } from 'vuetify/labs/VTreeview'
 
-
+const dialog = ref(false)
+const download_file_name= ref('')
 const api = inject('api') 
 const file_names = ref([]);  // noms des fichiers
 const file_name = ref("Importer un fichier");
@@ -158,6 +196,7 @@ const is_exist_file = ref(false);
 const today = new Date().toISOString().split('T')[0]
 const isDialogActive = ref(false)
 const show_progress_import = ref(false)
+const percentage= ref(0)
 // Fonction pour ouvrir la boîte de dialogue de sélection de fichiers
 const triggerFileInput = () => {
   fileInput.value.click()
@@ -183,6 +222,11 @@ const normalizeTree = (data) => {
     })) : []
   }));
 };
+
+const CastString = (str) => {
+  if (str.length <= 40) return str
+  else return str.substring(0, 37) + '...' 
+}
 
 const handleFileUpload = (event) => {
   const files = event.target.files;
@@ -528,6 +572,72 @@ const triggerImport = async () => {
     importError.value = "Erreur réseau ou serveur"
   }
 }
+const extractDate = (filename) => {
+  const match = filename.match(/\d{8}/);
+  return match ? match[0] : null;
+};
+
+const downloadFile = async (item) => {
+  dialog.value = true
+  download_file_name.value=item.title
+  const date = extractDate(item.title);
+  if (!date) {
+    console.error("Impossible d'extraire la date");
+    return;
+  }
+
+  try {
+    console.log("Préparation du téléchargement...");
+
+    const response = await fetch(
+      `${api}/api/download-file?filename=${encodeURIComponent(item.title)}&date=${date}`
+    );
+
+    if (!response.ok) {
+      throw new Error("Erreur API");
+    }
+
+    const reader = response.body.getReader();
+    const contentLength = +response.headers.get("Content-Length") || 0;
+    let receivedLength = 0;
+    const chunks = [];
+
+    console.log("Téléchargement en cours...");
+
+    while (true) {
+      const { done, value } = await reader.read();
+      if (done) break;
+      chunks.push(value);
+      receivedLength += value.length;
+
+      if (contentLength) {
+        const percent = ((receivedLength / contentLength) * 100).toFixed(2);
+        percentage.value = percent+ '%'
+        if(percent==100){
+          setTimeout(() => {
+            dialog.value = false
+            percentage.value=0
+          }, 500);
+        }
+        console.log(`Téléchargé : ${percent}%`);
+      }
+    }
+
+    const blob = new Blob(chunks);
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = item.title;
+    a.click();
+    URL.revokeObjectURL(url);
+
+    console.log("Téléchargement terminé ✅");
+
+  } catch (err) {
+    console.error("Erreur téléchargement :", err);
+  }
+};
+
 
 </script>
 
