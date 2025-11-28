@@ -1,5 +1,35 @@
 <template>
   <div id="upload-container">
+             
+            <div class="text-center pa-4">
+              <v-dialog
+                v-model="dialog"
+                max-width="200"
+                max-height="400"
+                persistent  
+                style=" background-color: #000000EE;"           
+              >
+              
+                <div class="   w-full flex-col flex items-center justify-center"  >    
+                    <v-progress-circular :model-value="percentage" :rotate="360" :size="150" :width="1.5" color="green">
+                      <div class="flex flex-col items-center justify-center" > 
+                        <span  class=" text-xl font-bold" v-if="percentage!=0">{{'100.00%'?'100%':percentage}}</span>
+                        <span v-else class=" animate-ping"> Chargement ...</span>
+                        <span title="Temps de chargement" class="  text-stone-100 font-bold" v-text=" percentage=='100.00%'?'Fait':'Encours'"></span>
+                      </div>
+                    </v-progress-circular> 
+
+                    <div>
+                      <span class="white underline">Telechargement</span>
+                      <div class="flex flex-row  text-green-500 mt-2">
+                         <v-icon icon="mdi-file-chart-outline ml-2 mr-5"></v-icon>
+                        {{download_file_name}}
+                      </div>
+                    </div>
+                </div  > 
+              </v-dialog>
+            </div> 
+
     <popup_view v-if="usePopupStore().show_notification.status" style=" z-index: 10000;"></popup_view>
     <v-card class="upload-box" outlined>
       <v-icon size="48" class="upload-icon">mdi-cloud-upload</v-icon>
@@ -22,8 +52,7 @@
     <v-dialog max-width="500">
       <template v-slot:activator="{ props: activatorProps }">
         <v-btn @click="showFiles" id="history" v-bind="activatorProps" icon="mdi-history" variant="flat"></v-btn>
-      </template>
-
+      </template>      
       <template v-slot:default="{ isActive }">
         <v-card title="Explorateur de fichier">
           <div style="max-height: 400px; overflow-y: auto; padding: 0 30px;">
@@ -69,6 +98,8 @@
         </v-card-actions>
       </v-card>
     </v-dialog>
+
+
 
     <import_progress v-if="show_progress_import">
     </import_progress>
@@ -140,6 +171,8 @@
           </v-card-actions>
       </v-card>
     </v-dialog>
+
+    
   </div>
 
 </template>
@@ -152,7 +185,8 @@ import Cookies from 'js-cookie'
 import import_progress from '../../components/loading/import_progress.vue'
 import { VTreeview } from 'vuetify/labs/VTreeview'
 
-
+const dialog = ref(false)
+const download_file_name= ref('')
 const api = inject('api') 
 const file_names = ref([]);  // noms des fichiers
 const file_name = ref("Importer un fichier");
@@ -162,6 +196,7 @@ const is_exist_file = ref(false);
 const today = new Date().toISOString().split('T')[0]
 const isDialogActive = ref(false)
 const show_progress_import = ref(false)
+const percentage= ref(0)
 // Fonction pour ouvrir la boîte de dialogue de sélection de fichiers
 const triggerFileInput = () => {
   fileInput.value.click()
@@ -543,6 +578,8 @@ const extractDate = (filename) => {
 };
 
 const downloadFile = async (item) => {
+  dialog.value = true
+  download_file_name.value=item.title
   const date = extractDate(item.title);
   if (!date) {
     console.error("Impossible d'extraire la date");
@@ -575,6 +612,12 @@ const downloadFile = async (item) => {
 
       if (contentLength) {
         const percent = ((receivedLength / contentLength) * 100).toFixed(2);
+        percentage.value = percent+ '%'
+        if(percent==100){
+          setTimeout(() => {
+            dialog.value = false
+          }, 500);
+        }
         console.log(`Téléchargé : ${percent}%`);
       }
     }
