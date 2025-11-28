@@ -72,7 +72,7 @@
       </v-row>
 
       <!-- BOUTON -->
-      <div class="text-center mt-6">
+      <div class="text-center  mt-6">
         <v-btn
           color="primary"
           size="large"
@@ -583,14 +583,14 @@ const rechercher = async () => {
   headersDav.value = []
   headersDat.value = []
   headersEpr.value = []
-    resultsEncoursDepot.value = [] // Nouveau reset
+    resultsEncoursDepot.value = []
 
   
     visibleColumns.value = {
     info: ['date', 'agence'],
-    dav: ['total_debit'], // Seul total_debit visible par défaut
-    dat: ['total_montant'], // Seul total_credit visible par défaut
-    epr: ['total_debit'], // Seul total_debit visible par défaut
+    dav: ['total_debit'],
+    dat: ['total_montant'], 
+    epr: ['total_debit'], 
     encours_depot: ['encours_depot']
   }
 
