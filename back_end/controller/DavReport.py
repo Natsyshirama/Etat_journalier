@@ -354,9 +354,8 @@ class DavReport:
                                 "date_agence": date_agence_data,
                                 "data": {
                                     "nb_clients": int(result[0] or 0),
-                                    "total_montant": float(result[1] or 0),
-                                    "total_debit": float(result[2] or 0),
-                                    "total_credit": float(result[3] or 0)
+                                    "total_montant": round(float(result[1] or 0),2),
+                                    "total_debit": round(float(result[2] or 0),2)
                                 }
                             })
                         elif type_table == "dat":
@@ -364,8 +363,8 @@ class DavReport:
                                 "date_agence": date_agence_data,
                                 "data": {
                                     "nb_clients": int(result[0] or 0),
-                                    "total_montant": float(result[1] or 0),
-                                    "total_credit": float(result[2] or 0)
+                                    "total_montant":round (float(result[1] or 0),2),
+                                    "total_credit": round (float(result[2] or 0),2)
                                 }
                             })
             else:
@@ -432,9 +431,8 @@ class DavReport:
                         if type_table == "dav" or type_table == "epr":
                             current_data = {
                                 "nb_clients": int(result[0] or 0),
-                                "total_montant": float(result[1] or 0),
-                                "total_debit": float(result[2] or 0),
-                                "total_credit": float(result[3] or 0)
+                                "total_montant": round(float(result[1] or 0),2),
+                                "total_debit": round(float(result[2] or 0),2)
                             }
                             
                             # Calculer l'écart si on a des données précédentes

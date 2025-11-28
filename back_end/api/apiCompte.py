@@ -442,6 +442,47 @@ def get_total_par_produit(
             status_code=500,
             content={"error": f"Erreur serveur: {e}"}
         )
+@router.get("/resume/total-produit/global")
+def get_total_global(request: Request, agence: str = None, date_debut: str = None, date_fin: str = None):
+    try:
+        dav = dav_report.getTotalParProduit("dav", agence, date_debut, date_fin)
+        dat = dav_report.getTotalParProduit("dat", agence, date_debut, date_fin)
+        epr = dav_report.getTotalParProduit("epr", agence, date_debut, date_fin)
+
+        # Indexation par date
+        dict_dav = { row["date_agence"]["date"]: row for row in dav }
+        dict_dat = { row["date_agence"]["date"]: row for row in dat }
+        dict_epr = { row["date_agence"]["date"]: row for row in epr }
+
+        # Fusion des dates disponibles
+        all_dates = sorted(set(dict_dav.keys()) | set(dict_dat.keys()) | set(dict_epr.keys()))
+
+        result = []
+
+        for d in all_dates:
+            dav_row = dict_dav.get(d, {"data": {}})
+            dat_row = dict_dat.get(d, {"data": {}})
+            epr_row = dict_epr.get(d, {"data": {}})
+
+            encours = (
+                dav_row["data"].get("total_debit", 0) +
+                dat_row["data"].get("total_montant", 0) +
+                epr_row["data"].get("total_debit", 0)
+            )
+
+            result.append({
+                "date": d,
+                "agence": agence,
+                "dav": dav_row,
+                "dat": dat_row,
+                "epr": epr_row,
+                "encours_depot": encours
+            })
+
+        return result
+
+    except Exception as e:
+        return JSONResponse(status_code=500, content={"error": f"Erreur serveur: {e}"})
 
 @router.get("/davGraphe/{table_name}")
 def get_graphe_dav(

@@ -170,6 +170,23 @@
     </div>
   </div>
 </template>
+ <template v-if="visibleTables.includes('encours_depot') && resultsEncoursDepot.length">
+        <div class="column-group">
+          <div class="group-title group-title-encours mb-2">EN COURS DEPOT</div>
+          <div class="d-flex flex-wrap gap-2">
+            <v-checkbox
+              v-for="header in headersEncoursDepot"
+              :key="header.key"
+              v-model="visibleColumns.encours_depot"
+              :label="header.title"
+              :value="header.key"
+              density="compact"
+              hide-details
+              class="column-checkbox"
+            />
+          </div>
+        </div>
+      </template>
   </div>
 </div>
 
@@ -235,7 +252,7 @@
         <v-col
           v-if="visibleTables.includes('dav') && Array.isArray(resultsDav) && resultsDav.length"
           cols="12"
-          md="3"
+          md="2"
         >
           <v-data-table
             class="elevation-2 fade-in full-table table-dav data-table-fixed"
@@ -273,7 +290,7 @@
         <v-col
           v-if="visibleTables.includes('dat') && Array.isArray(resultsDat) && resultsDat.length"
           cols="12"
-          md="3"
+          md="2"
         >
           <v-data-table
             class="elevation-2 fade-in full-table table-dat data-table-fixed"
@@ -311,7 +328,7 @@
         <v-col
           v-if="visibleTables.includes('epr') && Array.isArray(resultsEpr) && resultsEpr.length"
           cols="12"
-          md="3"
+          md="2"
         >
           <v-data-table
             class="elevation-2 fade-in full-table table-epr data-table-fixed"
@@ -344,6 +361,43 @@
     </template>
           </v-data-table>
         </v-col>
+        <v-col
+      v-if="visibleTables.includes('encours_depot') && Array.isArray(resultsEncoursDepot) && resultsEncoursDepot.length"
+      cols="12"
+      md="1"
+    >
+      <v-data-table
+        class="elevation-2 fade-in full-table table-encours data-table-fixed"
+        :headers="headersEncoursDepot.filter(h => visibleColumns.encours_depot.includes(h.key))"
+        :items="resultsEncoursDepot"
+        density="comfortable"
+        hide-default-footer
+        :items-per-page="-1"
+        fixed-header
+      >
+        <template #top>
+          <h3 class="text-h6 font-weight-bold mb-2 table-title table-title-encours"> DEPOT</h3>
+        </template>
+        <template #item="{ item, index }">
+          <tr>
+            <td
+              v-for="header in headersEncoursDepot.filter(h => visibleColumns.encours_depot.includes(h.key))"
+              :key="header.key"
+            >
+              <div>
+                {{ item[header.key] !== undefined && item[header.key] !== null ? formatNumber(item[header.key]) : '' }}
+                <div v-if="index > 0 && item.ecart && item.ecart['ecart_' + header.key] !== 0">
+                  <small :style="{ color: item.ecart['ecart_' + header.key] > 0 ? '#43a047' : '#e53935' }">
+                    ({{ item.ecart['ecart_' + header.key] > 0 ? '+' : '' }}{{ formatNumber(item.ecart['ecart_' + header.key]) }})
+                  </small>
+                </div>
+              </div>
+            </td>
+          </tr>
+        </template>
+      </v-data-table>
+    </v-col>
+
       </v-row>
     </v-card>
   </v-container>
@@ -367,6 +421,10 @@ const messageType = ref("info")
 const resultsDav = ref([])
 const resultsDat = ref([])
 const resultsEpr = ref([])
+
+const resultsEncoursDepot = ref([])
+const headersEncoursDepot = ref([])
+
 const infoDav = ref([])
 const infoDat = ref([])
 const infoEpr = ref([])
@@ -384,10 +442,12 @@ const visibleColumns = ref({
 
   dav: [],
   dat: [],
-  epr: []
+  epr: [],
+    encours_depot: [] // Nouveau
+
 })
 
-const visibleTables = ref(['date','dav', 'dat', 'epr'])
+const visibleTables = ref(['date','dav', 'dat', 'epr', 'encours_depot'])
 
 const isAllAgence = computed(() => agence.value === 'all')
 const hasResults = computed(() => 
@@ -406,6 +466,96 @@ const generateHeaders = (data) => {
     }))
 }
 
+const shouldShowEncoursDepot = computed(() => {
+  return typeTable.value === 'all' && 
+         (resultsDav.value.length > 0 || resultsDat.value.length > 0 || resultsEpr.value.length > 0)
+})
+
+// Fonction pour obtenir les items info
+const getInfoItems = () => {
+  if (infoDav.value.length) return infoDav.value
+  if (infoDat.value.length) return infoDat.value
+  if (infoEpr.value.length) return infoEpr.value
+  if (resultsEncoursDepot.value.length) return resultsEncoursDepot.value.map(item => item.date_agence)
+  return []
+}
+
+// Fonction pour calculer encours_depot
+const calculateEncoursDepot = () => {
+  if (!resultsDav.value.length && !resultsDat.value.length && !resultsEpr.value.length) {
+    resultsEncoursDepot.value = []
+    return
+  }
+
+  const maxLength = Math.max(
+    resultsDav.value.length,
+    resultsDat.value.length,
+    resultsEpr.value.length
+  )
+
+  const encoursData = []
+  let previousData = null
+
+  for (let i = 0; i < maxLength; i++) {
+    const davItem = resultsDav.value[i] || { total_debit: 0 }
+    const datItem = resultsDat.value[i] || { total_montant: 0 }
+    const eprItem = resultsEpr.value[i] || { total_debit: 0 }
+    
+    const infoItem = infoDav.value[i] || infoDat.value[i] || infoEpr.value[i] || {}
+
+    // Calcul de encours_depot
+    const encoursDepot = (davItem.total_debit || 0) + 
+                         (datItem.total_montant || 0) + 
+                         (eprItem.total_debit || 0)
+
+    const currentData = {
+      encours_depot: roundNumber(encoursDepot)
+    }
+
+    // Calcul des écarts
+    const ecartData = {}
+    if (previousData) {
+      for (const key in currentData) {
+        const previousValue = previousData[key] || 0
+        const currentValue = currentData[key] || 0
+        ecartData[`ecart_${key}`] = roundNumber(currentValue - previousValue)
+      }
+    } else {
+      for (const key in currentData) {
+        ecartData[`ecart_${key}`] = 0
+      }
+    }
+
+    encoursData.push({
+      date_agence: infoItem,
+      ...currentData,
+      ecart: ecartData
+    })
+
+    previousData = currentData
+  }
+
+  resultsEncoursDepot.value = encoursData
+  headersEncoursDepot.value = generateHeaders(encoursData.map(item => {
+    const { date_agence, ecart, ...rest } = item
+    return rest
+  }))
+  visibleColumns.value.encours_depot = headersEncoursDepot.value.map(h => h.key)
+}
+
+// Fonctions utilitaires
+const roundNumber = (num) => {
+  return Math.round((num + Number.EPSILON) * 100) / 100
+}
+
+const formatNumber = (num) => {
+  if (num === undefined || num === null) return ''
+  return new Intl.NumberFormat('fr-FR', {
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2
+  }).format(num)
+}
+
 
 const rechercher = async () => {
   loading.value = true
@@ -416,6 +566,8 @@ const rechercher = async () => {
   headersDav.value = []
   headersDat.value = []
   headersEpr.value = []
+    resultsEncoursDepot.value = [] // Nouveau reset
+
   
   visibleColumns.value = {info: ['date', 'agence'], dav: [], dat: [], epr: [] }
 
@@ -466,6 +618,10 @@ const rechercher = async () => {
   }
 }
 
+if (typeTable.value === 'all') {
+      calculateEncoursDepot()
+    }
+
     }
 
     const total =
@@ -487,6 +643,8 @@ const rechercher = async () => {
     loading.value = false
   }
 }
+
+
 </script>
   
 <style scoped>
@@ -617,6 +775,29 @@ const rechercher = async () => {
 .gap-2 {
   gap: 8px;
 }
+/* Styles existants... */
 
+.table-title-encours {
+  background-color: #7b1fa2; /* Violet pour encours depot */
+}
+
+.table-encours {
+}
+
+.group-title-encours {
+  background-color: #7b1fa2;
+  color: white;
+}
+
+/* Assurer l'alignement des tableaux */
+:deep(.table-encours .v-data-table__td),
+:deep(.table-encours .v-data-table__th) {
+  padding-left: 8px !important;
+  padding-right: 8px !important;
+  width: 120px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
 
 </style>
