@@ -1,7 +1,6 @@
 from sqlalchemy import text
 from db.db import DB
 import pandas as pd
-from datetime import datetime, timedelta
 
 class DecaissementOptimise:
     def __init__(self):
@@ -188,20 +187,25 @@ CREATE FUNCTION calcul_montant_capital(
 
     def create_decaissement_table(self, date_limite: str):
         try:
+            from datetime import datetime, timedelta
+
             original_date_limite = date_limite  # Conserve la date d'origine pour le nom de la table
 
-            # Si date_limite est le premier du mois, prendre le dernier jour du mois précédent
             if date_limite[6:] == "01":
                 dt = datetime.strptime(date_limite, "%Y%m%d")
                 last_month = dt.replace(day=1) - timedelta(days=1)
-                dt = last_month
-                
+                date_limite = last_month.strftime("%Y%m%d")
+
             dt = datetime.strptime(date_limite, "%Y%m%d")
             first_day_of_month = dt.replace(day=1).strftime("%Y%m%d")
             next_month = (dt.replace(day=28) + timedelta(days=4)).replace(day=1)
             last_day_of_month = (next_month - timedelta(days=1)).strftime("%Y%m%d")
 
             table_name = f"decaissement_{original_date_limite}"
+
+            # Calculer le premier et dernier jour du mois de date_limite
+            first_day_of_month = f"{date_limite[:6]}01"
+            last_day_of_month = f"{date_limite[:6]}31"  # MySQL gère bien les dates supérieures au max du mois
 
             query = f"""
                 CREATE TABLE {table_name} AS
@@ -263,7 +267,7 @@ CREATE FUNCTION calcul_montant_capital(
                     arr.product_line = 'LENDING'
                     AND arr.arr_status IN ('AUTH', 'CURRENT')
                     AND acc.opening_date BETWEEN '{first_day_of_month}' AND '{last_day_of_month}'
-                    AND em.proc_status = 'DISBURSED' ; 
+                    AND em.proc_status = 'DISBURSED' LIMIT 100; 
             """
 
             with self.db.connect() as conn:

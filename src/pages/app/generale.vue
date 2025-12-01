@@ -465,13 +465,7 @@ const visibleColumns = ref({
 
 // Ajout du watch pour agence
 // Ajout du watch pour agence
-watch(agence, (newVal) => {
-  if (newVal === 'all') {
-    visibleColumns.value.info = ['date', 'agence']
-  } else {
-    visibleColumns.value.info = ['date']
-  }
-})
+
 const visibleTables = ref(['date','dav', 'dat', 'epr', 'encours_depot'])
 
 const isAllAgence = computed(() => agence.value === 'all')
