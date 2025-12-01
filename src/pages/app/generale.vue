@@ -109,18 +109,18 @@
     <template v-if="visibleTables.includes('dav') && resultsDav.length">
       <div class="column-group">
         <div class="group-title group-title-dav mb-2">DAV</div>
-        <div class="d-flex flex-wrap gap-2">
-          <v-checkbox
-            v-for="header in headersDav"
-            :key="header.key"
-            v-model="visibleColumns.dav"
-            :label="header.title"
-            :value="header.key"
-            density="compact"
-            hide-details
-            class="column-checkbox"
-          />
-        </div>
+        <div class="d-flex flex-column gap-2">
+            <v-checkbox
+              v-for="header in headersDav"
+              :key="header.key"
+              v-model="visibleColumns.dav"
+              :label="header.title"
+              :value="header.key"
+              density="compact"
+              hide-details
+              class="column-checkbox"
+            />
+          </div>
       </div>
     </template>
 
@@ -128,7 +128,7 @@
     <template v-if="visibleTables.includes('dat') && resultsDat.length">
       <div class="column-group">
         <div class="group-title group-title-dat mb-2">DAT</div>
-        <div class="d-flex flex-wrap gap-2">
+        <div class="d-flex flex-column gap-2">
           <v-checkbox
             v-for="header in headersDat"
             :key="header.key"
@@ -147,7 +147,7 @@
     <template v-if="visibleTables.includes('epr') && resultsEpr.length">
       <div class="column-group">
         <div class="group-title group-title-epr mb-2">EPR</div>
-        <div class="d-flex flex-wrap gap-2">
+        <div class="d-flex flex-column gap-2">
           <v-checkbox
             v-for="header in headersEpr"
             :key="header.key"
@@ -167,7 +167,7 @@
       Info (Date & Agence)
     </div>
 
-    <div class="d-flex flex-wrap gap-2">
+    <div class="d-flex flex-column gap-2">
       <v-checkbox
         v-for="col in ['date','agence']"
         :key="col"
@@ -415,7 +415,7 @@
 </template>
 
 <script setup>
-import { ref, inject, computed } from "vue"
+import { ref, inject, computed ,watch} from "vue"
 import axios from "axios"
 import { useRouter } from 'vue-router'
 const router = useRouter()
@@ -456,14 +456,22 @@ const headersInfo = computed(() => [
 ])
 
 const visibleColumns = ref({
-  info: ['date', 'agence'],
-  dav: ['total_debit'], // Cache nb_clients et total_montant par défaut
-  dat: ['total_montant'], // Cache nb_clients et total_montant par défaut  
-  epr: ['total_debit'], // Cache nb_clients et total_montant par défaut
+  info: ['date'],
+  dav: ['total_debit'], 
+  dat: ['total_montant'], 
+  epr: ['total_debit'],
   encours_depot: ['encours_depot']
 })
 
-
+// Ajout du watch pour agence
+// Ajout du watch pour agence
+watch(agence, (newVal) => {
+  if (newVal === 'all') {
+    visibleColumns.value.info = ['date', 'agence']
+  } else {
+    visibleColumns.value.info = ['date']
+  }
+})
 const visibleTables = ref(['date','dav', 'dat', 'epr', 'encours_depot'])
 
 const isAllAgence = computed(() => agence.value === 'all')
@@ -587,8 +595,7 @@ const rechercher = async () => {
 
   
     visibleColumns.value = {
-    info: ['date', 'agence'],
-    dav: ['total_debit'],
+    info: agence.value === 'all' ? ['date', 'agence'] : ['date'],    dav: ['total_debit'],
     dat: ['total_montant'], 
     epr: ['total_debit'], 
     encours_depot: ['encours_depot']

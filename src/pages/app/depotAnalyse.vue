@@ -660,23 +660,23 @@ onMounted(() => {
 }
 /* Styles pour la ligne de total */
 .total-row {
-  background-color: #f8f9fa !important;
   border-top: 2px solid #dee2e6;
 }
 
 .total-cell {
-  background-color: #e9ecef !important;
   font-weight: bold !important;
 }
 
 .total-montant {
   font-size: 1rem !important;
-  color: #1976d2 !important;
+  color: #698bab !important;
+      vertical-align: top; /* montant en haut */
+
 }
 
 .total-ecart {
   font-size: 0.9rem !important;
-  background-color: rgba(25, 118, 210, 0.1) !important;
+  background-color: rgba(164, 174, 185, 0.1) !important;
 }
 
 /* Amélioration du style des cellules de total */
@@ -687,7 +687,7 @@ onMounted(() => {
 
 .total-row .cell-agence,
 .total-row .cell-nom {
-  background: linear-gradient(135deg, #1976d2, #1565c0) !important;
+  background: linear-gradient(135deg, #4b4c4e, #1565c0) !important;
   color: white !important;
   text-align: center !important;
 }

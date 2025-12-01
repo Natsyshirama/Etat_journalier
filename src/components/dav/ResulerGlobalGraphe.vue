@@ -152,7 +152,6 @@ const fetchData = async (type) => {
 
     if (type === "dav") {
       datasets = [
-        { label: "Montant total DAV", data: data.map(d => d.total_montant_dav || 0), borderColor: "#10B981", backgroundColor: "rgba(16,185,129,0.15)" },
         { label: "Total Débit DAV", data: data.map(d => d.total_debit_dav || 0), borderColor: "#F59E0B", backgroundColor: "rgba(245,158,11,0.10)" },
         { label: "Total Crédit DAV", data: data.map(d => d.total_credit_dav || 0), borderColor: "#EF4444", backgroundColor: "rgba(239,68,68,0.10)" },
       ]
@@ -167,7 +166,6 @@ const fetchData = async (type) => {
 
     if (type === "epr") {
       datasets = [
-        { label: "Montant Total EPR", data: data.map(d => d.total_montant_epr || 0), borderColor: "#10B981", backgroundColor: "rgba(16,185,129,0.15)" },
         { label: "Total Débit EPR", data: data.map(d => d.total_debit_epr || 0), borderColor: "#F59E0B", backgroundColor: "rgba(245,158,11,0.10)" },
         { label: "Total Crédit EPR", data: data.map(d => d.total_credit_epr || 0), borderColor: "#EF4444", backgroundColor: "rgba(239,68,68,0.10)" },
       ]

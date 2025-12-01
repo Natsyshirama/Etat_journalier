@@ -28,7 +28,7 @@ class Operation:
                
                 
                 for index, entry in enumerate(type_sysdate_values):
-                    if entry == "CURACCOUNT" or entry.startswith("CURACCOUNT-202411") or entry.startswith("CURACCOUNT-202412") or entry.startswith("CURACCOUNT-202501") or entry.startswith("CURACCOUNT-202502") or entry.startswith("CURACCOUNT-202503"):
+                    if entry == "CURACCOUNT" or entry.startswith("CURACCOUNT-2024") or entry.startswith("CURACCOUNT-2025"):
                         debit_mvmt = row['debit_mvmt'].split('|')[index] if index < len(row['debit_mvmt'].split('|')) else '0'
                         credit_mvmt = row['credit_mvmt'].split('|')[index] if index < len(row['credit_mvmt'].split('|')) else '0'
                         open_balance = row['open_balance'].split('|')[index] if index < len(row['open_balance'].split('|')) else '0'

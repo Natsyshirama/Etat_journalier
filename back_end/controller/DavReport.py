@@ -84,7 +84,6 @@ class DavReport:
                 SELECT 
                    
                     COUNT(DISTINCT code_client) AS nb_clients,
-                    SUM(solde) AS total_montant_dav,
                     SUM(debit) AS total_debit_dav,
                     SUM(credit) AS total_credit_dav
                 FROM `{table_name_vrai}`
@@ -93,7 +92,7 @@ class DavReport:
 
             columns =  result.keys() if hasattr(result, "keys") else [
                 
-                 "nb_clients", "total_montant_dav", "total_debit_dav", "total_credit_dav"
+                 "nb_clients", "total_debit_dav", "total_credit_dav"
             ]
             
             summary = {col: result[idx] for idx, col in enumerate(columns)} if result else {}
@@ -138,7 +137,6 @@ class DavReport:
                         query = text(f"""
                             SELECT 
                                 COUNT(DISTINCT code_client) AS nb_clients,
-                                SUM(solde) AS total_montant_dav,
                                 SUM(debit) AS total_debit_dav,
                                 SUM(credit) AS total_credit_dav
                             FROM `{table_name_vrai}`
@@ -158,7 +156,6 @@ class DavReport:
                         query = text(f"""
                             SELECT 
                                 COUNT(DISTINCT code_client) AS nb_clients,
-                                SUM(solde) AS total_montant_epr,
                                 SUM(Debit) AS total_debit_epr,
                                 SUM(Credit) AS total_credit_epr
                             FROM `{table_name_vrai}`
@@ -180,9 +177,8 @@ class DavReport:
                         summary = {
                             "table_name": table_name_vrai,
                             "nb_clients": int(result[0] or 0),
-                            "total_montant_dav": float(result[1] or 0),
-                            "total_debit_dav": float(result[2] or 0),
-                            "total_credit_dav": float(result[3] or 0)
+                            "total_debit_dav": float(result[1] or 0),
+                            "total_credit_dav": float(result[2] or 0)
                         }
 
                     elif type_table == "dat":
@@ -198,9 +194,8 @@ class DavReport:
                         summary = {
                             "table_name": table_name_vrai,
                             "nb_clients": int(result[0] or 0),
-                            "total_montant_epr": float(result[1] or 0),
-                            "total_debit_epr": float(result[2] or 0),
-                            "total_credit_epr": float(result[3] or 0)
+                            "total_debit_epr": float(result[1] or 0),
+                            "total_credit_epr": float(result[2] or 0)
                         }
                     elif type_table == "decaissement":
                         summary = {
@@ -242,7 +237,6 @@ class DavReport:
             total_resumer = {
                 "type": "dav",
                 "nb_clients_total": sum(item.get("nb_clients", 0) for item in all_summaries),
-                "total_montant_dav": sum(item.get("total_montant_dav", 0.0) for item in all_summaries),
                 "total_debit_dav": sum(item.get("total_debit_dav", 0.0) for item in all_summaries),
                 "total_credit_dav": sum(item.get("total_credit_dav", 0.0) for item in all_summaries),
             }
@@ -260,7 +254,6 @@ class DavReport:
             total_resumer = {
                 "type": "epr",
                 "nb_clients_total": sum(item.get("nb_clients", 0) for item in all_summaries),
-                "total_montant_epr": sum(item.get("total_montant_epr", 0.0) for item in all_summaries),
                 "total_debit_epr": sum(item.get("total_debit_epr", 0.0) for item in all_summaries),
                 "total_credit_epr": sum(item.get("total_credit_epr", 0.0) for item in all_summaries),
             }
@@ -317,8 +310,7 @@ class DavReport:
                         sql = f"""
                             SELECT 
                                 COUNT(DISTINCT code_client) AS nb_clients,
-                                SUM(solde) AS total_montant,
-                                SUM(debit) AS total_debit,
+*                                SUM(debit) AS total_debit,
                                 SUM(credit) AS total_credit
                             FROM `{table_name}`
                             WHERE Agence = :agence
@@ -336,7 +328,6 @@ class DavReport:
                         sql = f"""
                             SELECT 
                                 COUNT(DISTINCT code_client) AS nb_clients,
-                                SUM(solde) AS total_montant,
                                 SUM(Debit) AS total_debit,
                                 SUM(Credit) AS total_credit
                             FROM `{table_name}`
@@ -354,9 +345,8 @@ class DavReport:
                                 "date_agence": date_agence_data,
                                 "data": {
                                     "nb_clients": int(result[0] or 0),
-                                    "total_montant": round(float(result[1] or 0),2),
-                                    "total_debit": round(float(result[2] or 0),2),
-                                    "total_credit": round(float(result[3] or 0),2)
+                                    "total_debit": round(float(result[1] or 0),2),
+                                    "total_credit": round(float(result[2] or 0),2)
                                 }
                             })
                         elif type_table == "dat":
@@ -395,7 +385,6 @@ class DavReport:
                         sql = f"""
                             SELECT 
                                 COUNT(DISTINCT code_client) AS nb_clients,
-                                SUM(solde) AS total_montant,
                                 SUM(debit) AS total_debit,
                                 SUM(credit) AS total_credit
                             FROM `{table_name}`
@@ -414,7 +403,6 @@ class DavReport:
                         sql = f"""
                             SELECT 
                                 COUNT(DISTINCT code_client) AS nb_clients,
-                                SUM(solde) AS total_montant,
                                 SUM(Debit) AS total_debit,
                                 SUM(Credit) AS total_credit
                             FROM `{table_name}`
@@ -432,9 +420,8 @@ class DavReport:
                         if type_table == "dav" or type_table == "epr":
                             current_data = {
                                 "nb_clients": int(result[0] or 0),
-                                "total_montant": round(float(result[1] or 0),2),
-                                "total_debit": round(float(result[2] or 0),2),
-                                "total_credit": round(float(result[3] or 0),2)
+                                "total_debit": round(float(result[1] or 0),2),
+                                "total_credit": round(float(result[2] or 0),2)
                             }
                             
                             # Calculer l'écart si on a des données précédentes

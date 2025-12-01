@@ -222,7 +222,9 @@ const exportToExcel = async (type) => {
   }
 
   try {
-    const res = await axios.get(`${api}/api/${config.apiEndpoint}/${selectedTable.value}`)
+    const res = await axios.get(`${api}/api/${config.apiEndpoint}/${selectedTable.value}`, {
+      headers: { Authorization: `Bearer ${localStorage.getItem('access_token')}` }
+    })
     const data = res.data.data || []
     const columns = res.data.columns || []
 
@@ -250,7 +252,7 @@ const exportToExcel = async (type) => {
     
   } catch (error) {
     console.error(`Erreur lors de l'export ${type} Excel:`, error)
-    alert(`Erreur lors de l'export ${type} Excel`)
+    alert(`Erreur lors de l'export ${type} Excel: ${error?.response?.data?.error || error.message}`)
   }
 }
 

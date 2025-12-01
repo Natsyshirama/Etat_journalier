@@ -31,17 +31,7 @@
         </v-card>
       </v-col>
 
-      <v-col cols="12" md="3">
-        <v-card variant="tonal" color="blue" class="pa-3 rounded-lg">
-          <div class="d-flex align-center">
-            <v-icon class="mr-2">mdi-cash</v-icon>
-            <div>
-              <div class="text-caption text-blue">Total Montant DAV</div>
-              <div class="text-h6 font-weight-bold">{{ Number(resume.total_montant_dav).toLocaleString('fr-FR', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) }}</div>
-            </div>
-          </div>
-        </v-card>
-      </v-col>
+      
 
       <v-col cols="12" md="3">
         <v-card variant="tonal" color="red" class="pa-3 rounded-lg">

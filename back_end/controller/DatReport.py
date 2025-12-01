@@ -66,7 +66,7 @@ class DatReport:
 
         except Exception as e:
             print(f"[ERREUR] getDat : {e}")
-            return {"columns": [], "rows": []}
+            return {"columns": [], "data": []}
         finally:
             if conn:
                 try:
