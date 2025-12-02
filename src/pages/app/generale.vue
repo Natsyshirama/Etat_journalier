@@ -531,7 +531,7 @@ const calculateEncoursDepot = () => {
       encours_depot: roundNumber(encoursDepot)
     }
 
-    // Calcul des écarts
+    // Calcul ecart
     const ecartData = {}
     if (previousData) {
       for (const key in currentData) {

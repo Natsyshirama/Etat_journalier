@@ -289,7 +289,6 @@ class DavReport:
         try:
             conn = self.db.connect()
 
-            # Récupérer toutes les tables du type
             tables_query = text(f"SHOW TABLES LIKE '{type_table}_%'")
             all_tables = [row[0] for row in conn.execute(tables_query).fetchall()]
             if not all_tables:

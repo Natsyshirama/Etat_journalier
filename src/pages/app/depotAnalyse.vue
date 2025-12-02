@@ -7,9 +7,8 @@
          Analyse des Encours de Dépôts 
       </v-card-title>
 
-      <!-- FORMULAIRE -->
       <v-row dense class="px-4 justify-left">
-        <!-- SELECTION MULTIPLE DES AGENCES -->
+        <!-- Select agence -->
         <v-col cols="12" sm="4">
           <v-select
             v-model="selectedAgences"
@@ -38,6 +37,7 @@
               </v-list-item>
               <v-divider class="mt-2"></v-divider>
             </template>
+
           </v-select>
         </v-col>
 
@@ -108,6 +108,15 @@
           >
             
             Analyser
+          </v-btn>
+          <v-btn
+            color="primary"
+            size="large"
+            rounded="lg"
+            class="px-8 ml-2"
+            @click="showGraphe = !showGraphe"
+          >
+            Graphe
           </v-btn>
         </v-col>
       </v-row>
@@ -203,6 +212,61 @@
     </v-card>
   </v-col>
 </v-row>
+
+<!-- Graphe avec Montant total et sous-titre écart coloré -->
+<div v-if="showGraphe && hasResults" class="mt-8">
+  <v-card class="elevation-3 pa-4">
+    <Line
+      :data="{
+        labels: graphLabels,
+        datasets: [
+          {
+            label: 'Montant total',
+            data: graphValues ,
+            borderColor: '#1976d2',
+            backgroundColor: 'rgba(25, 118, 210, 0.12)',
+            fill: true,
+            tension: 0.4,
+            pointRadius: 4,
+            borderWidth: 3
+          }
+        ]
+      }"
+      :options="{
+        responsive: true,
+        plugins: {
+          legend: { display: true, position: 'top' },
+          title: { 
+            display: true, 
+            text: 'Évolution des encours de dépôts', 
+            font: { size: 18 } 
+          },
+          tooltip: {
+            mode: 'index',
+            intersect: false,
+            callbacks: {
+              label: (context) => {
+                const montant = context.parsed.y
+                const idx = context.dataIndex
+                // graphEcarts est accessible ici car closure
+                const ecart = graphEcarts.value ? graphEcarts.value[idx] : 0
+                return [
+                  `Montant total: ${formatNumber(montant)}`,
+                  `Montant écart: ${formatEcart(ecart)}`
+                ]
+              }
+            }
+          }
+        },
+        scales: {
+          x: { title: { display: true, text: 'Date ou Mois', font: { size: 15 } } },
+          y: { title: { display: true, text: 'Montant total', font: { size: 15 } }, beginAtZero: true }
+        }
+      }"
+      style="height:500px;"
+    />
+  </v-card>
+</div>
     </v-card>
   </v-container>
 </template>
@@ -210,10 +274,22 @@
 <script setup>
 import { ref, computed, onMounted } from "vue"
 import axios from "axios"
+import { Line } from "vue-chartjs"
+import {
+  Chart as ChartJS,
+  Title,
+  Tooltip,
+  Legend,
+  LineElement,
+  PointElement,
+  CategoryScale,
+  LinearScale
+} from "chart.js"
+
+ChartJS.register(Title, Tooltip, Legend, LineElement, PointElement, CategoryScale, LinearScale)
 
 const api = "http://localhost:8000"
 
-// Liste des agences avec leurs noms
 const agencesList = ref([
   { code: "MG0010009", nom: "Andavamamba" },
   { code: "MG0010004", nom: "Analamahitsy" },
@@ -306,31 +382,27 @@ const toggleAllMonths = () => {
     selectedMonths.value = availableMonths.value.map(month => month.value)
   }
 }
-
-// Obtenir la valeur d'une cellule
+// valeur par cellule
 const getCellValue = (agence, column) => {
   if (column.type === 'daily') {
-    // Mode quotidien : valeur quotidienne
     return agence.encours[column.key]?.montant || 0
   } else {
-    // Mode mensuel : total du mois
     return agence.monthlyEncours[column.key]?.montant || 0
   }
 }
 
-// Obtenir l'écart d'une cellule
+// ecart par cellule
 const getCellEcart = (agence, column) => {
   if (column.type === 'daily') {
-    // Mode quotidien : écart quotidien
     return agence.encours[column.key]?.ecart || 0
   } else {
-    // Mode mensuel : écart mensuel
+    
     return agence.monthlyEncours[column.key]?.ecart || 0
   }
 }
 
-// Extraire les mois disponibles des dates
-const extractAvailableMonths = (dates) => {
+// getmois dispo
+const getMoisDispo = (dates) => {
   const monthSet = new Set()
   const monthLabels = []
   
@@ -355,11 +427,10 @@ const extractAvailableMonths = (dates) => {
     }
   })
   
-  // Trier par date (du plus récent au plus ancien)
   return monthLabels.sort((a, b) => a.value.localeCompare(b.value))
 }
 
-// Calculer les totaux mensuels pour chaque agence
+//total par mois /agence
 const calculateMonthlyEncours = (agences) => {
   const monthlyData = []
 
@@ -367,9 +438,9 @@ const calculateMonthlyEncours = (agences) => {
     const agenceInfo = agencesList.value.find(ag => ag.code === agenceCode)
     const monthlyEncours = {}
 
-    // Pour chaque mois disponible
+    // les mois dispo
     availableMonths.value.forEach((month, index) => {
-      // Récupérer toutes les dates de ce mois
+      // date dispo sur cette mois
       const monthDates = datesList.value.filter(date => 
         date.startsWith(month.value)
       )
@@ -414,7 +485,7 @@ const calculateMonthlyEncours = (agences) => {
   return monthlyData
 }
 
-// Organiser les données quotidiennes
+// organsation des data journaliers
 const organizeDailyData = (agences) => {
   const dailyData = []
 
@@ -422,7 +493,7 @@ const organizeDailyData = (agences) => {
     const agenceInfo = agencesList.value.find(ag => ag.code === agenceCode)
     const encours = {}
 
-    // Pour chaque date, calculer l'encours
+// calcule encours depots
     datesList.value.forEach((date, index) => {
       const davData = allData.value.dav[agenceCode]?.[date] || {}
       const datData = allData.value.dat[agenceCode]?.[date] || {}
@@ -434,7 +505,7 @@ const organizeDailyData = (agences) => {
 
       const encoursDepot = davDebit + datMontant + eprDebit
 
-      // Calculer l'écart par rapport à la date précédente
+//ecart
       let ecart = 0
       if (index > 0) {
         const previousDate = datesList.value[index - 1]
@@ -452,7 +523,7 @@ const organizeDailyData = (agences) => {
       code: agenceInfo.code,
       nom: agenceInfo.nom,
       encours: encours,
-      monthlyEncours: {} // Sera calculé plus tard si besoin
+      monthlyEncours: {} //por total par mois
     })
   })
 
@@ -480,7 +551,7 @@ const analyserEncours = async () => {
     organizeBaseData(allData.value, agencesToAnalyze)
 
     // Extraire les mois disponibles
-    availableMonths.value = extractAvailableMonths(datesList.value)
+    availableMonths.value = getMoisDispo(datesList.value)
     
     // Calculer les données quotidiennes
     const dailyData = organizeDailyData(agencesToAnalyze)
@@ -562,9 +633,9 @@ const fetchAllAgencesData = async (agences) => {
 }
 
 const organizeBaseData = (allData, agences) => {
-  // Collecter toutes les dates uniques
   const allDates = new Set()
   
+  //convertir sous forme tableau
   Object.values(allData.dav).forEach(agenceData => {
     Object.keys(agenceData).forEach(date => allDates.add(date))
   })
@@ -604,7 +675,7 @@ const getEcartClass = (ecart) => {
 }
 
 
-// Calculer le total pour une colonne (date ou mois)
+// total pour une colonne
 const getTotalValue = (column) => {
   let total = 0
   agencesData.value.forEach(agence => {
@@ -613,7 +684,7 @@ const getTotalValue = (column) => {
   return total
 }
 
-// Calculer l'écart total pour une colonne
+// ecart total pour une column
 const getTotalEcart = (column) => {
   let totalEcart = 0
   agencesData.value.forEach(agence => {
@@ -621,10 +692,20 @@ const getTotalEcart = (column) => {
   })
   return totalEcart
 }
+const showGraphe = ref(false)
 // Sélectionner toutes les agences par défaut au chargement
+
 onMounted(() => {
   selectedAgences.value = agencesList.value.map(ag => ag.code)
 })
+const graphLabels = computed(() => tableColumns.value.map(col => col.label))
+const graphValues = computed(() =>
+  tableColumns.value.map(col => getTotalValue(col))
+)
+const graphEcarts = computed(() =>
+  tableColumns.value.map(col => getTotalEcart(col))
+)
+
 </script>
 
 <style scoped>
