@@ -109,15 +109,7 @@
             
             Analyser
           </v-btn>
-          <v-btn
-            color="primary"
-            size="large"
-            rounded="lg"
-            class="px-8 ml-2"
-            @click="showGraphe = !showGraphe"
-          >
-            Graphe
-          </v-btn>
+          
         </v-col>
       </v-row>
 
@@ -133,8 +125,15 @@
         {{ message }}
       </v-alert>
 
-      
-<!-- TABLEAU HORIZONTAL -->
+      <v-btn
+            color="primary"
+            size="large"
+            rounded="lg"
+            class="px-8 ml-2"
+            @click="showGraphe = !showGraphe"
+          >
+            Graphe
+          </v-btn>
 <v-row v-if="hasResults" class="mt-8">
   <v-col cols="12">
     <v-card class="elevation-3">
@@ -503,8 +502,8 @@ const calculateMonthlyEncours = (agences) => {
     monthlyData.push({
       code: agenceInfo.code,
       nom: agenceInfo.nom,
-      encours: {}, // Données quotidiennes
-      monthlyEncours: monthlyEncours // Données mensuelles
+      encours: {}, 
+      monthlyEncours: monthlyEncours 
     })
   })
 
@@ -556,13 +555,39 @@ console.log('Ecart pour', date, ':', ecart)
   return dailyData
 }
 
+
+
+
+const saveToLocalStorage = () => {
+  try {
+    const snapshot = {
+      timestamp: new Date().toISOString(),
+      selectedAgences: selectedAgences.value,
+      dateDebut: dateDebut.value,
+      dateFin: dateFin.value,
+      selectedMonths: selectedMonths.value,
+      datesList: datesList.value,
+      availableMonths: availableMonths.value,
+      agencesData: agencesData.value,
+      message: message.value,
+      messageType: messageType.value
+    }
+    localStorage.setItem("depotAnalyse_snapshot", JSON.stringify(snapshot))
+    console.log('Snapshot saved to localStorage: depotAnalyse_snapshot')
+  } catch (err) {
+    console.error('Failed to save snapshot to localStorage', err)
+  }
+}
+
+
+
 const analyserEncours = async () => {
   loading.value = true
   message.value = ""
   datesList.value = []
   agencesData.value = []
   availableMonths.value = []
-  selectedMonths.value = [] // Réinitialiser la sélection mois
+  selectedMonths.value = [] 
 
   try {
     // Déterminer les agences à analyser
@@ -593,7 +618,13 @@ const analyserEncours = async () => {
 
     messageType.value = "success"
     message.value = `Analyse terminée : ${agencesData.value.length} agences, ${datesList.value.length} dates disponibles`
-
+     
+    try {
+            saveToLocalStorage()
+            console.log('Snapshot auto-sauvegardé après analyse')
+          } catch (err) {
+            console.warn('Erreur lors de la sauvegarde automatique:', err)
+          }
   } catch (error) {
     console.error("Erreur analyse:", error)
     messageType.value = "error"
@@ -603,6 +634,7 @@ const analyserEncours = async () => {
   }
 }
 
+
 const fetchAllAgencesData = async (agences) => {
   const allData = {
     dav: {},
@@ -610,11 +642,9 @@ const fetchAllAgencesData = async (agences) => {
     epr: {}
   }
 
-  // Récupérer les données pour les 3 produits
   for (const product of ['dav', 'dat', 'epr']) {
     console.log(`Récupération des données ${product} pour agences:`, agences)
 
-    // Pour chaque agence, faire un appel API
     for (const agenceCode of agences) {
       const params = {
         agence: agenceCode,
@@ -719,8 +749,42 @@ const getTotalEcart = (column) => {
   return totalEcart
 }
 const showGraphe = ref(false)
-// Sélectionner toutes les agences par défaut au chargement
 
+
+const restaurerDataCacher = () => {
+  const raw = localStorage.getItem("depotAnalyse_snapshot")
+  if (!raw) return false
+  try {
+    const parsed = JSON.parse(raw)
+
+    selectedAgences.value = (parsed.selectedAgences && parsed.selectedAgences.length)
+      ? parsed.selectedAgences
+      : agencesList.value.map(ag => ag.code)
+
+    dateDebut.value = parsed.dateDebut || ""
+    dateFin.value = parsed.dateFin || ""
+    selectedMonths.value = parsed.selectedMonths || []
+    datesList.value = parsed.datesList || []
+    availableMonths.value = parsed.availableMonths || (datesList.value.length ? getMoisDispo(datesList.value) : [])
+    agencesData.value = parsed.agencesData || []
+    message.value = parsed.message || ""
+    messageType.value = parsed.messageType || "info"
+
+    console.log("Snapshot restored from localStorage: depotAnalyse_snapshot")
+    return true
+  } catch (err) {
+    console.warn("Failed to parse depotAnalyse_snapshot:", err)
+    return false
+  }
+}
+
+onMounted(() => {
+  const restored = restaurerDataCacher()
+  if (!restored) {
+    selectedAgences.value = agencesList.value.map(ag => ag.code)
+  }
+})
+// ...existing code...
 onMounted(() => {
   selectedAgences.value = agencesList.value.map(ag => ag.code)
 })

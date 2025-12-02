@@ -38,7 +38,6 @@ const tableName = computed(() => route.query.tableName)
 const agence = computed(() => route.query.agence)
 const activeTab = ref(0)
 
-// Formatte la date pour l'affichage (ex: 20250924 → 24/09/2024)
 const formattedDate = computed(() => {
   if (!tableName.value || tableName.value.length !== 8) return tableName.value
   
@@ -49,7 +48,6 @@ const formattedDate = computed(() => {
   return `${day}/${month}/${year}`
 })
 
-// Optionnel: pour le débogage, affichez les valeurs reçues
 console.log('analyseDetail - Query params:', {
   tableName: tableName.value,
   agence: agence.value,

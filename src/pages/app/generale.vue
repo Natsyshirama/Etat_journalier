@@ -4,6 +4,43 @@
       class="pa-8 rounded-0 elevation-2 fade-in full-card"
       flat
     >
+      <v-row class="justify-space-between align-center mb-6 px-4">
+        <div>
+          <h2 class="text-h6 font-weight-bold mb-0">Tableaux & Analyses</h2>
+        </div>
+        <div class="d-flex gap-3">
+          <v-btn
+            color="flat"
+            size="large"
+            rounded="lg"
+            @click="goToAnalyseEncours"
+            class="px-4"
+          >
+            <v-icon left>mdi-chart-bar</v-icon>
+            Analyser Dépôts
+          </v-btn>
+          <v-btn
+            color="flat"
+            size="large"
+            rounded="lg"
+            @click="goToAnalyseDecaissement"
+            class="px-4"
+          >
+            <v-icon left>mdi-chart-bar</v-icon>
+            Analyser Décaissement
+          </v-btn>
+          <v-btn
+            color="flat"
+            size="large"
+            rounded="lg"
+            @click="goToAnalyseEsri"
+            class="px-4"
+          >
+            <v-icon left>mdi-chart-bar</v-icon>
+            Analyser Esri
+          </v-btn>
+        </div>
+      </v-row>
       
       <!-- FORMULAIRE -->
       <v-row dense class="px-4">
@@ -69,10 +106,8 @@
             />
           </v-col>
         </template>
-      </v-row>
-
-      <!-- BOUTON -->
-      <div class="text-center  mt-6">
+        <!-- BOUTON -->
+        <v-col cols="12" sm="auto" class="d-flex align-right ">
         <v-btn
           color="primary"
           size="large"
@@ -84,18 +119,13 @@
           <v-icon left>mdi-magnify</v-icon>
            recherche
         </v-btn>
+                </v-col>
+      </v-row>
 
-        <v-btn
-    color="secondary"
-    size="large"
-    rounded="lg"
-    @click="goToAnalyseEncours"
-    class="px-8"
-  >
-    <v-icon left>mdi-chart-bar</v-icon>
-    Analyser Dépôts
-  </v-btn>
-      </div>
+      
+
+
+        
 
       <!-- SELECTION DES COLONNES PAR TYPE -->
       <div v-if="hasResults" class="d-flex flex-column mb-4 px-2">

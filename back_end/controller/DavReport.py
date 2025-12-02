@@ -319,7 +319,7 @@ class DavReport:
                         sql = f"""
                             SELECT 
                                 COUNT(DISTINCT code_client) AS nb_clients,
-*                                SUM(debit) AS total_debit,
+                               SUM(debit) AS total_debit,
                                 SUM(credit) AS total_credit
                             FROM `{table_name}`
                             WHERE Agence = :agence
