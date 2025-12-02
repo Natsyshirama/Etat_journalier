@@ -72,6 +72,7 @@ class Operation:
                 if not result:
                     conn.execute(text(f"ALTER TABLE {table_name} ADD COLUMN {column_name} {column_type}"))
 
+
    
             # Calculer la nouvelle colonne
             df['montant_capital'] = df.apply(extract_balance, axis=1)

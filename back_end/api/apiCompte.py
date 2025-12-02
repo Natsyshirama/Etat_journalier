@@ -222,14 +222,14 @@ def listeDta():
         return JSONResponse(status_code=500, content={"error": f"Erreur serveur: {e}"})
 
 @router.get("/dat/{table_name}")
-def get_dat_table(request: Request,table_name: str):
+def get_dat_table(request: Request,table_name: str, agence: str = None):
    
     try:
         current_user = user.get_current_user(request)
         if current_user.get("privillege") not in ["user","admin", "superadmin"]:
             raise HTTPException(status_code=403, detail="Accès refusé : privilège insuffisant")
 
-        data = dat_report.getDat(table_name)
+        data = dat_report.getDat(table_name, agence)
         return {"table": table_name, **data}
     except ValueError as ve:
         return JSONResponse(status_code=400, content={"error": str(ve)})
@@ -328,7 +328,7 @@ def listeDav():
         return JSONResponse(status_code=500, content={"error": f"Erreur serveur: {e}"})
 
 @router.get("/dav/{table_name}")
-def get_dav_table(request: Request,table_name: str):
+def get_dav_table(request: Request,table_name: str, agence: str = None):
     """ tablea de dav selectionner
     """
     try:
@@ -336,7 +336,7 @@ def get_dav_table(request: Request,table_name: str):
         if current_user.get("privillege") not in ["user","admin", "superadmin"]:
             raise HTTPException(status_code=403, detail="Accès refusé : privilège insuffisant")
 
-        data = dav_report.getDav(table_name)
+        data = dav_report.getDav(table_name, agence)
         return {"table": table_name, **data}
     except ValueError as ve:
         return JSONResponse(status_code=400, content={"error": str(ve)})
@@ -525,13 +525,14 @@ def listeEpr():
 @router.get("/epr/{table_name}")
 def get_epr_table(
     request: Request,
-    table_name: str):
+    table_name: str,
+    agence: str = None):
     try:
         current_user = user.get_current_user(request)
         if current_user.get("privillege") not in ["user","admin", "superadmin"]:
             raise HTTPException(status_code=403, detail="Accès refusé : privilège insuffisant")
 
-        data = epr_report.getEpr(table_name)
+        data = epr_report.getEpr(table_name,agence)
         return {"table": table_name, **data}
     except ValueError as ve:
         return JSONResponse(status_code=400, content={"error": str(ve)})

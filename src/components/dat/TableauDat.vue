@@ -51,7 +51,8 @@ const props = defineProps({
   tableName: {
     type: String,
     required: true
-  }
+  },
+   agence: { type: String, default: "" }
 })
 const api = inject('api') 
 
@@ -65,15 +66,19 @@ const pageCount = computed(() =>
   Math.ceil(items.value.length / itemsPerPage.value)
 )
 
-const fetchTableData = async (tableName) => {
-  if (!tableName) {
+const fetchTableData = async (tableName,agence) => {
+  if (!tableName ) {
     items.value = []
     headers.value = []
     return
   }
   try {
     const res = await axios.get(`${api}/api/dat/${tableName}`, {
-      headers: { Authorization: `Bearer ${localStorage.getItem('access_token')}` }
+      headers: { Authorization: `Bearer ${localStorage.getItem('access_token')}` },
+      params: {
+        
+    agence: props.agence || undefined
+  }
     })
     items.value = res.data.data || []
     headers.value = (res.data.columns || []).map(col => ({

@@ -49,7 +49,8 @@ const props = defineProps({
   tableName: {
     type: String,
     required: true
-  }
+  },
+  agence: { type: String, default: "" }
 })
 const api = inject('api') 
 
@@ -71,7 +72,10 @@ const fetchTableData = async (tableName) => {
   }
   try {
     const res = await axios.get(`${api}/api/epr/${tableName}`, {
-      headers: { Authorization: `Bearer ${localStorage.getItem('access_token')}` }
+      headers: { Authorization: `Bearer ${localStorage.getItem('access_token')}` },
+      params: {
+    agence: props.agence || undefined
+  }
     })
     console.log("Réponse API:", res.data)
 

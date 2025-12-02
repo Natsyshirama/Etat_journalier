@@ -42,7 +42,7 @@ class DatReport:
                     print(f"[ERREUR] Fermeture connexion (getListeDat) : {close_err}")
                 
 
-    def getDat(self, table_name: str):
+    def getDat(self, table_name: str, agence: str = None):
         table_name_vrai = f"dat_{table_name}"
         if not table_name_vrai or not table_name_vrai.startswith("dat_"):
             raise ValueError("Nom de table invalide")
@@ -50,9 +50,12 @@ class DatReport:
         conn = None
         try:
             conn = self.db.connect()
-
-            query = text(f"SELECT * FROM `{table_name_vrai}`")  
-            result = conn.execute(query)
+            if agence:
+                query = text(f"SELECT * FROM `{table_name_vrai}` WHERE Agence = :agence")  
+                result = conn.execute(query, {"agence": agence})
+            else:
+                query = text(f"SELECT * FROM `{table_name_vrai}`")  
+                result = conn.execute(query)
 
             rows = result.fetchall()
             columns = list(result.keys())   # noms colonnes

@@ -38,7 +38,7 @@ class DavReport:
                 except Exception as close_err:
                     print(f"[ERREUR] Fermeture connexion (getListeDav) : {close_err}")
 
-    def getDav(self, table_name: str):
+    def getDav(self, table_name: str, agence: str = None):
         table_name_vrai = f"dav_{table_name}"
         if not table_name_vrai or not table_name_vrai.startswith("dav_"):
             raise ValueError("Nom de table invalide")
@@ -47,28 +47,38 @@ class DavReport:
         try:
             conn = self.db.connect()
 
-            query = text(f"SELECT * FROM `{table_name_vrai}`")  
-            result = conn.execute(query)
+            if agence:
+                query = text(f"SELECT * FROM `{table_name_vrai}` WHERE Agence = :agence")  
+                result = conn.execute(query, {"agence": agence})
+            else:
+                query = text(f"SELECT * FROM `{table_name_vrai}`")  
+                result = conn.execute(query)
 
             rows = result.fetchall()
-            columns = list(result.keys())   # noms colonnes
+            columns = list(result.keys())   
 
             data = [dict(zip(columns, row)) for row in rows]
             return {
                 "columns": columns,
-                "data": data
+                "data": data,
+                "filtre_agence": agence if agence else "aucun"
             }
 
         except Exception as e:
             print(f"[ERREUR] getDav : {e}")
-            return []
+            # Retourner une structure cohérente même en cas d'erreur
+            return {
+                "columns": [],
+                "data": [],
+                "filtre_agence": agence if agence else "aucun",
+                "error": str(e)
+            }
         finally:
             if conn:
                 try:
                     conn.close()
                 except Exception as close_err:
                     print(f"[ERREUR] Fermeture connexion (getDav) : {close_err}")
-    
     
          
     def getResumeDav(self, table_name: str):
@@ -458,7 +468,7 @@ class DavReport:
                                     ecart = current_value - previous_value
                                     ecart_data[f"ecart_{key}"] = ecart
                             else:
-                                # Première ligne, écarts à 0
+                                
                                 for key in current_data.keys():
                                     ecart_data[f"ecart_{key}"] = 0
                             
@@ -468,7 +478,7 @@ class DavReport:
                                 "ecart": ecart_data
                             })
                             
-                            previous_data = current_data  # Mettre à jour pour la prochaine itération
+                            previous_data = current_data  
 
             return results
         

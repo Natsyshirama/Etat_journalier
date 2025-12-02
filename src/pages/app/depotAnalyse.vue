@@ -164,9 +164,14 @@
                   class="cell-montant"
                 >
                   <div class="montant-container">
-                    <div class="montant-value">
-                      {{ formatNumber(getCellValue(agence, column)) }}
-                    </div>
+                    <!-- Dans le tableau principal, par exemple dans depotAnalyse.vue -->
+                      <div 
+                        class="montant-value"
+                        @click="goToDetail(column.key, agence.code )"
+                        style="cursor:pointer;"
+                      >
+                        {{ formatNumber(getCellValue(agence, column)) }}
+                      </div>
                     <div 
                       v-if="getCellEcart(agence, column) !== 0" 
                       class="ecart-indicator"
@@ -213,58 +218,68 @@
   </v-col>
 </v-row>
 
-<!-- Graphe avec Montant total et sous-titre écart coloré -->
 <div v-if="showGraphe && hasResults" class="mt-8">
   <v-card class="elevation-3 pa-4">
     <Line
-      :data="{
-        labels: graphLabels,
-        datasets: [
-          {
-            label: 'Montant total',
-            data: graphValues ,
-            borderColor: '#1976d2',
-            backgroundColor: 'rgba(25, 118, 210, 0.12)',
-            fill: true,
-            tension: 0.4,
-            pointRadius: 4,
-            borderWidth: 3
+  :data="{
+    labels: graphLabels,
+    datasets: [
+      {
+        label: 'Montant total',
+        data: graphValues,
+        borderColor: '#1976d2',
+        backgroundColor: 'rgba(25, 118, 210, 0.12)',
+        fill: true,
+        tension: 0.4,
+        pointRadius: 4,
+        borderWidth: 3
+      }
+    ]
+  }"
+  :options="{
+    responsive: true,
+    plugins: {
+      legend: { display: true, position: 'top' },
+      title: { 
+        display: true, 
+        text: 'Évolution des encours de dépôts', 
+        font: { size: 18 } 
+      },
+      tooltip: {
+        useHTML: true,
+        mode: 'index',
+        intersect: false,
+        callbacks: {
+          label: (context) => {
+            const montant = context.parsed.y
+            const idx = context.dataIndex
+            const ecart = graphEcarts[idx] || 0
+              let sign = '⚫'
+                if (ecart > 0) sign = '🟢'
+                else if (ecart < 0) sign = '🔴​'
+            return [
+              `Montant total: ${formatNumber(montant)}`,
+              `Écart:${sign} ${formatEcart(ecart)} `
+            ]
           }
-        ]
-      }"
-      :options="{
-        responsive: true,
-        plugins: {
-          legend: { display: true, position: 'top' },
-          title: { 
-            display: true, 
-            text: 'Évolution des encours de dépôts', 
-            font: { size: 18 } 
-          },
-          tooltip: {
-            mode: 'index',
-            intersect: false,
-            callbacks: {
-              label: (context) => {
-                const montant = context.parsed.y
-                const idx = context.dataIndex
-                // graphEcarts est accessible ici car closure
-                const ecart = graphEcarts.value ? graphEcarts.value[idx] : 0
-                return [
-                  `Montant total: ${formatNumber(montant)}`,
-                  `Montant écart: ${formatEcart(ecart)}`
-                ]
-              }
-            }
-          }
-        },
-        scales: {
-          x: { title: { display: true, text: 'Date ou Mois', font: { size: 15 } } },
-          y: { title: { display: true, text: 'Montant total', font: { size: 15 } }, beginAtZero: true }
         }
-      }"
-      style="height:500px;"
-    />
+      }
+    },
+    scales: {
+      x: { title: { display: true, text: 'Date ou Mois', font: { size: 15 } } },
+      y: { 
+        title: { display: true, text: 'Montant total', font: { size: 15 } }, 
+        beginAtZero: true,
+        ticks: {
+          callback: function(value) {
+            return formatNumber(value)
+          }
+        }
+      }
+    }
+  }"
+  style="height:800px;"
+/>
   </v-card>
 </div>
     </v-card>
@@ -285,8 +300,19 @@ import {
   CategoryScale,
   LinearScale
 } from "chart.js"
-
+import { useRouter } from 'vue-router'
 ChartJS.register(Title, Tooltip, Legend, LineElement, PointElement, CategoryScale, LinearScale)
+
+
+const router = useRouter()
+const goToDetail = (columnKey, agenceCode) => {
+  
+  router.push({
+    path: "/app/analyseDetails",
+    query: { tableName: columnKey, agence: agenceCode }
+  })
+}
+
 
 const api = "http://localhost:8000"
 
@@ -319,7 +345,7 @@ const messageType = ref("info")
 const datesList = ref([])
 const agencesData = ref([])
 const availableMonths = ref([])
-const allData = ref({}) // Stocker toutes les données brutes
+const allData = ref({})
 
 // Computed
 const allAgencesSelected = computed(() => 
@@ -345,17 +371,17 @@ const monthFilterHint = computed(() => {
   return `${selectedMonths.value.length} mois sélectionné(s) - Affichage mensuel`
 })
 
-// Colonnes du tableau (dates ou mois selon la sélection)
+//colonnes du tableau
 const tableColumns = computed(() => {
   if (selectedMonths.value.length === 0) {
-    // Mode quotidien : afficher toutes les dates
+//daily
     return datesList.value.map(date => ({
       key: date,
       label: formatDateDisplay(date),
       type: 'daily'
     }))
   } else {
-    // Mode mensuel : afficher les mois sélectionnés
+    //monthly
     return availableMonths.value
       .filter(month => selectedMonths.value.includes(month.value))
       .map(month => ({
@@ -366,7 +392,7 @@ const tableColumns = computed(() => {
   }
 })
 
-// Méthodes
+// methodes
 const toggleAllAgences = () => {
   if (allAgencesSelected.value) {
     selectedAgences.value = []
@@ -445,7 +471,7 @@ const calculateMonthlyEncours = (agences) => {
         date.startsWith(month.value)
       )
 
-      // Calculer le total mensuel
+      // calc total mois
       let totalMontant = 0
 
       monthDates.forEach(date => {
@@ -460,7 +486,7 @@ const calculateMonthlyEncours = (agences) => {
         totalMontant += (davDebit + datMontant + eprDebit)
       })
 
-      // Calculer l'écart par rapport au mois précédent
+      // calc ecart du mois prev
       let ecart = 0
       if (index > 0) {
         const previousMonth = availableMonths.value[index - 1]
@@ -512,7 +538,7 @@ const organizeDailyData = (agences) => {
         const previousEncours = encours[previousDate]?.montant || 0
         ecart = encoursDepot - previousEncours
       }
-
+console.log('Ecart pour', date, ':', ecart)
       encours[date] = {
         montant: encoursDepot,
         ecart: ecart
@@ -699,9 +725,11 @@ onMounted(() => {
   selectedAgences.value = agencesList.value.map(ag => ag.code)
 })
 const graphLabels = computed(() => tableColumns.value.map(col => col.label))
+
 const graphValues = computed(() =>
   tableColumns.value.map(col => getTotalValue(col))
 )
+
 const graphEcarts = computed(() =>
   tableColumns.value.map(col => getTotalEcart(col))
 )
@@ -709,7 +737,6 @@ const graphEcarts = computed(() =>
 </script>
 
 <style scoped>
-/* Modern Professional Style */
 .full-container {
   width: 100%;
   height: 100vh;
