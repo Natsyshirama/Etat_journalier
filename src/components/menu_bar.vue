@@ -186,6 +186,8 @@ const isSession = computed(() => route.path === '/app/session')
 const isInitialise = computed(() => route.path === '/app/Initialise')
 const isgenerale = computed(() => route.path === '/app/generale')
 const isFilemanager = computed(() => route.path === '/app/file_manager')
+const isDecaissementAnalyse = computed(() => route.path === '/app/decaisAnalyse')
+const isDepotAnalyse = computed(() => route.path === '/app/depotAnalyse')
 
 
 const toolbarTitle = computed(() => {
@@ -196,6 +198,8 @@ const toolbarTitle = computed(() => {
   if (isInitialise.value) return 'Initialisation Compte'
   if (isgenerale.value) return 'Vue'
   if (isFilemanager.value) return 'Gestionnaire de fichiers'
+  if (isDecaissementAnalyse.value) return 'Analyse Décaissement'
+  if (isDepotAnalyse.value) return 'Analyse Dépôt'
 
  return 'Encours Credits'
 })
@@ -360,7 +364,7 @@ async function selectDate(date,stat_compte) {
   selectedDate.value = date
   popupStore.selected_date = date
   popupStore.selected_date_stat_compte = stat_compte
-  localStorage.setItem("selectedTable", date) // <-- Ajout ici
+  localStorage.setItem("selectedTable", date) 
 
   menu.value = false
    

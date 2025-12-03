@@ -116,8 +116,8 @@ class decaissementReport:
                             "date_agence": {"date": single_date_if_all, "agence": ag},
                             "data": {
                                 "nb_clients": int(result[0] or 0),
-                                "total_montant_capital": round(float(result[1] or 0), 2),
-                                "total_frais_de_dossier": round(float(result[2] or 0), 2)
+                                "total_montant_capital": round(abs(float(result[1] or 0)), 2),
+                                "total_frais_de_dossier": round(abs(float(result[2] or 0)), 2)
                             }
                         })
 
@@ -166,8 +166,8 @@ class decaissementReport:
 
                 current_data = {
                     "nb_clients": int(result[0] or 0),
-                    "total_montant_capital": round(float(result[1] or 0), 2),
-                    "total_frais_de_dossier": round(float(result[2] or 0), 2),
+                    "total_montant_capital": round(abs(float(result[1] or 0)), 2),
+                    "total_frais_de_dossier": round(abs(float(result[2] or 0)), 2),
                 }
 
                 # --- Calcul des écarts ---
