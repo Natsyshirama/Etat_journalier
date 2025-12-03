@@ -454,6 +454,9 @@ const router = useRouter()
 const goToAnalyseEncours = () => {
   router.push('/app/depotAnalyse')
 }
+const goToAnalyseDecaissement = () => {
+  router.push('/app/decaisAnalyse')
+}
 
 const api = inject("api")
 

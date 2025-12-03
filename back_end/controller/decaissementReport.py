@@ -72,7 +72,133 @@ class decaissementReport:
                 except Exception as close_err:
                     print(f"[ERREUR] Fermeture connexion (getDecaissement) : {close_err}")
                     
-                    
+    def getDecAn(self, agence: str = None,
+                       date_debut: str = None, date_fin: str = None,
+                       single_date_if_all: str = "20251028"):
+       
+        AGENCES_DISPO = [
+            "MG0010009","MG0010004","MG0010024","MG0010052","MG0010011",
+            "MG0010012","MG0010010","MG0011001","MG0010003","MG0010022",
+            "MG0010053","MG0010013","MG0010041","MG0010023"
+        ]
+
+        conn = None
+        try:
+            conn = self.db.connect()
+
+            tables_query = text("SHOW TABLES LIKE 'decaissement_%'")
+            all_tables = [row[0] for row in conn.execute(tables_query).fetchall()]
+            if not all_tables:
+                return []
+
+            results = []
+
+           
+            if agence and agence.lower() == "all":
+
+                table_name = f"decaissement_{single_date_if_all}"
+                if table_name not in all_tables:
+                    return {"message": f"Aucune table trouvée pour la date {single_date_if_all}"}
+
+                sql = f"""
+                    SELECT 
+                        COUNT(DISTINCT code_client) AS nb_clients,
+                        SUM(montant_capital) AS total_montant_capital,
+                        SUM(frais_de_dossier) AS total_frais_de_dossier
+                    FROM `{table_name}`
+                    WHERE Agence = :agence
+                """
+
+                for ag in AGENCES_DISPO:
+                    result = conn.execute(text(sql), {"agence": ag}).fetchone()
+                    if result:
+                        results.append({
+                            "date_agence": {"date": single_date_if_all, "agence": ag},
+                            "data": {
+                                "nb_clients": int(result[0] or 0),
+                                "total_montant_capital": round(float(result[1] or 0), 2),
+                                "total_frais_de_dossier": round(float(result[2] or 0), 2)
+                            }
+                        })
+
+                return results
+
+           
+            if date_debut and date_fin:
+                filtered_tables = [
+                    t for t in all_tables
+                    if date_debut <= t.replace("decaissement_", "") <= date_fin
+                ]
+            else:
+                filtered_tables = all_tables
+
+            if not filtered_tables:
+                return []
+
+            previous_data = None
+
+            for table_name in sorted(filtered_tables):
+                table_date = table_name.replace("decaissement_", "")
+
+                where = []
+                params = {}
+
+                if agence:
+                    where.append("Agence = :agence")
+                    params["agence"] = agence
+
+                where_clause = " AND ".join(where)
+                if where_clause:
+                    where_clause = "WHERE " + where_clause
+
+                sql = f"""
+                    SELECT 
+                        COUNT(DISTINCT code_client) AS nb_clients,
+                        SUM(montant_capital) AS total_montant_capital,
+                        SUM(frais_de_dossier) AS total_frais_de_dossier
+                    FROM `{table_name}`
+                    {where_clause}
+                """
+
+                result = conn.execute(text(sql), params).fetchone()
+                if not result:
+                    continue
+
+                current_data = {
+                    "nb_clients": int(result[0] or 0),
+                    "total_montant_capital": round(float(result[1] or 0), 2),
+                    "total_frais_de_dossier": round(float(result[2] or 0), 2),
+                }
+
+                # --- Calcul des écarts ---
+                ecart_data = {}
+                if previous_data:
+                    for key in current_data:
+                        previous_value = previous_data.get(key, 0)
+                        ecart_data[f"ecart_{key}"] = current_data[key] - previous_value
+                else:
+                    ecart_data = {f"ecart_{k}": 0 for k in current_data}
+
+                results.append({
+                    "date_agence": {"date": table_date, "agence": agence},
+                    "data": current_data,
+                    "ecart": ecart_data
+                })
+
+                previous_data = current_data
+
+            return results
+        except Exception as e:
+            print(f"[ERREUR] getTotalParProduit : {e}")
+            return {"status": "error", "message": str(e)}
+        finally:
+            if conn:
+                try:
+                    conn.close()
+                except Exception as close_err:
+                    print(f"[ERREUR] Fermeture connexion (getTotalParProduit) : {close_err}")
+
+
     def getResumeDecaissement(self, table_name: str):
         table_name_vrai = f"decaissement_{table_name}"
         if not table_name_vrai or not table_name_vrai.startswith("decaissement_"):

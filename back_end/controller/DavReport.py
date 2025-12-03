@@ -307,7 +307,6 @@ class DavReport:
             results = []
 
             if agence and agence.lower() == "all":
-                # On prend une seule date
                 agence = agence.strip()
 
                 table_name = f"{type_table}_{single_date_if_all}"
@@ -368,7 +367,6 @@ class DavReport:
                                 }
                             })
             else:
-                # Filtrer les tables par plage de dates
                 if date_debut and date_fin:
                     filtered_tables = [t for t in all_tables if date_debut <= t.replace(f"{type_table}_", "") <= date_fin]
                 else:
@@ -377,8 +375,7 @@ class DavReport:
                 if not filtered_tables:
                     return []
 
-                previous_data = None  # Stocker les données précédentes pour calculer l'écart
-
+                previous_data = None  
                 for table_name in sorted(filtered_tables):
                     table_date = table_name.replace(f"{type_table}_", "")
                     where = []

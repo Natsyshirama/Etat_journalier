@@ -442,6 +442,74 @@ def get_total_par_produit(
             status_code=500,
             content={"error": f"Erreur serveur: {e}"}
         )
+        
+@router.get("/resume/decaissement")
+def get_total_par_produit(
+    request: Request,
+    agence: str = None,
+    date_debut: str = None,
+    date_fin: str = None,
+    single_date_if_all: str = None
+):
+    try:
+        # current_user = user.get_current_user(request)
+        # if current_user.get("privillege") not in ["user", "admin", "superadmin"]:
+        #     raise HTTPException(
+        #         status_code=403,
+        #         detail="Accès refusé : privilège insuffisant"
+        #     )
+
+        total = decaissement_report.getDecAn(
+            agence=agence,
+            date_debut=date_debut,
+            date_fin=date_fin,
+            single_date_if_all=single_date_if_all
+        )
+
+        if not total:
+            return JSONResponse(
+                status_code=404,
+                content={"error": "Aucune donnée trouvée pour décaissement"}
+            )
+
+        return total
+
+    except ValueError as ve:
+        return JSONResponse(
+            status_code=400,
+            content={"error": str(ve)}
+        )
+
+    except Exception as e:
+        return JSONResponse(
+            status_code=500,
+            content={"error": f"Erreur serveur: {e}"}
+        )
+
+
+@router.get("/resume/total-produit/decaissement")
+def get_total_decaissement(
+    request: Request,
+    agence: str = None,
+    date_debut: str = None,
+    date_fin: str = None,
+    single_date_if_all: str = None
+):
+    try:
+        current_user = user.get_current_user(request)
+        if current_user.get("privillege") not in ["user","admin", "superadmin"]:
+            raise HTTPException(status_code=403, detail="Accès refusé")
+        total = decaissement_report.getTotalParProduit(
+            agence=agence,
+            date_debut=date_debut,
+            date_fin=date_fin,
+            single_date_if_all=single_date_if_all or "20251028"
+        )
+        if not total:
+            return JSONResponse(status_code=404, content={"error": "Aucune donnée decaissement"})
+        return total
+    except Exception as e:
+        return JSONResponse(status_code=500, content={"error": str(e)})
 @router.get("/resume/total-produit/global")
 def get_total_global(request: Request, agence: str = None, date_debut: str = None, date_fin: str = None):
     try:

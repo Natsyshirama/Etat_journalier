@@ -439,7 +439,6 @@ const getMoisDispo = (dates) => {
     if (!monthSet.has(monthKey)) {
       monthSet.add(monthKey)
       
-      // Formater le label (ex: "Septembre 2025")
       const monthNames = [
         'Janvier', 'Février', 'Mars', 'Avril', 'Mai', 'Juin',
         'Juillet', 'Août', 'Septembre', 'Octobre', 'Novembre', 'Décembre'
