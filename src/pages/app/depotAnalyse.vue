@@ -3,9 +3,29 @@
     <v-card class="pa-8 rounded-0 elevation-2 fade-in full-card" flat>
       
       <!-- TITRE -->
-      <v-card-title class="text-h4 font-weight-bold text-left mb-6">
-         Analyse des Encours de Dépôts 
-      </v-card-title>
+      <v-row align="center">
+        <v-col cols="12" md="8">
+          <h1 class="text-h4 font-weight-bold text-white">
+            Analyse des Depots
+          </h1>
+          <p class="mt-2 text-white text-body-1 opacity-80">
+          </p>
+        </v-col>
+
+        <v-col cols="12" md="4" class="text-md-right text-center">
+          <v-btn
+            color="white"
+            variant="outlined"
+            size="large"
+            rounded="xl"
+            prepend-icon="mdi-chart-line"
+            class="mt-2 px-6"
+            @click="showGraphe = !showGraphe"
+          >
+            Voir le graphe
+          </v-btn>
+        </v-col>
+      </v-row>
 
       <v-row dense class="px-4 justify-left">
         <!-- Select agence -->
@@ -125,15 +145,7 @@
         {{ message }}
       </v-alert>
 
-      <v-btn
-            color="primary"
-            size="large"
-            rounded="lg"
-            class="px-8 ml-2"
-            @click="showGraphe = !showGraphe"
-          >
-            Graphe
-          </v-btn>
+      
 <v-row v-if="hasResults" class="mt-8">
   <v-col cols="12">
     <v-card class="elevation-3">
@@ -286,7 +298,7 @@
 </template>
 
 <script setup>
-import { ref, computed, onMounted } from "vue"
+import { ref, computed, onMounted,inject } from "vue"
 import axios from "axios"
 import { Line } from "vue-chartjs"
 import {
@@ -313,7 +325,7 @@ const goToDetail = (columnKey, agenceCode) => {
 }
 
 
-const api = "http://localhost:8000"
+const api = inject("api")
 
 const agencesList = ref([
   { code: "MG0010009", nom: "Andavamamba" },

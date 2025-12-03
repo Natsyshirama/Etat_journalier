@@ -677,13 +677,14 @@ def listeDecaissement():
 @router.get("/decaissement/{table_name}")
 def get_decaissement_table(
     request: Request,
-    table_name: str):
+    table_name: str,
+     agence: str = None):
     try:
         current_user = user.get_current_user(request)
         if current_user.get("privillege") not in ["user","admin", "superadmin"]:
             raise HTTPException(status_code=403, detail="Accès refusé : privilège insuffisant")
 
-        data = decaissement_report.getDecaissement(table_name)
+        data = decaissement_report.getDecaissement(table_name, agence)
         return {"table": table_name, **data}
     except ValueError as ve:
         return JSONResponse(status_code=400, content={"error": str(ve)})

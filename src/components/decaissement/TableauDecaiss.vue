@@ -45,7 +45,11 @@ import { ref, watch, computed, onMounted, inject } from "vue"
 import axios from "axios"
 
 const props = defineProps({
-  tableName: { type: String, required: true }
+  tableName: {
+    type: String,
+    required: true
+  },
+   agence: { type: String, default: "" }
 })
 const api = inject('api') 
 
@@ -73,8 +77,12 @@ const fetchTableData = async (tableName) => {
   }
   try {
     const res = await axios.get(`${api}/api/decaissement/${tableName}`, {
-      headers: { Authorization: `Bearer ${localStorage.getItem('access_token')}` }
-    })
+      headers: { Authorization: `Bearer ${localStorage.getItem('access_token')}` },
+      params: {
+        
+    agence: props.agence || undefined
+  }
+})
     items.value = res.data.data || []
     headers.value = (res.data.columns || []).map(col => ({
       title: col,
