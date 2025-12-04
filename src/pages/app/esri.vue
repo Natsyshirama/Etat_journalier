@@ -61,10 +61,31 @@
       </v-list>
     </v-card>
 
+    <div class="table-search-bar">
+      <v-text-field
+        v-model="search"
+        label="Rechercher"
+        clearable
+        dense
+        hide-details
+      />
+      <v-select
+        v-model="selectedMonth"
+        :items="monthsAvailable"
+        label="Filtrer par mois"
+        clearable
+        dense
+        hide-details
+        style="max-width: 200px; margin-left: 16px;"
+      />
+    </div>
+
     <TablesEsri
       v-if="status === 'success' && rows.length"
       :columns="columns"
       :rows="rows"
+      :selected-month="selectedMonth"
+      :months="monthsAvailable"
       ref="tableEsriRef"
     />
   </v-container>
@@ -72,7 +93,7 @@
 
 
 <script setup>
-import { ref, onMounted, onUnmounted,inject } from "vue"
+import { ref, onMounted, onUnmounted, inject, computed } from "vue"
 import axios from "axios"
 import * as XLSX from "xlsx"
 import TablesEsri from "@/components/esri/TableauEsri.vue"
@@ -89,6 +110,21 @@ const rows = ref([])
 const tableEsriRef = ref(null)
 const api = inject('api') 
 const bilan = ref([])
+
+const selectedMonth = ref("")
+const monthsAvailable = computed(() => {
+  const dates = rows.value.map(r => r.Date)
+  const months = dates
+    .filter(Boolean)
+    .map(date => {
+      const parts = date.split("/")
+      if (parts.length < 2) return null
+      const [year, month] = parts
+      return `${year}-${month.padStart(2, "0")}`
+    })
+    .filter(Boolean)
+  return [...new Set(months)].sort()
+})
 
 const fetchEsriData = async () => {
   if (!dateDebut.value || !dateFin.value) {

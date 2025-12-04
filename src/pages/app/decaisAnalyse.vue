@@ -1,20 +1,47 @@
 <template>
   <v-container  class="pa-0 full-container"fluid>
     <v-card class="pa-8 rounded-0 elevation-2 fade-in full-card" flat>
-      
+      <v-row class="justify-space-between align-center mb-6 px-4">
+        <div>
+<h1 class="text-h5 font-weight-bold text-blue">
+            Analyse des Décaissements
+          </h1>
+                </div>
+        <div class="d-flex gap-3">
+          <v-btn
+            color="flat"
+            size="large"
+            rounded="lg"
+            @click="goToAnalyseEncours"
+            class="px-4"
+          >
+            <v-icon left>mdi-chart-bar</v-icon>
+            Analyser Dépôts
+          </v-btn>
+          
+          <v-btn
+            color="flat"
+            size="large"
+            rounded="lg"
+            @click="goToAnalyseEsri"
+            class="px-4"
+          >
+            <v-icon left>mdi-chart-bar</v-icon>
+            Analyser Esri
+          </v-btn>
+        </div>
+      </v-row>
       <!-- TITRE -->
       <v-row align="center">
         <v-col cols="12" md="8">
-          <h1 class="text-h4 font-weight-bold text-white">
-            Analyse des Décaissements
-          </h1>
+          
           <p class="mt-2 text-white text-body-1 opacity-80">
           </p>
         </v-col>
 
         <v-col cols="12" md="4" class="text-md-right text-center">
           <v-btn
-            color="white"
+            :color="showGraphe ? 'blue' : 'grey'"
             variant="outlined"
             size="large"
             rounded="xl"
@@ -43,6 +70,8 @@
             density="comfortable"
             :hint="selectedAgences.length > 0 ? `${selectedAgences.length} agence(s) sélectionnée(s)` : 'Sélectionnez une ou plusieurs agences'"
             persistent-hint
+                style="max-height: 95px; overflow-y: auto;"
+
           >
             <template v-slot:prepend-item>
               <v-list-item title="Toutes les agences" @click="toggleAllAgences">
@@ -69,6 +98,7 @@
             rounded="lg"
             clearable
             density="comfortable"
+            hide-details
           />
         </v-col>
 
@@ -81,11 +111,22 @@
             rounded="lg"
             clearable
             density="comfortable"
+            hide-details
+          />
+          <v-checkbox
+            v-model="compare"
+              density="compact"
+              label="comparer"
+              color="primary"
+              class="mt-2"
+              :style="{ marginTop: '-8px', color: '#888' }"
+              hide-details
+
           />
         </v-col>
 
         <!-- FILTRE PAR MOIS -->
-        <v-col cols="12" sm="2">
+        <v-col cols="12" sm="2" v-if="!compare">
           <v-select
             v-model="selectedMonths"
             :items="availableMonths"
@@ -238,8 +279,6 @@
         label: 'Montant total',
         data: graphValues,
         borderColor: '#1976d2',
-        backgroundColor: 'rgba(25, 118, 210, 0.12)',
-        fill: true,
         tension: 0.4,
         pointRadius: 4,
         borderWidth: 3
@@ -323,6 +362,9 @@ const goToDetail = (columnKey, agenceCode) => {
   })
 }
 
+const goToAnalyseEncours = () => {
+  router.push('/app/depotAnalyse')
+}
 
 const api = inject("api")
 
@@ -377,7 +419,7 @@ const someMonthsSelected = computed(() =>
 const hasResults = computed(() => agencesData.value.length > 0 && datesList.value.length > 0)
 
 const monthFilterHint = computed(() => {
-  if (selectedMonths.value.length === 0) return 'Affichage quotidien'
+  if (selectedMonths.value.length === 0) return 'Affichage Journalier'
   return `${selectedMonths.value.length} mois sélectionné(s) - Affichage mensuel`
 })
 
@@ -640,6 +682,7 @@ const analyserEncours = async () => {
   }
 }
 
+const compare = ref(false)
 
 const fetchAllAgencesData = async (agences) => {
   const allData = {
@@ -650,7 +693,8 @@ const fetchAllAgencesData = async (agences) => {
     const params = {
       agence: agenceCode,
       date_debut: dateDebut.value || undefined,
-      date_fin: dateFin.value || undefined
+      date_fin: dateFin.value || undefined,
+      compare: compare.value || false
     }
 
     // Nettoyer les params undefined
@@ -911,8 +955,6 @@ const graphEcarts = computed(() =>
 
 .encours-table tbody tr {
   transition: background 0.2s;
-}
-.encours-table tbody tr:hover {
 }
 
 .cell-agence {

@@ -1,7 +1,6 @@
 <template>
   <v-container class="unified-container" fluid>
     <v-card class="pa-6">
-      <h2 class="mb-4">Détail Decaissement</h2>
       <div class="mb-4">
         <strong>Agence :</strong> {{ agence }}<br>
         <strong>Date :</strong> {{ formattedDate }}

@@ -124,6 +124,41 @@ def create_decaissement(date_limit:str):
     
 # ESRI
 
+# Dans votre route FastAPI
+@router.post("/api/esri/create_esri_precompute")
+async def create_esri_precompute(
+    date_debut: str = Query(...),
+    date_fin: str = Query(...),
+    agences: Optional[str] = Query(None),  # Format: "MG0010009,MG0010004"
+    months: Optional[str] = Query(None)    # Format: "202501,202502"
+):
+    try:
+        # Convertir les paramètres
+        agences_list = agences.split(",") if agences else None
+        months_list = months.split(",") if months else None
+        
+        # Appeler la fonction de traitement
+        rows, columns, bilan = operation_esri.process_esri_data_fast(
+            date_debut=date_debut,
+            date_fin=date_fin,
+            agences=agences_list,
+            months=months_list
+        )
+        
+        return {
+            "status": "success",
+            "message": f"{len(rows)} lignes chargées",
+            "columns": columns,
+            "rows": rows,
+            "bilan": bilan
+        }
+        
+    except Exception as e:
+        return {
+            "status": "error",
+            "message": str(e)
+        }
+
 
 @router.post("/esri/create_esri_precompute")
 def create_esri_precompute( request: Request, date_debut: str = Query(...), date_fin: str = Query(...)):
@@ -168,7 +203,6 @@ def create_esri_precompute( request: Request, date_debut: str = Query(...), date
         print(f"[ERREUR] create_esri_precompute : {e}")
         print(traceback.format_exc())
         return JSONResponse(content={"status": "error", "message": str(e)}, status_code=500)
-
 
 #change
 @router.post("/change/generate_report")
@@ -408,7 +442,8 @@ def get_total_par_produit(
     agence: str = None,
     date_debut: str = None,
     date_fin: str = None,
-    single_date_if_all = None
+    single_date_if_all = None,
+    compare: bool = Query(False, description="Comparer uniquement date_debut et date_fin")
 ):
     try:
         current_user = user.get_current_user(request)
@@ -420,7 +455,9 @@ def get_total_par_produit(
             agence=agence,
             date_debut=date_debut,
             date_fin=date_fin,
-            single_date_if_all=single_date_if_all
+            single_date_if_all=single_date_if_all,
+            compare=compare
+
         )
 
         if not total:
@@ -449,7 +486,9 @@ def get_total_par_produit(
     agence: str = None,
     date_debut: str = None,
     date_fin: str = None,
-    single_date_if_all: str = None
+    single_date_if_all: str = None,
+    compare: bool = Query(False, description="Comparer uniquement date_debut et date_fin")
+
 ):
     try:
         # current_user = user.get_current_user(request)
@@ -463,7 +502,8 @@ def get_total_par_produit(
             agence=agence,
             date_debut=date_debut,
             date_fin=date_fin,
-            single_date_if_all=single_date_if_all
+            single_date_if_all=single_date_if_all,
+            compare=compare
         )
 
         if not total:

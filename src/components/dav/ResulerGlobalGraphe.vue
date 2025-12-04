@@ -101,12 +101,10 @@ const chartOptions = {
     line: {
       tension: 0.3,
       borderWidth: 3,
-      fill: true
     },
     point: {
       radius: 5,
       hoverRadius: 8,
-      backgroundColor: "#fff",
       borderWidth: 2
     }
   },
@@ -183,7 +181,6 @@ const fetchData = async (type) => {
         ...ds,
         borderWidth: 3,
         pointBorderColor: ds.borderColor,
-        fill: true,
         tension: 0.3,
       })),
     }
@@ -222,7 +219,6 @@ fetchData(selectedType.value)
   margin: 0;
   padding: 16px;
   box-sizing: border-box;
-  background-color:#000000;
 }
 .chart-container {
   width: 100%;

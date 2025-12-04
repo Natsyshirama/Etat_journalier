@@ -13,7 +13,7 @@
     <div class="table-scroll">
       <v-data-table
         :headers="headers"
-        :items="rows"
+        :items="filteredRows"
         :items-per-page="itemsPerPage"
         :page.sync="page"
         class="elevation-1 fixed-header-table"
@@ -52,6 +52,14 @@ const props = defineProps({
   rows: {
     type: Array,
     required: true
+  },
+  selectedMonth: {
+    type: String,
+    default: ""
+  },
+  months: {
+    type: Array,
+    default: () => []
   }
 })
 
@@ -67,11 +75,22 @@ const headers = computed(() =>
 )
 
 const pageCount = computed(() =>
-  Math.ceil(props.rows.length / itemsPerPage.value)
+  Math.ceil(filteredRows.value.length / itemsPerPage.value)
 )
 
+const filteredRows = computed(() => {
+  if (!props.selectedMonth) return props.rows
+  return props.rows.filter(row => {
+    if (!row.Date) return false
+    const parts = row.Date.split("/")
+    if (parts.length < 2) return false
+    const [year, month] = parts
+    return `${year}-${month.padStart(2, "0")}` === props.selectedMonth
+  })
+})
+
 watch(
-  () => props.rows,
+  () => [props.rows, props.selectedMonth],
   () => (page.value = 1)
 )
 </script>
@@ -91,12 +110,10 @@ watch(
   position: sticky;
   top: 0;
   z-index: 20;
-  background-color: #121212; /* couleur fond selon ton thème */
   padding: 8px;
   border-bottom: 1px solid #333;
 }
 
-/* 📊 Tableau avec zone scrollable */
 .table-scroll {
   flex: 1;
   overflow-y: auto;
@@ -111,7 +128,6 @@ watch(
 .fixed-header-table ::v-deep(th) {
   position: sticky;
   top: 0;
-  background: linear-gradient(180deg, #1e1e1e 0%, #2d2d2d 100%); /* ✅ Fond différent et contrasté */
   font-weight: 600;
   text-transform: uppercase;
   letter-spacing: 0.5px;
@@ -124,8 +140,6 @@ watch(
 
 /* ✅ Lignes du tableau avec fond légèrement différent */
 .fixed-header-table ::v-deep(td) {
-  background-color: #181818; /* différence nette avec les headers */
-  color: #dcdcdc;
   border-bottom: 1px solid #333;
   padding: 8px 12px;
   font-size: 14px;

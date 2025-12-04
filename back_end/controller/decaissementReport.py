@@ -78,7 +78,7 @@ class decaissementReport:
                     
     def getDecAn(self, agence: str = None,
                        date_debut: str = None, date_fin: str = None,
-                       single_date_if_all: str = "20251028"):
+                       single_date_if_all: str = "20251028" , compare: bool = False):
        
         AGENCES_DISPO = [
             "MG0010009","MG0010004","MG0010024","MG0010052","MG0010011",
@@ -128,11 +128,10 @@ class decaissementReport:
                 return results
 
            
-            if date_debut and date_fin:
-                filtered_tables = [
-                    t for t in all_tables
-                    if date_debut <= t.replace("decaissement_", "") <= date_fin
-                ]
+            if compare and date_debut and date_fin:
+                    filtered_tables = [t for t in all_tables if t.replace(f"decaissement_", "") in [date_debut, date_fin]]
+            elif date_debut and date_fin:
+                filtered_tables = [t for t in all_tables if date_debut <= t.replace("decaissement_", "") <= date_fin]    
             else:
                 filtered_tables = all_tables
 

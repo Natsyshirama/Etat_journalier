@@ -1,20 +1,46 @@
 <template>
   <v-container  class="pa-0 full-container"fluid>
     <v-card class="pa-8 rounded-0 elevation-2 fade-in full-card" flat>
-      
+      <v-row class="justify-space-between align-center mb-6 px-4">
+        <div>
+<h1 class="text-h5 font-weight-bold text-blue">
+            Analyse des Depots
+          </h1>        </div>
+        <div class="d-flex gap-3">
+          
+          <v-btn
+            color="flat"
+            size="large"
+            rounded="lg"
+            @click="goToAnalyseDecaissement"
+            class="px-4"
+          >
+            <v-icon left>mdi-chart-bar</v-icon>
+            Analyser Décaissement
+          </v-btn>
+          <v-btn
+            color="flat"
+            size="large"
+            rounded="lg"
+            @click="goToAnalyseEsri"
+            class="px-4"
+          >
+            <v-icon left>mdi-chart-bar</v-icon>
+            Analyser Esri
+          </v-btn>
+        </div>
+      </v-row>
       <!-- TITRE -->
       <v-row align="center">
         <v-col cols="12" md="8">
-          <h1 class="text-h4 font-weight-bold text-white">
-            Analyse des Depots
-          </h1>
+          
           <p class="mt-2 text-white text-body-1 opacity-80">
           </p>
         </v-col>
 
         <v-col cols="12" md="4" class="text-md-right text-center">
           <v-btn
-            color="white"
+            :color="showGraphe ? 'blue' : 'grey'"
             variant="outlined"
             size="large"
             rounded="xl"
@@ -36,6 +62,7 @@
             item-title="nom"
             item-value="code"
             label="Sélectionner les agences"
+            class="label-visible"
             variant="outlined"
             rounded="lg"
             multiple
@@ -44,6 +71,8 @@
             density="comfortable"
             :hint="selectedAgences.length > 0 ? `${selectedAgences.length} agence(s) sélectionnée(s)` : 'Sélectionnez une ou plusieurs agences'"
             persistent-hint
+    style="max-height: 95px; overflow-y: auto;"
+
           >
             <template v-slot:prepend-item>
               <v-list-item title="Toutes les agences" @click="toggleAllAgences">
@@ -70,23 +99,37 @@
             rounded="lg"
             clearable
             density="comfortable"
+            hide-details
           />
         </v-col>
 
-        <v-col cols="12" sm="2">
-          <v-text-field
-            v-model="dateFin"
-            label="Date fin"
-            placeholder="YYYYMMDD"
-            variant="outlined"
-            rounded="lg"
-            clearable
-            density="comfortable"
-          />
-        </v-col>
+          <v-col cols="12" sm="2">
+            <v-text-field
+              v-model="dateFin"
+              label="Date fin"
+              placeholder="YYYYMMDD"
+              variant="outlined"
+              rounded="lg"
+              clearable
+              density="comfortable"
+              hide-details
+            />
+            <v-checkbox
+              v-model="compare"
+              density="compact"
+
+              label="comparer"
+              color="primary"
+              class="mt-2"
+              :style="{ marginTop: '-8px', color: '#888' }"
+    hide-details
+
+              
+            />
+          </v-col>
 
         <!-- FILTRE PAR MOIS -->
-        <v-col cols="12" sm="2">
+        <v-col cols="12" sm="2" v-if="!compare">
           <v-select
             v-model="selectedMonths"
             :items="availableMonths"
@@ -110,7 +153,7 @@
                     :indeterminate="someMonthsSelected"
                     color="primary"
                   ></v-checkbox>
-                </template>
+                </template> 
               </v-list-item>
               <v-divider class="mt-2"></v-divider>
             </template>
@@ -239,8 +282,6 @@
         label: 'Montant total',
         data: graphValues,
         borderColor: '#1976d2',
-        backgroundColor: 'rgba(25, 118, 210, 0.12)',
-        fill: true,
         tension: 0.4,
         pointRadius: 4,
         borderWidth: 3
@@ -324,6 +365,10 @@ const goToDetail = (columnKey, agenceCode) => {
   })
 }
 
+const goToAnalyseDecaissement = () => {
+  router.push('/app/decaisAnalyse')
+}
+
 
 const api = inject("api")
 
@@ -347,6 +392,8 @@ const agencesList = ref([
 const selectedAgences = ref([])
 const dateDebut = ref("")
 const dateFin = ref("")
+const compare = ref(false)
+
 const selectedMonths = ref([])
 const loading = ref(false)
 const message = ref("")
@@ -378,7 +425,7 @@ const someMonthsSelected = computed(() =>
 const hasResults = computed(() => agencesData.value.length > 0 && datesList.value.length > 0)
 
 const monthFilterHint = computed(() => {
-  if (selectedMonths.value.length === 0) return 'Affichage quotidien'
+  if (selectedMonths.value.length === 0) return 'Affichage journalier'
   return `${selectedMonths.value.length} mois sélectionné(s) - Affichage mensuel`
 })
 
@@ -660,7 +707,9 @@ const fetchAllAgencesData = async (agences) => {
       const params = {
         agence: agenceCode,
         date_debut: dateDebut.value || undefined,
-        date_fin: dateFin.value || undefined
+        date_fin: dateFin.value || undefined,
+        compare: compare.value || undefined
+
       }
 
       // Nettoyer les params undefined
@@ -930,9 +979,6 @@ const graphEcarts = computed(() =>
 .encours-table tbody tr {
   transition: background 0.2s;
 }
-.encours-table tbody tr:hover {
-}
-
 .cell-agence {
   font-weight: bold;
   text-align: center;
@@ -1007,7 +1053,13 @@ const graphEcarts = computed(() =>
 .fade-in {
   animation: fadeIn 0.5s ease-in-out;
 }
-
+/* Ajoute ceci dans le <style scoped> */
+.chips-scroll {
+  max-height: 60px;
+  overflow-y: auto;
+  display: flex;
+  flex-wrap: wrap;
+}
 @keyframes fadeIn {
   from { opacity: 0; transform: translateY(8px); }
   to { opacity: 1; transform: translateY(0); }

@@ -129,12 +129,10 @@ class OperationEsri:
         ]
 
     def extract_between_teller_and_mcbc(self, local_ref):
-        """Extrait la valeur entre TELLER, et .MCBC"""
         match = re.search(r'TELLER,([^,]+)\.MCBC', local_ref)
         return match.group(1) if match else None
 
     def extract_value_from_local_ref(self, local_ref, field):
-        """Extrait la valeur d'un champ donné depuis local_ref"""
         values = local_ref.split('|')
         if field in self.teller:
             index = self.teller.index(field)
@@ -143,11 +141,9 @@ class OperationEsri:
         return None
 
     def update_address_based_on_country(self, country_code):
-        """Met à jour l'adresse basée sur le code pays"""
         return self.country_addresses.get(country_code, 'Adresse inconnue')
 
     def update_country_code(self, country_code):
-        """Convertit le code pays en code numérique"""
         codes_dict = {code: number for code, number in self.countries_codes if number != ""}
         if country_code is None:
             return None

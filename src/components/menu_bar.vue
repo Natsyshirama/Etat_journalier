@@ -188,7 +188,8 @@ const isgenerale = computed(() => route.path === '/app/generale')
 const isFilemanager = computed(() => route.path === '/app/file_manager')
 const isDecaissementAnalyse = computed(() => route.path === '/app/decaisAnalyse')
 const isDepotAnalyse = computed(() => route.path === '/app/depotAnalyse')
-
+const isDepotDetail = computed(() => route.path === '/app/analyseDetails')
+const isDecDetal = computed(() => route.path === '/app/detailDecais')
 
 const toolbarTitle = computed(() => {
   if (isEsriPage.value) return 'ESRI'
@@ -198,8 +199,10 @@ const toolbarTitle = computed(() => {
   if (isInitialise.value) return 'Initialisation Compte'
   if (isgenerale.value) return 'Vue'
   if (isFilemanager.value) return 'Gestionnaire de fichiers'
-  if (isDecaissementAnalyse.value) return 'Analyse Décaissement'
-  if (isDepotAnalyse.value) return 'Analyse Dépôt'
+  if (isDecaissementAnalyse.value) return ' Décaissement'
+  if (isDepotAnalyse.value) return ' Dépôt'
+  if (isDepotDetail.value) return 'Détail Dépôt'
+  if (isDecDetal.value) return 'Détail Décaissement'
 
  return 'Encours Credits'
 })
