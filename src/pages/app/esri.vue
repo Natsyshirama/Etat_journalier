@@ -20,8 +20,8 @@
         />
       </v-col>
 
-  
-
+      
+ 
       <v-col cols="12" md="3" class="d-flex align-center">
         <v-btn
           color="primary"
@@ -61,14 +61,11 @@
       </v-list>
     </v-card>
 
-    <div class="table-search-bar">
-      <v-text-field
-        v-model="search"
-        label="Rechercher"
-        clearable
-        dense
-        hide-details
-      />
+    
+          <div class="table-filtre-bar">
+
+      <v-row class="align-center mb-4 px-2" fluid>
+
       <v-select
         v-model="selectedMonth"
         :items="monthsAvailable"
@@ -78,16 +75,77 @@
         hide-details
         style="max-width: 200px; margin-left: 16px;"
       />
+      <v-col cols="12" md="3">
+        <v-select
+          v-model="selectedAgences"
+          :items="agencesList"
+          item-title="nom"
+          item-value="code"
+          label="Filtrer par agence"
+          multiple
+          chips
+          clearable
+          dense
+          hide-details
+        />
+      </v-col>
+
+      <v-col cols="12" md="3">
+      <v-select
+        v-model="selectedType"
+        :items="typesList"
+        item-title="nom"
+        item-value="code"
+        label="Filtrer par type"
+        clearable
+        dense
+        hide-details
+        style="max-width: 180px; margin-left: 12px;"
+      />
+      </v-col>
+
+      <v-col cols="12" md="4" class="text-md-right text-center">
+        <v-btn
+          :color="showTotal ? 'blue' : 'grey'"
+          variant="outlined"
+          size="large"
+          rounded="xl"
+          prepend-icon="mdi-chart-line"
+          class="mt-2 px-6"
+          @click="showTotal = !showTotal"
+        >
+          Voir le total
+        </v-btn>
+      </v-col>
+      </v-row>
     </div>
 
-    <TablesEsri
-      v-if="status === 'success' && rows.length"
-      :columns="columns"
-      :rows="rows"
-      :selected-month="selectedMonth"
-      :months="monthsAvailable"
-      ref="tableEsriRef"
-    />
+    <!-- TABLEAU NORMAL -->
+<TablesEsri
+  v-if="status === 'success' && rows.length && !showTotal"
+  :columns="columns"
+  :rows="rows"
+  :selected-month="selectedMonth"
+  :months="monthsAvailable"
+  :selected-agences="selectedAgences"
+  :selected-type="selectedType"
+  :show-total="false"
+  ref="tableEsriRef"
+/>
+
+<!-- TABLEAU TOTAL UNIQUEMENT -->
+<TablesEsri
+  v-if="status === 'success' && rows.length && showTotal"
+  :columns="columns"
+  :rows="rows"
+  :selected-month="selectedMonth"
+  :months="monthsAvailable"
+  :selected-agences="selectedAgences"
+  :selected-type="selectedType"
+  :show-total="true"
+  ref="tableEsriRef"
+/>
+
   </v-container>
 </template>
 
@@ -111,6 +169,28 @@ const tableEsriRef = ref(null)
 const api = inject('api') 
 const bilan = ref([])
 
+const showTotal = ref(false)
+
+// Liste agences (même format que depotAnalyse)
+const agencesList = ref([
+  { code: "MG0010009", nom: "Andavamamba" },
+  { code: "MG0010004", nom: "Analamahitsy" },
+  { code: "MG0010024", nom: "Andravoahangy" },
+  { code: "MG0010052", nom: "Imerinafovoany" },
+  { code: "MG0010011", nom: "Andoharanofotsy" },
+  { code: "MG0010012", nom: "Anosizato" },
+  { code: "MG0010010", nom: "67 Hectares" },
+  { code: "MG0011001", nom: "Antanimena" },
+  { code: "MG0010003", nom: "Antsahabe" },
+  { code: "MG0010022", nom: "Behoririka" },
+  { code: "MG0010053", nom: "Ivandry" },
+  { code: "MG0010013", nom: "Mahamasina" },
+  { code: "MG0010041", nom: "Soixante Sept Hectares" },
+  { code: "MG0010023", nom: "Tanjombato" }
+])
+
+const selectedAgences = ref([]) // codes d'agence sélectionnés (vide = toutes)
+
 const selectedMonth = ref("")
 const monthsAvailable = computed(() => {
   const dates = rows.value.map(r => r.Date)
@@ -125,6 +205,12 @@ const monthsAvailable = computed(() => {
     .filter(Boolean)
   return [...new Set(months)].sort()
 })
+
+const selectedType = ref("")         
+const typesList = ref([{code:"RIA.PAYMENT", nom:"RIA"},
+                       {code:"GLOBAL.TRANSFER.PAYMENT", nom:"GLOBAL TRANSFER"},
+]) 
+
 
 const fetchEsriData = async () => {
   if (!dateDebut.value || !dateFin.value) {
