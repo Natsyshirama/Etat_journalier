@@ -81,6 +81,18 @@
               clearable
               density="comfortable"
             />
+            <v-checkbox
+              v-model="compare"
+              density="compact"
+
+              label="comparer"
+              color="primary"
+              class="mt-2"
+              :style="{ marginTop: '-8px', color: '#888' }"
+    hide-details
+
+              
+            />
           </v-col>
         </template>
 
@@ -451,6 +463,8 @@ const goToAnalyseDecaissement = () => {
 
 const api = inject("api")
 
+const compare = ref(false)
+
 const typeTable = ref("all")
 const agence = ref("")
 const singleDate = ref("")
@@ -631,6 +645,7 @@ const rechercher = async () => {
           single_date_if_all: singleDate.value,
           date_debut: dateDebut.value,
           date_fin: dateFin.value,
+          compare: compare.value
         }
       })
       
