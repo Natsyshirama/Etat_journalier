@@ -4,11 +4,7 @@
       <v-row class="justify-space-between align-center mb-6 px-4">
         <div>
 <h1 class="text-h5 font-weight-bold text-blue">
-            Analyse des Depots
-          </h1>        </div>
-        <div class="d-flex gap-3">
-          
-          <v-btn
+          </h1>   <v-btn
             color="flat"
             size="large"
             rounded="lg"
@@ -17,17 +13,11 @@
           >
             <v-icon left>mdi-chart-bar</v-icon>
             Analyser Décaissement
-          </v-btn>
-          <v-btn
-            color="flat"
-            size="large"
-            rounded="lg"
-            @click="goToAnalyseEsri"
-            class="px-4"
-          >
-            <v-icon left>mdi-chart-bar</v-icon>
-            Analyser Esri
-          </v-btn>
+          </v-btn>      </div>
+        <div class="d-flex gap-3">
+          
+         
+          
         </div>
       </v-row>
       <!-- TITRE -->
