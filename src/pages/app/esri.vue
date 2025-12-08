@@ -20,7 +20,14 @@
         />
       </v-col>
 
-      
+       <v-col cols="12" md="2" class="d-flex align-center">
+        <v-checkbox
+          v-model="compareMode"
+          label="Mode comparer"
+          hide-details
+          class="mt-0"
+        />
+      </v-col>
  
       <v-col cols="12" md="3" class="d-flex align-center">
         <v-btn
@@ -171,6 +178,8 @@ const bilan = ref([])
 
 const showTotal = ref(false)
 
+const compareMode = ref(false) // Nouveau: variable pour le mode comparer
+
 // Liste agences (même format que depotAnalyse)
 const agencesList = ref([
   { code: "MG0010009", nom: "Andavamamba" },
@@ -232,6 +241,8 @@ const fetchEsriData = async () => {
         params: {
           date_debut: dateDebut.value,
           date_fin: dateFin.value,
+          compare: compareMode.value,
+
         },
       }
     )

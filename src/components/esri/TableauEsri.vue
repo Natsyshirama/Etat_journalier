@@ -178,7 +178,7 @@
     </div>
 
     <!-- Dialogue pour afficher le graphique d'évolution -->
-    <v-dialog v-model="showChart" max-width="1500px" scrollable>
+    <v-dialog v-model="showChart" max-width="1400px" scrollable>
       <v-card>
         <v-card-title class="headline">
           <v-icon left>mdi-chart-line</v-icon>
@@ -301,6 +301,7 @@ const pageCount = computed(() =>
   Math.ceil(filteredRows.value.length / itemsPerPage.value)
 )
 
+
 const chartTitle = computed(() => {
   if (chartData.value.type === 'overall') {
     return `Évolution ${activeTab.value === 0 ? 'journalière' : 'mensuelle'} globale`
@@ -308,7 +309,6 @@ const chartTitle = computed(() => {
     return `Évolution ${chartData.value.type === 'daily' ? 'journalière' : 'mensuelle'}`
   }
 })
-
 // Calcul si on doit afficher le bouton graphique
 const showChartButton = computed(() => {
   if (activeTab.value === 0) {
@@ -506,7 +506,7 @@ const formatMonth = (monthKey) => {
 }
 
 const formatDateForChart = (dateStr) => {
-// yyyy/mm/dd lasa mdd/mm/yyyy
+  // Formater la date pour l'affichage (ex: "2024/01/15" -> "15/01/2024")
   if (!dateStr) return "Date inconnue"
   
   const parts = dateStr.split("/")
@@ -743,6 +743,7 @@ const createChart = () => {
   })
 }
 
+
 // Nettoyer le graphique quand le composant est détruit
 onUnmounted(() => {
   if (chartInstance) {
@@ -881,7 +882,7 @@ watch(showChart, (newValue) => {
 
 .chart-container {
   position: relative;
-  height: 700px;
+  height: 630px;
   width: 100%;
 }
 
