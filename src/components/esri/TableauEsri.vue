@@ -57,9 +57,21 @@
 
     <div v-if="showTotal" class="summary-table mt-4">
       <v-card outlined class="pa-2" style="max-height: 900px; overflow-y: auto;">
-        <v-card-title class="text-subtitle-1">
-          <v-icon left>{{ activeTab === 0 ? 'mdi-calendar-today' : 'mdi-calendar-month' }}</v-icon>
-          {{ activeTab === 0 ? 'Totaux journaliers' : 'Totaux mensuels' }}
+        <v-card-title class="text-subtitle-1 d-flex justify-space-between align-center">
+          <div>
+            <v-icon left>{{ activeTab === 0 ? 'mdi-calendar-today' : 'mdi-calendar-month' }}</v-icon>
+            {{ activeTab === 0 ? 'Totaux journaliers' : 'Totaux mensuels' }}
+          </div>
+          <v-btn 
+            v-if="showChartButton"
+            small 
+            color="primary" 
+            @click="showOverallChart"
+            class="ml-2"
+          >
+            <v-icon left small>mdi-chart-line</v-icon>
+            Voir graphique global
+          </v-btn>
         </v-card-title>
         <div style="overflow-y: auto;">
           <v-data-table
@@ -72,7 +84,18 @@
             height="900px"
           >
             <template v-if="activeTab === 0" v-slot:item.date="{ item }">
-              {{ item.displayDate || item.date }}
+              <div class="date-cell">
+                {{ item.displayDate || item.date }}
+                <v-btn 
+                  small 
+                  text 
+                  color="primary" 
+                  @click="showEvolutionChart(item.date, item.total, 'daily')"
+                  class="chart-btn"
+                >
+                  <v-icon x-small>mdi-chart-line</v-icon>
+                </v-btn>
+              </div>
             </template>
             
             <template v-if="activeTab === 0" v-slot:item.total_ria="{ item }">
@@ -103,7 +126,18 @@
             </template>
             
             <template v-if="activeTab === 1" v-slot:item.month="{ item }">
-              {{ formatMonth(item.month) }}
+              <div class="date-cell">
+                {{ formatMonth(item.month) }}
+                <v-btn 
+                  small 
+                  text 
+                  color="primary" 
+                  @click="showEvolutionChart(item.month, item.total, 'monthly')"
+                  class="chart-btn"
+                >
+                  <v-icon x-small>mdi-chart-line</v-icon>
+                </v-btn>
+              </div>
             </template>
             
             <template v-if="activeTab === 1" v-slot:item.total_ria="{ item }">
@@ -142,12 +176,72 @@
         </div>
       </v-card>
     </div>
+
+    <!-- Dialogue pour afficher le graphique d'évolution -->
+    <v-dialog v-model="showChart" max-width="1500px" scrollable>
+      <v-card>
+        <v-card-title class="headline">
+          <v-icon left>mdi-chart-line</v-icon>
+          {{ chartTitle }}
+          <v-spacer></v-spacer>
+          <v-btn icon @click="showChart = false">
+            <v-icon>mdi-close</v-icon>
+          </v-btn>
+        </v-card-title>
+        
+        <v-card-text>
+          <div v-if="chartData.type === 'daily' && chartData.label" class="text-subtitle-1 mb-4">
+            <strong>Date sélectionnée :</strong> {{ formatDateForChart(chartData.label) }}
+          </div>
+          <div v-else-if="chartData.type === 'monthly' && chartData.label" class="text-subtitle-1 mb-4">
+            <strong>Mois sélectionné :</strong> {{ formatMonth(chartData.label) }}
+          </div>
+          
+          <!-- Graphique d'évolution -->
+          <div class="chart-container">
+            <canvas ref="chartCanvas"></canvas>
+          </div>
+          
+          <!-- Légende des données -->
+          <v-card class="mt-4" outlined>
+            <v-card-text>
+              <div v-if="chartData.type === 'overall'" class="text-center">
+                <strong>Graphique global {{ activeTab === 0 ? 'journalier' : 'mensuel' }}</strong>
+                <div class="mt-2">
+                  <v-icon small color="blue">mdi-information</v-icon>
+                  Visualisation de toutes les périodes disponibles
+                </div>
+              </div>
+              <div v-else class="d-flex justify-space-between">
+                <div>
+                  <strong>Total :</strong> {{ formatCurrency(chartData.total) }}
+                </div>
+                <div v-if="chartData.ecart !== 0" :class="getEcartClass(chartData.ecart)">
+                  <strong>Écart :</strong> {{ formatEcart(chartData.ecart) }}
+                </div>
+              </div>
+            </v-card-text>
+          </v-card>
+        </v-card-text>
+        
+        <v-card-actions>
+          <v-spacer></v-spacer>
+          <v-btn color="primary" @click="showChart = false">
+            Fermer
+          </v-btn>
+        </v-card-actions>
+      </v-card>
+    </v-dialog>
   </div>
 </template>
 
 <script setup>
-import { ref, computed, watch } from "vue"
- 
+import { ref, computed, watch, onMounted, onUnmounted, nextTick } from "vue"
+import { Chart, registerables } from 'chart.js'
+
+// Enregistrer tous les composants de Chart.js
+Chart.register(...registerables)
+
 const props = defineProps({
   columns: {
     type: Array,
@@ -182,7 +276,19 @@ const props = defineProps({
 const search = ref("")
 const page = ref(1)
 const itemsPerPage = ref(20)
-const activeTab = ref(0) // 0 = journ, 1 = mensuel
+const activeTab = ref(0)
+const showChart = ref(false)
+const chartCanvas = ref(null)
+let chartInstance = null
+
+// Données pour le graphique
+const chartData = ref({
+  type: 'overall', // 'daily', 'monthly', ou 'overall'
+  label: '',
+  total: 0,
+  ecart: 0,
+  evolutionData: []
+})
 
 const headers = computed(() =>
   props.columns.map(col => ({
@@ -195,10 +301,26 @@ const pageCount = computed(() =>
   Math.ceil(filteredRows.value.length / itemsPerPage.value)
 )
 
+const chartTitle = computed(() => {
+  if (chartData.value.type === 'overall') {
+    return `Évolution ${activeTab.value === 0 ? 'journalière' : 'mensuelle'} globale`
+  } else {
+    return `Évolution ${chartData.value.type === 'daily' ? 'journalière' : 'mensuelle'}`
+  }
+})
+
+// Calcul si on doit afficher le bouton graphique
+const showChartButton = computed(() => {
+  if (activeTab.value === 0) {
+    return dailyTotals.value.length > 0
+  } else {
+    return monthlyTotals.value.length > 0
+  }
+})
+
 const filteredRows = computed(() => {
   let result = props.rows || []
 
-  // filtre par mois 
   if (props.selectedMonth) {
     result = result.filter(row => {
       if (!row.Date) return false
@@ -208,7 +330,7 @@ const filteredRows = computed(() => {
       return `${year}-${month.padStart(2, "0")}` === props.selectedMonth
     })
   }
-  //filtre type
+  
   if (props.selectedType) {
     const wanted = String(props.selectedType).trim().toUpperCase()
     result = result.filter(row => {
@@ -217,11 +339,9 @@ const filteredRows = computed(() => {
     })
   }
 
-  // filtre par agences 
   if (props.selectedAgences && props.selectedAgences.length > 0) {
     const setAg = new Set(props.selectedAgences.map(s => String(s).trim()))
     result = result.filter(row => {
-
       const agenceCodeRaw = row.Agence ?? row.agence ?? row.AGENCY
       if (!agenceCodeRaw) return false
       const agenceCode = String(agenceCodeRaw).trim()
@@ -251,14 +371,12 @@ const monthlyHeaders = computed(() => [
   { title: "Total", key: "total", align: "center" }
 ])
 
-// Calcul 
 const dailyTotals = computed(() => {
   const map = new Map()
   const rows = filteredRows.value || []
   
   for (const row of rows) {
     const dateRaw = row.Date ?? row.date ?? ""
-
     const dateKey = String(dateRaw).replace(/\//g, "").trim() || "unknown"
     const rawAmount = row.Montant ?? row.Amount ?? row.amount ?? 0
     const amount = parseFloat(String(rawAmount).replace(/,/g, "")) || 0
@@ -387,6 +505,17 @@ const formatMonth = (monthKey) => {
   return `${monthName} ${year}`
 }
 
+const formatDateForChart = (dateStr) => {
+// yyyy/mm/dd lasa mdd/mm/yyyy
+  if (!dateStr) return "Date inconnue"
+  
+  const parts = dateStr.split("/")
+  if (parts.length === 3) {
+    return `${parts[2]}/${parts[1]}/${parts[0]}`
+  }
+  return dateStr
+}
+
 const formatCurrency = (value) => {
   return value.toLocaleString(undefined, { 
     minimumFractionDigits: 2, 
@@ -416,6 +545,218 @@ const switchToDaily = () => {
 const switchToMonthly = () => {
   activeTab.value = 1
 }
+
+// Afficher le graphique d'évolution
+const showEvolutionChart = (label, total, type) => {
+  chartData.value = {
+    type: type,
+    label: label,
+    total: total,
+    ecart: 0,
+    evolutionData: []
+  }
+
+  // Récupérer les données d'évolution selon le type
+  if (type === 'daily') {
+    const dailyData = dailyTotals.value
+    const index = dailyData.findIndex(item => item.date === label)
+    
+    if (index >= 0) {
+      // Calculer l'écart
+      if (index > 0) {
+        chartData.value.ecart = dailyData[index].total - dailyData[index - 1].total
+      }
+      
+      // Préparer les données pour le graphique (5 jours avant et après)
+      const start = Math.max(0, index - 10)
+      const end = Math.min(dailyData.length, index + 11)
+      
+      chartData.value.evolutionData = dailyData
+        .slice(start, end)
+        .map(item => ({
+          label: item.displayDate || item.date,
+          value: item.total
+        }))
+    }
+  } else {
+    const monthlyData = monthlyTotals.value
+    const index = monthlyData.findIndex(item => item.month === label)
+    
+    if (index >= 0) {
+      // Calculer l'écart
+      if (index > 0) {
+        chartData.value.ecart = monthlyData[index].total - monthlyData[index - 1].total
+      }
+      
+      // Préparer les données pour le graphique (3 mois avant et après)
+      const start = Math.max(0, index - 3)
+      const end = Math.min(monthlyData.length, index + 4)
+      
+      chartData.value.evolutionData = monthlyData
+        .slice(start, end)
+        .map(item => ({
+          label: formatMonth(item.month),
+          value: item.total
+        }))
+    }
+  }
+  
+  showChart.value = true
+  
+  // Détruire l'ancien graphique si il existe
+  if (chartInstance) {
+    chartInstance.destroy()
+  }
+  
+  // Créer le nouveau graphique
+  nextTick(() => {
+    createChart()
+  })
+}
+
+// Afficher le graphique global
+const showOverallChart = () => {
+  if (activeTab.value === 0) {
+    // Graphique journalier global
+    const dailyData = dailyTotals.value
+    
+    chartData.value = {
+      type: 'overall',
+      label: '',
+      total: 0,
+      ecart: 0,
+      evolutionData: dailyData.map(item => ({
+        label: item.displayDate || item.date,
+        value: item.total
+      }))
+    }
+  } else {
+    // Graphique mensuel global
+    const monthlyData = monthlyTotals.value
+    
+    chartData.value = {
+      type: 'overall',
+      label: '',
+      total: 0,
+      ecart: 0,
+      evolutionData: monthlyData.map(item => ({
+        label: formatMonth(item.month),
+        value: item.total
+      }))
+    }
+  }
+  
+  showChart.value = true
+  
+  // Détruire l'ancien graphique si il existe
+  if (chartInstance) {
+    chartInstance.destroy()
+  }
+  
+  // Créer le nouveau graphique
+  nextTick(() => {
+    createChart()
+  })
+}
+
+// Créer le graphique
+const createChart = () => {
+  if (!chartCanvas.value) return
+  
+  const ctx = chartCanvas.value.getContext('2d')
+  
+  // Préparer les données pour Chart.js
+  const labels = chartData.value.evolutionData.map(item => item.label)
+  const data = chartData.value.evolutionData.map(item => item.value)
+  
+  // Pour le graphique global, toutes les barres sont bleues
+  // Pour le graphique spécifique, la barre sélectionnée est différente
+  let backgroundColors
+  let borderColors
+  
+  if (chartData.value.type === 'overall') {
+    // Graphique global - toutes les barres en bleu
+    backgroundColors = labels.map(() => 'rgba(54, 162, 235, 0.8)')
+    borderColors = labels.map(() => 'rgb(54, 162, 235)')
+  } else {
+    // Graphique spécifique - barre sélectionnée en bleu, autres en gris
+    const selectedIndex = chartData.value.evolutionData.findIndex(
+      item => item.label === (chartData.value.type === 'daily' 
+        ? chartData.value.label 
+        : formatMonth(chartData.value.label))
+    )
+    
+    backgroundColors = labels.map((_, index) => 
+      index === selectedIndex ? 'rgba(54, 162, 235, 0.8)' : 'rgba(201, 203, 207, 0.8)'
+    )
+    
+    borderColors = labels.map((_, index) => 
+      index === selectedIndex ? 'rgb(54, 162, 235)' : 'rgb(201, 203, 207)'
+    )
+  }
+  
+  chartInstance = new Chart(ctx, {
+    type: 'bar',
+    data: {
+      labels: labels,
+      datasets: [{
+        label: 'Montant total',
+        data: data,
+        backgroundColor: backgroundColors,
+        borderColor: borderColors,
+        borderWidth: 1
+      }]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: true,
+      plugins: {
+        title: {
+          display: true,
+          text: chartTitle.value
+        },
+        tooltip: {
+          callbacks: {
+            label: function(context) {
+              return `Total: ${formatCurrency(context.raw)}`
+            }
+          }
+        }
+      },
+      scales: {
+        y: {
+          beginAtZero: true,
+          ticks: {
+            callback: function(value) {
+              return formatCurrency(value)
+            }
+          }
+        },
+        x: {
+          ticks: {
+            maxRotation: chartData.value.type === 'daily' ? 45 : 0,
+            minRotation: chartData.value.type === 'daily' ? 45 : 0
+          }
+        }
+      }
+    }
+  })
+}
+
+// Nettoyer le graphique quand le composant est détruit
+onUnmounted(() => {
+  if (chartInstance) {
+    chartInstance.destroy()
+  }
+})
+
+// Détruire le graphique quand le dialogue se ferme
+watch(showChart, (newValue) => {
+  if (!newValue && chartInstance) {
+    chartInstance.destroy()
+    chartInstance = null
+  }
+})
 </script>
 
 <style scoped>
@@ -524,5 +865,28 @@ const switchToMonthly = () => {
 
 .ecart-neutral {
   color: #9e9e9e; 
+}
+
+.date-cell {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.chart-btn {
+  min-width: 30px !important;
+  height: 24px !important;
+  padding: 0 4px !important;
+}
+
+.chart-container {
+  position: relative;
+  height: 700px;
+  width: 100%;
+}
+
+/* Styles pour le bouton graphique principal */
+.v-btn--icon.v-size--small .v-icon {
+  font-size: 16px;
 }
 </style>

@@ -29,16 +29,7 @@
             <v-icon left>mdi-chart-bar</v-icon>
             Analyser Décaissement
           </v-btn>
-          <v-btn
-            color="flat"
-            size="large"
-            rounded="lg"
-            @click="goToAnalyseEsri"
-            class="px-4"
-          >
-            <v-icon left>mdi-chart-bar</v-icon>
-            Analyser Esri
-          </v-btn>
+          
         </div>
       </v-row>
       
