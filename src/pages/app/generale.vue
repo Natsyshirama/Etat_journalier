@@ -4,34 +4,39 @@
       class="pa-8 rounded-0 elevation-2 fade-in full-card"
       flat
     >
-      <v-row class="justify-space-between align-center mb-6 px-4">
-        <div>
-          <h2 class="text-h6 font-weight-bold mb-0">Tableaux & Analyses</h2>
+       <div class="navigation-container mb-6">
+        <div class="navigation-header">
+          <div class="header-title">
+            <h1 class="text-h6 font-weight-bold mb-0">Decaissement Analyse</h1>
+          </div>
+          <div class="navigation-buttons">
+            <v-btn
+              color="primary"
+              size="large"
+              rounded="lg"
+              @click="goToAnalyseEncours"
+              class="navigation-btn"
+              variant="outlined"
+            >
+              <v-icon left>mdi-chart-box</v-icon>
+              Analyse Dépôts
+              <v-icon right size="small">mdi-arrow-right</v-icon>
+            </v-btn>
+            <v-btn
+              color="primary"
+              size="large"
+              rounded="lg"
+              @click="goToAnalyseDecaissement"
+              class="navigation-btn"
+              variant="outlined"
+            >
+              <v-icon left>mdi-chart-box-outline</v-icon>
+              Analyse Decaissements
+              <v-icon right size="small">mdi-arrow-right</v-icon>
+            </v-btn>
+          </div>
         </div>
-        <div class="d-flex gap-3">
-          <v-btn
-            color="flat"
-            size="large"
-            rounded="lg"
-            @click="goToAnalyseEncours"
-            class="px-4"
-          >
-            <v-icon left>mdi-chart-bar</v-icon>
-            Analyser Dépôts
-          </v-btn>
-          <v-btn
-            color="flat"
-            size="large"
-            rounded="lg"
-            @click="goToAnalyseDecaissement"
-            class="px-4"
-          >
-            <v-icon left>mdi-chart-bar</v-icon>
-            Analyser Décaissement
-          </v-btn>
-          
-        </div>
-      </v-row>
+      </div>
       
       <!-- FORMULAIRE -->
       <v-row dense class="px-4">
@@ -80,16 +85,17 @@
               rounded="lg"
               clearable
               density="comfortable"
+              hide-details
+
             />
             <v-checkbox
               v-model="compare"
               density="compact"
-
               label="comparer"
               color="primary"
               class="mt-2"
               :style="{ marginTop: '-8px', color: '#888' }"
-    hide-details
+              hide-details
 
               
             />
@@ -109,6 +115,7 @@
             />
           </v-col>
         </template>
+        
         <!-- BOUTON -->
         <v-col cols="12" sm="auto" class="d-flex align-right ">
         <v-btn
@@ -125,17 +132,11 @@
                 </v-col>
       </v-row>
 
-      
-
-
-        
-
       <!-- SELECTION DES COLONNES PAR TYPE -->
       <div v-if="hasResults" class="d-flex flex-column mb-4 px-2">
   <span class="font-weight-bold mb-3">Colonnes à afficher :</span>
   
   <div class="d-flex flex-wrap gap-4">
-    <!-- Colonnes pour DATE & AGENCE -->
 
 
     <!-- Colonnes pour DAV -->
@@ -268,7 +269,10 @@
 
       <!-- TABLEAUX -->
       <v-row dense class="mt-8">
-         <v-col cols="12" md="2">
+        <!-- INFO DATE & AGENCE -->
+         <v-col cols="12" md="2" v-if= "(Array.isArray(resultsDav) && resultsDav.length) ||
+                                          (Array.isArray(resultsDat) && resultsDat.length) ||
+                                          (Array.isArray(resultsEpr) && resultsEpr.length)">
             <v-data-table
               
               :headers="headersInfo.filter(h => visibleColumns.info.includes(h.key))"
@@ -501,8 +505,7 @@ const visibleColumns = ref({
   encours_depot: ['encours_depot']
 })
 
-// Ajout du watch pour agence
-// Ajout du watch pour agence
+
 
 const visibleTables = ref(['date','dav', 'dat', 'epr', 'encours_depot'])
 
@@ -708,6 +711,82 @@ if (typeTable.value === 'all') {
 </script>
   
 <style scoped>
+
+  /* STYLES DE NAVIGATION */
+.navigation-container {
+  border: 2px solid #e0e0e0;
+  border-radius: 12px;
+  padding: 20px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+  margin-bottom: 24px;
+}
+
+.navigation-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 0;
+  padding-bottom: 0;
+  border-bottom: none;
+}
+
+.header-title {
+  flex: 1;
+}
+
+.navigation-buttons {
+  display: flex;
+  flex-direction: row;
+  gap: 16px;
+  align-items: center;
+  justify-content: flex-end;
+}
+
+.navigation-btn {
+  min-width: 200px;
+  border: 2px solid #1976d2;
+  font-weight: 600;
+  transition: all 0.3s ease;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.navigation-btn:hover {
+  background-color: #1976d2;
+  color: white;
+  transform: translateY(-2px);
+  box-shadow: 0 6px 16px rgba(25, 118, 210, 0.3);
+}
+
+.navigation-btn .v-icon--left {
+  margin-right: 8px;
+}
+
+.navigation-btn .v-icon--right {
+  margin-left: 8px;
+  opacity: 0.8;
+}
+
+/* Responsive design */
+@media (max-width: 768px) {
+  .navigation-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 16px;
+  }
+  
+  .navigation-buttons {
+    justify-content: flex-start;
+    width: 100%;
+  }
+  
+  .navigation-btn {
+    width: 100%;
+    min-width: unset;
+  }
+}
+
 .full-container {
   width: 100%;
   height: 100vh;
@@ -787,14 +866,6 @@ if (typeTable.value === 'all') {
   background-color: #1976d2;
 }
 
-.table-dav {
-}
-
-.table-dat {
-}
-
-.table-epr {
-}
 
 .column-group {
   padding: 12px;
@@ -835,13 +906,9 @@ if (typeTable.value === 'all') {
 .gap-2 {
   gap: 8px;
 }
-/* Styles existants... */
 
 .table-title-encours {
-  background-color: #7b1fa2; /* Violet pour encours depot */
-}
-
-.table-encours {
+  background-color: #7b1fa2;
 }
 
 .group-title-encours {

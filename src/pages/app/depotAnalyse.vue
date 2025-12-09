@@ -1,48 +1,29 @@
 <template>
   <v-container  class="pa-0 full-container"fluid>
     <v-card class="pa-8 rounded-0 elevation-2 fade-in full-card" flat>
-      <v-row class="justify-space-between align-center mb-6 px-4">
-        <div>
-<h1 class="text-h5 font-weight-bold text-blue">
-          </h1>   <v-btn
-            color="flat"
-            size="large"
-            rounded="lg"
-            @click="goToAnalyseDecaissement"
-            class="px-4"
-          >
-            <v-icon left>mdi-chart-bar</v-icon>
-            Analyser Décaissement
-          </v-btn>      </div>
-        <div class="d-flex gap-3">
-          
-         
-          
+      <div class="navigation-container mb-6">
+        <div class="navigation-header">
+          <div class="header-title">
+            <h1 class="text-h6 font-weight-bold mb-0">Encours Depot </h1>
+          </div>
+          <div class="navigation-buttons">
+            <v-btn
+              color="primary"
+              size="large"
+              rounded="lg"
+              @click="goToAnalyseDecaissement"
+              class="navigation-btn"
+              variant="outlined"
+            >
+              <v-icon left>mdi-chart-box</v-icon>
+              Analyse Decaissement
+              <v-icon right size="small">mdi-arrow-right</v-icon>
+            </v-btn>
+          </div>
         </div>
-      </v-row>
+      </div>
       <!-- TITRE -->
-      <v-row align="center">
-        <v-col cols="12" md="8">
-          
-          <p class="mt-2 text-white text-body-1 opacity-80">
-          </p>
-        </v-col>
-
-        <v-col cols="12" md="4" class="text-md-right text-center">
-          <v-btn
-            :color="showGraphe ? 'blue' : 'grey'"
-            variant="outlined"
-            size="large"
-            rounded="xl"
-            prepend-icon="mdi-chart-line"
-            class="mt-2 px-6"
-            @click="showGraphe = !showGraphe"
-          >
-            Voir le graphe
-          </v-btn>
-        </v-col>
-      </v-row>
-
+      
       <v-row dense class="px-4 justify-left">
         <!-- Select agence -->
         <v-col cols="12" sm="4">
@@ -180,10 +161,20 @@
 
       
 <v-row v-if="hasResults" class="mt-8">
+  <v-col cols="12" md="4" class="text-md-left">
+          <v-btn
+            :color="showGraphe ? 'blue' : 'grey'"
+            variant="outlined"
+            prepend-icon="mdi-chart-line"
+            @click="showGraphe = !showGraphe"
+          >
+            Voir le graphe
+          </v-btn>
+        </v-col>
   <v-col cols="12">
     <v-card class="elevation-3">
       <v-card-text class="pa-0">
-        <div class="table-container">
+        <div class="table-container" v-if="!showGraphe">
           <table class="encours-table">
             <thead>
               <tr>
@@ -835,7 +826,6 @@ onMounted(() => {
     selectedAgences.value = agencesList.value.map(ag => ag.code)
   }
 })
-// ...existing code...
 onMounted(() => {
   selectedAgences.value = agencesList.value.map(ag => ag.code)
 })
@@ -867,7 +857,79 @@ const graphEcarts = computed(() =>
   
   box-shadow: 0 4px 24px rgba(44, 62, 80, 0.08);
 }
+/* STYLES DE NAVIGATION */
+.navigation-container {
+  border: 2px solid #e0e0e0;
+  border-radius: 12px;
+  padding: 20px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+  margin-bottom: 24px;
+}
 
+.navigation-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 0;
+  padding-bottom: 0;
+  border-bottom: none;
+}
+
+.header-title {
+  flex: 1;
+}
+
+.navigation-buttons {
+  display: flex;
+  flex-direction: row;
+  gap: 16px;
+  align-items: center;
+  justify-content: flex-end;
+}
+
+.navigation-btn {
+  min-width: 200px;
+  border: 2px solid #1976d2;
+  font-weight: 600;
+  transition: all 0.3s ease;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.navigation-btn:hover {
+  background-color: #1976d2;
+  color: white;
+  transform: translateY(-2px);
+  box-shadow: 0 6px 16px rgba(25, 118, 210, 0.3);
+}
+
+.navigation-btn .v-icon--left {
+  margin-right: 8px;
+}
+
+.navigation-btn .v-icon--right {
+  margin-left: 8px;
+  opacity: 0.8;
+}
+
+@media (max-width: 768px) {
+  .navigation-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 16px;
+  }
+  
+  .navigation-buttons {
+    justify-content: flex-start;
+    width: 100%;
+  }
+  
+  .navigation-btn {
+    width: 100%;
+    min-width: unset;
+  }
+}
 .v-card-title {
   letter-spacing: 1px;
   text-align: left;
@@ -881,7 +943,6 @@ const graphEcarts = computed(() =>
   box-shadow: 0 2px 12px rgba(44, 62, 80, 0.07);
   
 }
-/* Styles pour la ligne de total */
 .total-row {
   border-top: 2px solid #dee2e6;
 }
@@ -902,7 +963,6 @@ const graphEcarts = computed(() =>
   background-color: rgba(164, 174, 185, 0.1) !important;
 }
 
-/* Amélioration du style des cellules de total */
 .total-row td {
   border-top: 2px solid #b4afaf !important;
   border-bottom: 2px solid #b4afaf !important;
@@ -911,11 +971,9 @@ const graphEcarts = computed(() =>
 .total-row .cell-agence,
 .total-row .cell-nom {
   background: linear-gradient(135deg, #4b4c4e, #1565c0) !important;
-  color: white !important;
-  text-align: center !important;
+  text-align: left !important;
 }
 
-/* Effet de survol pour la ligne de total */
 .total-row:hover {
   background-color: #e3f2fd !important;
 }
@@ -948,16 +1006,14 @@ const graphEcarts = computed(() =>
 
 .header-agence {
   width: 120px;
-  background-color: #cdd2d6 !important;
-  color: #fff !important;
+  background-color: #7f8992 !important;
   text-align: center !important;
   border-top-left-radius: 12px;
 }
 
 .header-nom {
   width: 200px;
-  background-color: #97a2ae !important;
-  color: #fff !important;
+  background-color: hsl(211, 12%, 64%) !important;
 }
 
 .header-date {

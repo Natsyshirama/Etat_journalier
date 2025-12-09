@@ -46,13 +46,13 @@
     <v-alert
       v-if="message"
       :type="status === 'error' ? 'error' : (status === 'warning' ? 'warning' : 'success')"
-      border="left"
-      dark
+      border="right"
       class="mb-4"
     >
       {{ message }}
     </v-alert>
-    <v-card v-if="status === 'success' && bilan.length" class="mt-4 pa-4" outlined>
+    <v-card   v-if="status === 'success' && bilan.length" class="mt-4 mb-6 pa-6 bilan-card"
+  outlined>
       <v-list>
         <v-list-item
           v-for="(item, index) in bilan"
@@ -67,8 +67,7 @@
       </v-list>
     </v-card>
 
-    
-          <div class="table-filtre-bar" v-if="status === 'success' && rows.length">
+    <div class="table-filtre-bar" v-if="status === 'success' && rows.length">
 
       <v-row class="align-center mb-4 px-2" fluid>
 
