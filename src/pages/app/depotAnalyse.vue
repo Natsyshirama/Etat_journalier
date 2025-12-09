@@ -1,10 +1,10 @@
 <template>
-  <v-container  class="pa-0 full-container"fluid>
+  <v-container class="pa-0 full-container" fluid>
     <v-card class="pa-8 rounded-0 elevation-2 fade-in full-card" flat>
       <div class="navigation-container mb-6">
         <div class="navigation-header">
           <div class="header-title">
-            <h1 class="text-h6 font-weight-bold mb-0">Encours Depot </h1>
+            <h1 class="text-h6 font-weight-bold mb-0">Encours Depot</h1>
           </div>
           <div class="navigation-buttons">
             <v-btn
@@ -22,7 +22,7 @@
           </div>
         </div>
       </div>
-      
+
       <v-row dense class="px-4 justify-left">
         <v-col cols="12" sm="4">
           <v-select
@@ -40,8 +40,7 @@
             density="comfortable"
             :hint="selectedAgences.length > 0 ? `${selectedAgences.length} agence(s) sélectionnée(s)` : 'Sélectionnez une ou plusieurs agences'"
             persistent-hint
-    style="max-height: 95px; overflow-y: auto;"
-
+            style="max-height: 95px; overflow-y: auto;"
           >
             <template v-slot:prepend-item>
               <v-list-item title="Toutes les agences" @click="toggleAllAgences">
@@ -55,7 +54,6 @@
               </v-list-item>
               <v-divider class="mt-2"></v-divider>
             </template>
-
           </v-select>
         </v-col>
 
@@ -72,30 +70,27 @@
           />
         </v-col>
 
-          <v-col cols="12" sm="2">
-            <v-text-field
-              v-model="dateFin"
-              label="Date fin"
-              placeholder="YYYYMMDD"
-              variant="outlined"
-              rounded="lg"
-              clearable
-              density="comfortable"
-              hide-details
-            />
-            <v-checkbox
-              v-model="compare"
-              density="compact"
-
-              label="comparer"
-              color="primary"
-              class="mt-2"
-              :style="{ marginTop: '-8px', color: '#888' }"
-    hide-details
-
-              
-            />
-          </v-col>
+        <v-col cols="12" sm="2">
+          <v-text-field
+            v-model="dateFin"
+            label="Date fin"
+            placeholder="YYYYMMDD"
+            variant="outlined"
+            rounded="lg"
+            clearable
+            density="comfortable"     
+            hide-details
+          />
+          <v-checkbox
+            v-model="compare"
+            density="compact"
+            label="comparer"
+            color="primary"
+            class="mt-2"
+            :style="{ marginTop: '-8px', color: '#888' }"
+            hide-details
+          />
+        </v-col>
 
         <v-col cols="12" sm="2" v-if="!compare">
           <v-select
@@ -121,14 +116,14 @@
                     :indeterminate="someMonthsSelected"
                     color="primary"
                   ></v-checkbox>
-                </template> 
+                </template>
               </v-list-item>
               <v-divider class="mt-2"></v-divider>
             </template>
           </v-select>
         </v-col>
 
-        <v-col cols="12" sm="auto" class="d-flex align-right ">
+        <v-col cols="12" sm="auto" class="d-flex align-right">
           <v-btn
             color="pink"
             size="large"
@@ -137,10 +132,8 @@
             @click="analyserEncours"
             class="px-8"
           >
-            
             Analyser
           </v-btn>
-          
         </v-col>
       </v-row>
 
@@ -155,367 +148,343 @@
         {{ message }}
       </v-alert>
 
-      
-<v-row v-if="hasResults" class="mt-8">
-  <v-col cols="12" md="4" class="text-md-left">
+      <v-row v-if="hasResults" class="mt-8">
+        <v-col cols="12" md="4" class="text-md-left">
           <v-btn
             :color="showGraphe ? 'blue' : 'grey'"
             variant="outlined"
-            prepend-icon="mdi-chart-line"
+            prepend-icon="mdi-chart-bar"
             @click="showGraphe = !showGraphe"
           >
             Voir le graphe
           </v-btn>
         </v-col>
-  <v-col cols="12">
-    <v-card class="elevation-3">
-      <v-card-text class="pa-0">
-        <div class="table-container" v-if="!showGraphe">
-          <table class="encours-table">
-            <thead>
-              <tr>
-                <th class="header-agence">AGENCE</th>
-                <th class="header-nom">NOM AGENCE</th>
-                <th 
-                  v-for="column in tableColumns" 
-                  :key="column.key"
-                  class="header-date"
-                >
-                  {{ column.label }}
-                </th>
-              </tr>
-            </thead>
-            <tbody>
-              <tr v-for="agence in agencesData" :key="agence.code">
-                <td class="cell-agence">{{ agence.code }}</td>
-                <td class="cell-nom">{{ agence.nom }}</td>
-                <td 
-                  v-for="column in tableColumns" 
-                  :key="column.key"
-                  class="cell-montant"
-                >
-                  <div class="montant-container">
-                      <div 
-                        class="montant-value"
-                        @click="goToDetail(column.key, agence.code )"
-                        style="cursor:pointer;"
+        <v-col cols="12">
+          <v-card class="elevation-3">
+            <v-card-text class="pa-0">
+              <div class="table-container" v-if="!showGraphe">
+                <div class="text-body-1 text-medium-emphasis">Période couverte: {{ graphLabels[0] }} → {{ graphLabels[graphLabels.length - 1] }}</div>
+
+                <div class="text-body-1 font-weight-bold ">
+                    
+                  </div>
+                <table class="encours-table">
+                  <thead>
+                    <tr>
+                      <th class="header-agence">AGENCE</th>
+                      <th class="header-nom">NOM AGENCE</th>
+                      <th 
+                        v-for="column in tableColumns" 
+                        :key="column.key"
+                        class="header-date"
                       >
-                        {{ formatNumber(getCellValue(agence, column)) }}
-                      </div>
-                    <div 
-                      v-if="getCellEcart(agence, column) !== 0" 
-                      class="ecart-indicator"
-                      :class="getEcartClass(getCellEcart(agence, column))"
-                    >
-                      {{ formatEcart(getCellEcart(agence, column)) }}
-                    </div>
-                  </div>
-                </td>
-              </tr>
-              
-              <tr v-if="hasResults" class="total-row">
-                <td class="cell-agence total-cell">
-                  <strong>TOTAL</strong>
-                </td>
-                <td class="cell-nom total-cell">
-                  <strong>{{ agencesData.length }} agences</strong>
-                </td>
-                <td 
-                  v-for="column in tableColumns" 
-                  :key="column.key"
-                  class="cell-montant total-cell"
-                >
-                  <div class="montant-container">
-                    <div class="montant-value total-montant">
-                      {{ formatNumber(getTotalValue(column)) }}
-                    </div>
-                    <div 
-                      v-if="getTotalEcart(column) !== 0" 
-                      class="ecart-indicator total-ecart"
-                      :class="getEcartClass(getTotalEcart(column))"
-                    >
-                      {{ formatEcart(getTotalEcart(column)) }}
-                    </div>
-                  </div>
-                </td>
-              </tr>
-            </tbody>
-          </table>
-        </div>
-      </v-card-text>
-    </v-card>
-  </v-col>
-</v-row>
+                        {{ column.label }}
+                      </th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <tr v-for="agence in agencesData" :key="agence.code">
+                      <td class="cell-agence">{{ agence.code }}</td>
+                      <td class="cell-nom">{{ agence.nom }}</td>
+                      <td 
+                        v-for="column in tableColumns" 
+                        :key="column.key"
+                        class="cell-montant"
+                      >
+                        <div class="montant-container">
+                          <div 
+                            class="montant-value"
+                            @click="goToDetail(column.key, agence.code)"
+                            style="cursor: pointer;"
+                          >
+                            {{ formatNumber(getCellValue(agence, column)) }}
+                          </div>
+                          <div 
+                            v-if="getCellEcart(agence, column) !== 0" 
+                            class="ecart-indicator"
+                            :class="getEcartClass(getCellEcart(agence, column))"
+                          >
+                            {{ formatEcart(getCellEcart(agence, column)) }}
+                          </div>
+                        </div>
+                      </td>
+                    </tr>
+                    
+                    <tr v-if="hasResults" class="total-row">
+                      <td class="cell-agence total-cell">
+                        <strong>TOTAL</strong>
+                      </td>
+                      <td class="cell-nom total-cell">
+                        <strong>{{ agencesData.length }} agences</strong>
+                      </td>
+                      <td 
+                        v-for="column in tableColumns" 
+                        :key="column.key"
+                        class="cell-montant total-cell"
+                      >
+                        <div class="montant-container">
+                          <div class="montant-value total-montant">
+                            {{ formatNumber(getTotalValue(column)) }}
+                          </div>
+                          <div 
+                            v-if="getTotalEcart(column) !== 0" 
+                            class="ecart-indicator total-ecart"
+                            :class="getEcartClass(getTotalEcart(column))"
+                          >
+                            {{ formatEcart(getTotalEcart(column)) }}
+                          </div>
+                        </div>
+                      </td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+            </v-card-text>
+          </v-card>
+        </v-col>
+      </v-row>
 
-<div v-if="showGraphe && hasResults" class="mt-8">
-  <v-card class="elevation-4 pa-4 rounded-lg">
-    <div class="graph-header d-flex justify-space-between align-center mb-4">
-      <div>
-        <h3 class="text-h5 font-weight-bold graph-title">
-          <v-icon color="primary" class="mr-2">mdi-trending-up</v-icon>
-          Évolution des Encours de Dépôts
-        </h3>
-        <div class="graph-subtitle text-caption text-medium-emphasis">
-          Analyse temporelle des montants totaux
-        </div>
-      </div>
-      
-      <div class="graph-legend d-flex align-center gap-3">
-        <div class="legend-item d-flex align-center">
-          <span class="text-caption">⚫No ecart</span>
-        </div>
-        <div class="legend-item d-flex align-center">
-          <span class="text-caption">🔵Montant total</span>
-        </div>
-        <div class="legend-item d-flex align-center">
-          <span class="text-caption">🟢Hausse</span>
-        </div>
-        <div class="legend-item d-flex align-center">
-          <span class="text-caption">🔴Baisse</span>
-        </div>
-      </div>
-    </div>
+      <div v-if="showGraphe && hasResults" class="mt-8">
+        <v-card class="elevation-4 pa-4 rounded-lg">
+          <div class="graph-header d-flex justify-space-between align-center mb-4">
+            <div>
+              <h3 class="text-h5 font-weight-bold graph-title">
+                <v-icon color="primary" class="mr-2">mdi-chart-bar</v-icon>
+                Évolution des Encours de Dépôts
+              </h3>
+              <div class="graph-subtitle text-caption text-medium-emphasis">
+                Analyse temporelle des montants totaux - Graphique en barres
+              </div>
+            </div>
+            
+            <div class="graph-legend d-flex align-center gap-3">
+              <div class="legend-item d-flex align-center">
+                <span class="text-caption ml-1">🔵Stable</span>
+              </div>
+              <div class="legend-item d-flex align-center">
+                <span class="text-caption ml-1">🟢Hausse</span>
+              </div>
+              <div class="legend-item d-flex align-center">
+                <span class="text-caption ml-1">🔴Baisse</span>
+              </div>
+            </div>
+          </div>
 
-    <div class="graph-container" style="position: relative; height: 600px;">
-      <Bar
-        :data="{
-          labels: graphLabels,
-          datasets: [
-            {
-              label: 'Montant total',
-              data: graphValues,
-              borderColor: '#1976d2',
-              backgroundColor: 'rgba(25, 118, 210, 0.1)',
-              fill: true,
-              tension: 0.3,
-              pointBackgroundColor: '#1976d2',
-              pointBorderColor: '#fff',
-              pointBorderWidth: 2,
-              pointRadius: 6,
-              pointHoverRadius: 8,
-              borderWidth: 3,
-              pointStyle: 'circle'
-            }
-          ]
-        }"
-        :options="{
-          responsive: true,
-          maintainAspectRatio: false,
-          interaction: {
-            intersect: false,
-            mode: 'index'
-          },
-          plugins: {
-            legend: { 
-              display: false,
-              position: 'top',
-              labels: {
-                usePointStyle: true,
-                padding: 20
-              }
-            },
-            tooltip: {
-              usePointStyle: true,
-              borderWidth: 1,
-              cornerRadius: 8,
-              padding: 12,
-              boxPadding: 6,
-              callbacks: {
-                title: (context) => {
-                  return ` ${context[0].label}`
-                },
-                label: (context) => {
-                  const montant = context.parsed.y
-                  const idx = context.dataIndex
-                  const ecart = graphEcarts[idx] || 0
-                  const color = ecart > 0 ? '#4caf50' : ecart < 0 ? '#f44336' : '#666'
-                  const icon = ecart > 0 ? '🟢' : ecart < 0 ? '🔴' : '⚫'
-                  
-                  return [
-                    ` Montant total: ${formatNumber(montant)}`,
-                    ` Écart: ${icon} ${formatEcart(ecart)}`
-                  ]
-                },
-                labelColor: (context) => {
-                  return {
-                    borderColor: '#1976d2',
-                    backgroundColor: '#1976d2',
-                    borderWidth: 2
-                  }
-                }
-              }
-            },
-            annotation: {
-              annotations: graphValues.map((value, index) => {
-                if (index === 0) return null
-                const ecart = graphEcarts[index] || 0
-                if (ecart === 0) return null
-                
-                return {
-                  type: 'line',
-                  mode: 'vertical',
-                  scaleID: 'x',
-                  value: index - 0.5,
-                  borderColor: ecart > 0 ? 'rgba(76, 175, 80, 0.3)' : 'rgba(244, 67, 54, 0.3)',
+          <div class="graph-container" style="position: relative; height: 600px;">
+            <Bar
+              :data="{
+                labels: graphLabels,
+                datasets: [{
+                  label: 'Montant total',
+                  data: graphValues,
+                  backgroundColor: graphValues.map((value, index) => {
+                    const ecart = graphEcarts[index] || 0
+                    // if (ecart > 0) return 'rgba(76, 175, 80, 0.8)' // Vert pour hausse
+                    // if (ecart < 0) return 'rgba(244, 67, 54, 0.8)' // Rouge pour baisse
+                    return 'rgba(54, 162, 235, 0.6)' // Bleu pour stable
+                  }),
+                  borderColor: graphValues.map((value, index) => {
+                    const ecart = graphEcarts[index] || 0
+                      // if (ecart > 0) return 'rgba(76, 175, 80, 1)'
+                      // if (ecart < 0) return 'rgba(244, 67, 54, 1)'
+                    return 'rgba(25, 118, 210, 0.8)'
+                  }),
                   borderWidth: 2,
-                  borderDash: [5, 5]
-                }
-              }).filter(Boolean)
-            }
-          },
-          scales: {
-            x: {
-              grid: {
-                display: true,
-                color: 'rgba(0, 0, 0, 0.05)',
-                drawBorder: false
-              },
-              ticks: {
-                padding: 10,
-                font: {
-                  size: 12,
-                  weight: '500'
-                }
-              },
-              title: {
-                display: true,
-                text: 'Période',
-                color: '#666',
-                font: {
-                  size: 14,
-                  weight: '600'
+                  borderRadius: 4,
+                  barPercentage: 0.6,
+                  categoryPercentage: 0.8
+                }]
+              }"
+              :options="{
+                responsive: true,
+                maintainAspectRatio: false,
+                interaction: {
+                  intersect: false,
+                  mode: 'index'
                 },
-                padding: { top: 10, bottom: 5 }
-              }
-            },
-            y: {
-              beginAtZero: true,
-              grid: {
-                display: true,
-                color: 'rgba(0, 0, 0, 0.05)',
-                drawBorder: false
-              },
-              ticks: {
-                padding: 10,
-                callback: function(value) {
-                  if (value >= 1000000) {
-                    return (value / 1000000).toFixed(1) + 'M'
-                  } else if (value >= 1000) {
-                    return (value / 1000).toFixed(0) + 'k'
+                plugins: {
+                  legend: { 
+                    display: false
+                  },
+                  tooltip: {
+                    usePointStyle: true,
+                    borderWidth: 1,
+                    cornerRadius: 8,
+                    padding: 12,
+                    boxPadding: 6,
+                    callbacks: {
+                      title: (context) => {
+                        return ` ${context[0].label}`
+                      },
+                      label: (context) => {
+                        const montant = context.parsed.y
+                        const idx = context.dataIndex
+                        const ecart = graphEcarts[idx] || 0
+                        return [
+                          ` Montant total: ${formatNumber(montant)}`,
+                          ` Écart: ${formatEcart(ecart)}`
+                        ]
+                      },
+                      labelColor: (context) => {
+                        const idx = context.dataIndex
+                        const ecart = graphEcarts[idx] || 0
+                        let color = '#1976d2'
+                        if (ecart > 0) color = '#4caf50'
+                        if (ecart < 0) color = '#f44336'
+                        
+                        return {
+                          
+                          borderColor: color,
+                          backgroundColor: color,
+                          borderWidth: 2
+                        }
+                      }
+                    }
                   }
-                  return formatNumber(value)
                 },
-                font: {
-                  size: 12,
-                  weight: '500'
+                scales: {
+                  x: {
+                    grid: {
+                      display: true,
+                      color: 'rgba(0, 0, 0, 0.05)',
+                      drawBorder: false
+                    },
+                    ticks: {
+                      padding: 10,
+                      font: {
+                        size: 12,
+                        weight: '500'
+                      },
+                      maxRotation: 45,
+                      minRotation: 45
+                    },
+                    title: {
+                      display: true,
+                      text: 'Période',
+                      color: '#666',
+                      font: {
+                        size: 14,
+                        weight: '600'
+                      },
+                      padding: { top: 10, bottom: 5 }
+                    }
+                  },
+                  y: {
+                    beginAtZero: true,
+                    grid: {
+                      display: true,
+                      color: 'rgba(0, 0, 0, 0.05)',
+                      drawBorder: false
+                    },
+                    ticks: {
+                      padding: 10,
+                      callback: function(value) {
+                        if (value >= 1000000) {
+                          return (value / 1000000).toFixed(1) + 'M'
+                        } else if (value >= 1000) {
+                          return (value / 1000).toFixed(0) + 'k'
+                        }
+                        return formatNumber(value)
+                      },
+                      font: {
+                        size: 12,
+                        weight: '500'
+                      }
+                    },
+                    title: {
+                      display: true,
+                      text: 'Montant (en unités)',
+                      color: '#666',
+                      font: {
+                        size: 14,
+                        weight: '600'
+                      },
+                      padding: { top: 5, bottom: 10 }
+                    }
+                  }
+                },
+                animation: {
+                  duration: 1000,
+                  easing: 'easeInOutQuart'
+                },
+                hover: {
+                  mode: 'nearest',
+                  intersect: true
                 }
-              },
-              title: {
-                display: true,
-                text: 'Montant (en unités)',
-                color: '#666',
-                font: {
-                  size: 14,
-                  weight: '600'
-                },
-                padding: { top: 5, bottom: 10 }
-              }
-            }
-          },
-          elements: {
-            line: {
-              tension: 0.3
-            },
-            point: {
-              hoverBackgroundColor: '#fff',
-              hoverBorderColor: '#1976d2',
-              hoverBorderWidth: 3
-            }
-          },
-          animation: {
-            duration: 1000,
-            easing: 'easeInOutQuart'
-          },
-          hover: {
-            mode: 'nearest',
-            intersect: true
-          }
-        }"
-      />
-    </div>
+              }"
+            />
+          </div>
 
-    <div class="graph-footer mt-4 pt-3 border-top">
-      <div class="d-flex justify-space-between align-center">
-        <div class="graph-stats d-flex gap-4">
-          <div class="stat-item">
-            <div class="text-caption text-medium-emphasis">Période couverte</div>
-            <div class="text-body-2 font-weight-medium">
-              {{ graphLabels[0] }} → {{ graphLabels[graphLabels.length - 1] }}
+          <div class="graph-footer mt-4 pt-3 border-top">
+            <div class="d-flex justify-space-between align-center">
+              <div class="graph-stats d-flex gap-4">
+                <div class="stat-item">
+                  <div class="text-caption text-medium-emphasis">Période couverte</div>
+                  <div class="text-body-2 font-weight-medium">
+                    {{ graphLabels[0] }} → {{ graphLabels[graphLabels.length - 1] }}
+                  </div>
+                </div>
+                <div class="stat-item">
+                  <div class="text-caption text-medium-emphasis">Points de données</div>
+                  <div class="text-body-2 font-weight-medium">{{ graphValues.length }}</div>
+                </div>
+                <div class="stat-item">
+                  <div class="text-caption text-medium-emphasis">Écart moyen</div>
+                  <div class="text-body-2 font-weight-medium" :style="{ color: averageEcart >= 0 ? '#4caf50' : '#f44336' }">
+                    {{ formatEcart(averageEcart) }}
+                  </div>
+                </div>
+              </div>
+              
+              <div class="graph-actions">
+                <v-btn
+                  size="small"
+                  variant="text"
+                  color="primary"
+                  @click="downloadChart"
+                  class="mr-2"
+                >
+                  <v-icon left small>mdi-download</v-icon>
+                  Exporter
+                </v-btn>
+                <v-btn
+                  size="small"
+                  variant="text"
+                  color="primary"
+                  @click="toggleFullscreen"
+                >
+                  <v-icon left small>mdi-fullscreen</v-icon>
+                  Plein écran
+                </v-btn>
+              </div>
             </div>
           </div>
-          <div class="stat-item">
-            <div class="text-caption text-medium-emphasis">Points de données</div>
-            <div class="text-body-2 font-weight-medium">{{ graphValues.length }}</div>
-          </div>
-          <div class="stat-item">
-            <div class="text-caption text-medium-emphasis">Écart moyen</div>
-            <div class="text-body-2 font-weight-medium" :style="{ color: averageEcart >= 0 ? '#4caf50' : '#f44336' }">
-              {{ formatEcart(averageEcart) }}
-            </div>
-          </div>
-        </div>
-        
-        <div class="graph-actions">
-          <v-btn
-            size="small"
-            variant="text"
-            color="primary"
-            @click="downloadChart"
-            class="mr-2"
-          >
-            <v-icon left small>mdi-download</v-icon>
-            Exporter
-          </v-btn>
-          <v-btn
-            size="small"
-            variant="text"
-            color="primary"
-            @click="toggleFullscreen"
-          >
-            <v-icon left small>mdi-fullscreen</v-icon>
-            Plein écran
-          </v-btn>
-        </div>
+        </v-card>
       </div>
-    </div>
-  </v-card>
-</div>
     </v-card>
   </v-container>
 </template>
 
 <script setup>
-import { ref, computed, onMounted,inject } from "vue"
+import { ref, computed, onMounted, inject } from "vue"
 import axios from "axios"
-import { Line } from "vue-chartjs"
+import { Bar } from "vue-chartjs"
 import {
   Chart as ChartJS,
-  type,
   Title,
   Tooltip,
   Legend,
-  LineElement,
-  PointElement,
+  BarElement,
   CategoryScale,
   LinearScale
 } from "chart.js"
 import { useRouter } from 'vue-router'
-ChartJS.register(Title, Tooltip, Legend, LineElement, PointElement, CategoryScale, LinearScale)
 
+ChartJS.register(Title, Tooltip, Legend, BarElement, CategoryScale, LinearScale)
 
 const router = useRouter()
+
 const goToDetail = (columnKey, agenceCode) => {
-  
   router.push({
     path: "/app/analyseDetails",
     query: { tableName: columnKey, agence: agenceCode }
@@ -525,7 +494,6 @@ const goToDetail = (columnKey, agenceCode) => {
 const goToAnalyseDecaissement = () => {
   router.push('/app/decaisAnalyse')
 }
-
 
 const api = inject("api")
 
@@ -546,24 +514,20 @@ const agencesList = ref([
   { code: "MG0010023", nom: "Tanjombato" }
 ])
 
-
 const selectedAgences = ref([])
 const dateDebut = ref("")
 const dateFin = ref("")
 const compare = ref(false)
-
 const selectedMonths = ref([])
 const loading = ref(false)
 const message = ref("")
 const messageType = ref("info")
-
-// Résultats
 const datesList = ref([])
 const agencesData = ref([])
 const availableMonths = ref([])
 const allData = ref({})
+const showGraphe = ref(false)
 
-// Computed
 const allAgencesSelected = computed(() => 
   selectedAgences.value.length === agencesList.value.length
 )
@@ -587,17 +551,14 @@ const monthFilterHint = computed(() => {
   return `${selectedMonths.value.length} mois sélectionné(s) - Affichage mensuel`
 })
 
-//colonnes du tableau
 const tableColumns = computed(() => {
   if (selectedMonths.value.length === 0) {
-//daily
     return datesList.value.map(date => ({
       key: date,
       label: formatDateDisplay(date),
       type: 'daily'
     }))
   } else {
-    //monthly
     return availableMonths.value
       .filter(month => selectedMonths.value.includes(month.value))
       .map(month => ({
@@ -608,7 +569,24 @@ const tableColumns = computed(() => {
   }
 })
 
-// methodes
+const graphLabels = computed(() => tableColumns.value.map(col => col.label))
+
+const graphValues = computed(() =>
+  tableColumns.value.map(col => getTotalValue(col))
+)
+
+const graphEcarts = computed(() =>
+  tableColumns.value.map(col => getTotalEcart(col))
+)
+
+const averageEcart = computed(() => {
+  if (!graphEcarts.value || graphEcarts.value.length === 0) return 0
+  const validEcarts = graphEcarts.value.filter(e => !isNaN(e))
+  if (validEcarts.length === 0) return 0
+  const sum = validEcarts.reduce((a, b) => a + b, 0)
+  return sum / validEcarts.length
+})
+
 const toggleAllAgences = () => {
   if (allAgencesSelected.value) {
     selectedAgences.value = []
@@ -624,7 +602,7 @@ const toggleAllMonths = () => {
     selectedMonths.value = availableMonths.value.map(month => month.value)
   }
 }
-// valeur par cellule
+
 const getCellValue = (agence, column) => {
   if (column.type === 'daily') {
     return agence.encours[column.key]?.montant || 0
@@ -633,17 +611,14 @@ const getCellValue = (agence, column) => {
   }
 }
 
-// ecart par cellule
 const getCellEcart = (agence, column) => {
   if (column.type === 'daily') {
     return agence.encours[column.key]?.ecart || 0
   } else {
-    
     return agence.monthlyEncours[column.key]?.ecart || 0
   }
 }
 
-// getmois dispo
 const getMoisDispo = (dates) => {
   const monthSet = new Set()
   const monthLabels = []
@@ -671,7 +646,6 @@ const getMoisDispo = (dates) => {
   return monthLabels.sort((a, b) => a.value.localeCompare(b.value))
 }
 
-//total par mois /agence
 const calculateMonthlyEncours = (agences) => {
   const monthlyData = []
 
@@ -679,14 +653,11 @@ const calculateMonthlyEncours = (agences) => {
     const agenceInfo = agencesList.value.find(ag => ag.code === agenceCode)
     const monthlyEncours = {}
 
-    // les mois dispo
     availableMonths.value.forEach((month, index) => {
-      // date dispo sur cette mois
       const monthDates = datesList.value.filter(date => 
         date.startsWith(month.value)
       )
 
-      // calc total mois
       let totalMontant = 0
 
       monthDates.forEach(date => {
@@ -701,7 +672,6 @@ const calculateMonthlyEncours = (agences) => {
         totalMontant += (davDebit + datMontant + eprDebit)
       })
 
-      // calc ecart du mois prev
       let ecart = 0
       if (index > 0) {
         const previousMonth = availableMonths.value[index - 1]
@@ -718,15 +688,14 @@ const calculateMonthlyEncours = (agences) => {
     monthlyData.push({
       code: agenceInfo.code,
       nom: agenceInfo.nom,
-      encours: {}, 
-      monthlyEncours: monthlyEncours 
+      encours: {},
+      monthlyEncours: monthlyEncours
     })
   })
 
   return monthlyData
 }
 
-// organsation des data journaliers
 const organizeDailyData = (agences) => {
   const dailyData = []
 
@@ -734,7 +703,6 @@ const organizeDailyData = (agences) => {
     const agenceInfo = agencesList.value.find(ag => ag.code === agenceCode)
     const encours = {}
 
-// calcule encours depots
     datesList.value.forEach((date, index) => {
       const davData = allData.value.dav[agenceCode]?.[date] || {}
       const datData = allData.value.dat[agenceCode]?.[date] || {}
@@ -746,14 +714,13 @@ const organizeDailyData = (agences) => {
 
       const encoursDepot = davDebit + datMontant + eprDebit
 
-//ecart
       let ecart = 0
       if (index > 0) {
         const previousDate = datesList.value[index - 1]
         const previousEncours = encours[previousDate]?.montant || 0
         ecart = encoursDepot - previousEncours
       }
-console.log('Ecart pour', date, ':', ecart)
+
       encours[date] = {
         montant: encoursDepot,
         ecart: ecart
@@ -764,15 +731,12 @@ console.log('Ecart pour', date, ':', ecart)
       code: agenceInfo.code,
       nom: agenceInfo.nom,
       encours: encours,
-      monthlyEncours: {} //por total par mois
+      monthlyEncours: {}
     })
   })
 
   return dailyData
 }
-
-
-
 
 const saveToLocalStorage = () => {
   try {
@@ -795,38 +759,28 @@ const saveToLocalStorage = () => {
   }
 }
 
-
-
 const analyserEncours = async () => {
   loading.value = true
   message.value = ""
   datesList.value = []
   agencesData.value = []
   availableMonths.value = []
-  selectedMonths.value = [] 
+  selectedMonths.value = []
 
   try {
-    // Déterminer les agences à analyser
     const agencesToAnalyze = selectedAgences.value.length > 0 
       ? selectedAgences.value 
       : agencesList.value.map(ag => ag.code)
 
-    // Récupérer les données pour toutes les agences
     allData.value = await fetchAllAgencesData(agencesToAnalyze)
     
-    // Organiser les données quotidiennes
     organizeBaseData(allData.value, agencesToAnalyze)
 
-    // Extraire les mois disponibles
     availableMonths.value = getMoisDispo(datesList.value)
     
-    // Calculer les données quotidiennes
     const dailyData = organizeDailyData(agencesToAnalyze)
-    
-    // Calculer les données mensuelles
     const monthlyData = calculateMonthlyEncours(agencesToAnalyze)
     
-    // Fusionner les données quotidiennes et mensuelles
     agencesData.value = dailyData.map((dailyAgence, index) => ({
       ...dailyAgence,
       monthlyEncours: monthlyData[index].monthlyEncours
@@ -836,11 +790,11 @@ const analyserEncours = async () => {
     message.value = `Analyse terminée : ${agencesData.value.length} agences, ${datesList.value.length} dates disponibles`
      
     try {
-            saveToLocalStorage()
-            console.log('Snapshot auto-sauvegardé après analyse')
-          } catch (err) {
-            console.warn('Erreur lors de la sauvegarde automatique:', err)
-          }
+      saveToLocalStorage()
+      console.log('Snapshot auto-sauvegardé après analyse')
+    } catch (err) {
+      console.warn('Erreur lors de la sauvegarde automatique:', err)
+    }
   } catch (error) {
     console.error("Erreur analyse:", error)
     messageType.value = "error"
@@ -849,7 +803,6 @@ const analyserEncours = async () => {
     loading.value = false
   }
 }
-
 
 const fetchAllAgencesData = async (agences) => {
   const allData = {
@@ -867,10 +820,8 @@ const fetchAllAgencesData = async (agences) => {
         date_debut: dateDebut.value || undefined,
         date_fin: dateFin.value || undefined,
         compare: compare.value || undefined
-
       }
 
-      // Nettoyer les params undefined
       Object.keys(params).forEach(key => params[key] === undefined && delete params[key])
 
       try {
@@ -888,7 +839,6 @@ const fetchAllAgencesData = async (agences) => {
             allData[product][agenceCode] = {}
           }
           
-          // Organiser les données par date
           response.data.forEach(item => {
             const date = item.date_agence.date
             allData[product][agenceCode][date] = item.data
@@ -909,7 +859,6 @@ const fetchAllAgencesData = async (agences) => {
 const organizeBaseData = (allData, agences) => {
   const allDates = new Set()
   
-  //convertir sous forme tableau
   Object.values(allData.dav).forEach(agenceData => {
     Object.keys(agenceData).forEach(date => allDates.add(date))
   })
@@ -920,7 +869,6 @@ const organizeBaseData = (allData, agences) => {
     Object.keys(agenceData).forEach(date => allDates.add(date))
   })
 
-  // Trier les dates
   datesList.value = Array.from(allDates).sort()
 }
 
@@ -948,8 +896,6 @@ const getEcartClass = (ecart) => {
   return ''
 }
 
-
-// total pour une colonne
 const getTotalValue = (column) => {
   let total = 0
   agencesData.value.forEach(agence => {
@@ -958,7 +904,6 @@ const getTotalValue = (column) => {
   return total
 }
 
-// ecart total pour une column
 const getTotalEcart = (column) => {
   let totalEcart = 0
   agencesData.value.forEach(agence => {
@@ -966,8 +911,6 @@ const getTotalEcart = (column) => {
   })
   return totalEcart
 }
-const showGraphe = ref(false)
-
 
 const restaurerDataCacher = () => {
   const raw = localStorage.getItem("depotAnalyse_snapshot")
@@ -996,33 +939,6 @@ const restaurerDataCacher = () => {
   }
 }
 
-onMounted(() => {
-  const restored = restaurerDataCacher()
-  if (!restored) {
-    selectedAgences.value = agencesList.value.map(ag => ag.code)
-  }
-})
-onMounted(() => {
-  selectedAgences.value = agencesList.value.map(ag => ag.code)
-})
-const graphLabels = computed(() => tableColumns.value.map(col => col.label))
-
-const graphValues = computed(() =>
-  tableColumns.value.map(col => getTotalValue(col))
-)
-
-const graphEcarts = computed(() =>
-  tableColumns.value.map(col => getTotalEcart(col))
-)
-
-const averageEcart = computed(() => {
-  if (!graphEcarts.value || graphEcarts.value.length === 0) return 0
-  const validEcarts = graphEcarts.value.filter(e => !isNaN(e))
-  if (validEcarts.length === 0) return 0
-  const sum = validEcarts.reduce((a, b) => a + b, 0)
-  return sum / validEcarts.length
-})
-
 const downloadChart = () => {
   const canvas = document.querySelector('canvas')
   const link = document.createElement('a')
@@ -1040,9 +956,25 @@ const toggleFullscreen = () => {
   }
 }
 
-</script>
+onMounted(() => {
+  const restored = restaurerDataCacher()
+  if (!restored) {
+    selectedAgences.value = agencesList.value.map(ag => ag.code)
+  }
+})
 
+onMounted(() => {
+  selectedAgences.value = agencesList.value.map(ag => ag.code)
+})
+</script>
 <style scoped>
+  .legend-color {
+  display: inline-block;
+  width: 12px;
+  height: 12px;
+  border-radius: 2px;
+  margin-right: 4px;
+}
 .full-container {
   width: 100%;
   height: 100vh;
