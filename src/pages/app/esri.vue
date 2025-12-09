@@ -17,10 +17,9 @@
           label="Date fin (YYYYMMDD)"
           outlined
           dense
-        />
-      </v-col>
+          hide-details
 
-       <v-col cols="12" md="2" class="d-flex align-center">
+        />
         <v-checkbox
           v-model="compareMode"
           label="Mode comparer"
@@ -28,15 +27,19 @@
           class="mt-0"
         />
       </v-col>
+
+       
  
-      <v-col cols="12" md="3" class="d-flex align-center">
+      <v-col cols="12" sm="auto" class="d-flex align-rignt">
         <v-btn
           color="primary"
+          size="large"
+          rounded="lg"
           @click="fetchEsriData"
           :loading="loading"
-          class="mr-2"
+          class="px-6"
         >
-          Charger les données
+          Charger
         </v-btn>
         
        

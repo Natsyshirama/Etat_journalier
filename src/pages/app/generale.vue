@@ -91,7 +91,7 @@
             <v-checkbox
               v-model="compare"
               density="compact"
-              label="comparer"
+              label="Mode comparer"
               color="primary"
               class="mt-2"
               :style="{ marginTop: '-8px', color: '#888' }"
