@@ -15,7 +15,7 @@
               class="navigation-btn"
               variant="outlined"
             >
-              <v-icon left>mdi-chart-box</v-icon>
+              <v-icon left>mdi-chart-box-outline</v-icon>
               Analyse Decaissement
               <v-icon right size="small">mdi-arrow-right</v-icon>
             </v-btn>
