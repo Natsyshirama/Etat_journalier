@@ -43,7 +43,6 @@
       </v-col>
     </v-row>
 
-    <!-- Message d'état -->
     <v-alert
       v-if="message"
       :type="status === 'error' ? 'error' : (status === 'warning' ? 'warning' : 'success')"
@@ -69,7 +68,7 @@
     </v-card>
 
     
-          <div class="table-filtre-bar">
+          <div class="table-filtre-bar" v-if="status === 'success' && rows.length">
 
       <v-row class="align-center mb-4 px-2" fluid>
 
@@ -178,9 +177,8 @@ const bilan = ref([])
 
 const showTotal = ref(false)
 
-const compareMode = ref(false) // Nouveau: variable pour le mode comparer
+const compareMode = ref(false) 
 
-// Liste agences (même format que depotAnalyse)
 const agencesList = ref([
   { code: "MG0010009", nom: "Andavamamba" },
   { code: "MG0010004", nom: "Analamahitsy" },
@@ -198,7 +196,7 @@ const agencesList = ref([
   { code: "MG0010023", nom: "Tanjombato" }
 ])
 
-const selectedAgences = ref([]) // codes d'agence sélectionnés (vide = toutes)
+const selectedAgences = ref([]) 
 
 const selectedMonth = ref("")
 const monthsAvailable = computed(() => {
@@ -356,6 +354,6 @@ onUnmounted(() => {
   padding-bottom: 20px;
 }
 .esri-container::-webkit-scrollbar {
-  display: none; /* Chrome, Safari, Edge (basé sur Chromium) */
+  display: none; 
 }
 </style>

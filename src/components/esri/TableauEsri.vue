@@ -177,7 +177,6 @@
       </v-card>
     </div>
 
-    <!-- Dialogue pour afficher le graphique d'évolution -->
     <v-dialog v-model="showChart" max-width="1400px" scrollable>
       <v-card>
         <v-card-title class="headline">
@@ -197,12 +196,10 @@
             <strong>Mois sélectionné :</strong> {{ formatMonth(chartData.label) }}
           </div>
           
-          <!-- Graphique d'évolution -->
           <div class="chart-container">
             <canvas ref="chartCanvas"></canvas>
           </div>
           
-          <!-- Légende des données -->
           <v-card class="mt-4" outlined>
             <v-card-text>
               <div v-if="chartData.type === 'overall'" class="text-center">
@@ -239,7 +236,6 @@
 import { ref, computed, watch, onMounted, onUnmounted, nextTick } from "vue"
 import { Chart, registerables } from 'chart.js'
 
-// Enregistrer tous les composants de Chart.js
 Chart.register(...registerables)
 
 const props = defineProps({
@@ -281,9 +277,8 @@ const showChart = ref(false)
 const chartCanvas = ref(null)
 let chartInstance = null
 
-// Données pour le graphique
 const chartData = ref({
-  type: 'overall', // 'daily', 'monthly', ou 'overall'
+  type: 'overall', // 'daily monthly overall'
   label: '',
   total: 0,
   ecart: 0,
@@ -309,7 +304,7 @@ const chartTitle = computed(() => {
     return `Évolution ${chartData.value.type === 'daily' ? 'journalière' : 'mensuelle'}`
   }
 })
-// Calcul si on doit afficher le bouton graphique
+//quelle boutton on affiche
 const showChartButton = computed(() => {
   if (activeTab.value === 0) {
     return dailyTotals.value.length > 0
@@ -506,7 +501,6 @@ const formatMonth = (monthKey) => {
 }
 
 const formatDateForChart = (dateStr) => {
-  // Formater la date pour l'affichage (ex: "2024/01/15" -> "15/01/2024")
   if (!dateStr) return "Date inconnue"
   
   const parts = dateStr.split("/")
@@ -546,7 +540,7 @@ const switchToMonthly = () => {
   activeTab.value = 1
 }
 
-// Afficher le graphique d'évolution
+//graphe evolution
 const showEvolutionChart = (label, total, type) => {
   chartData.value = {
     type: type,
@@ -556,18 +550,15 @@ const showEvolutionChart = (label, total, type) => {
     evolutionData: []
   }
 
-  // Récupérer les données d'évolution selon le type
   if (type === 'daily') {
     const dailyData = dailyTotals.value
     const index = dailyData.findIndex(item => item.date === label)
     
     if (index >= 0) {
-      // Calculer l'écart
       if (index > 0) {
         chartData.value.ecart = dailyData[index].total - dailyData[index - 1].total
       }
       
-      // Préparer les données pour le graphique (5 jours avant et après)
       const start = Math.max(0, index - 10)
       const end = Math.min(dailyData.length, index + 11)
       
@@ -583,14 +574,12 @@ const showEvolutionChart = (label, total, type) => {
     const index = monthlyData.findIndex(item => item.month === label)
     
     if (index >= 0) {
-      // Calculer l'écart
       if (index > 0) {
         chartData.value.ecart = monthlyData[index].total - monthlyData[index - 1].total
       }
       
-      // Préparer les données pour le graphique (3 mois avant et après)
-      const start = Math.max(0, index - 3)
-      const end = Math.min(monthlyData.length, index + 4)
+      const start = Math.max(0, index - 5)
+      const end = Math.min(monthlyData.length, index + 5)
       
       chartData.value.evolutionData = monthlyData
         .slice(start, end)
@@ -603,21 +592,19 @@ const showEvolutionChart = (label, total, type) => {
   
   showChart.value = true
   
-  // Détruire l'ancien graphique si il existe
   if (chartInstance) {
     chartInstance.destroy()
   }
   
-  // Créer le nouveau graphique
   nextTick(() => {
     createChart()
   })
 }
 
-// Afficher le graphique global
+//graphe global
 const showOverallChart = () => {
   if (activeTab.value === 0) {
-    // Graphique journalier global
+    // daily
     const dailyData = dailyTotals.value
     
     chartData.value = {
@@ -631,7 +618,7 @@ const showOverallChart = () => {
       }))
     }
   } else {
-    // Graphique mensuel global
+    //mensuel
     const monthlyData = monthlyTotals.value
     
     chartData.value = {
@@ -648,38 +635,32 @@ const showOverallChart = () => {
   
   showChart.value = true
   
-  // Détruire l'ancien graphique si il existe
   if (chartInstance) {
     chartInstance.destroy()
   }
   
-  // Créer le nouveau graphique
   nextTick(() => {
     createChart()
   })
 }
 
-// Créer le graphique
+//creation de la graphe
 const createChart = () => {
   if (!chartCanvas.value) return
   
   const ctx = chartCanvas.value.getContext('2d')
   
-  // Préparer les données pour Chart.js
   const labels = chartData.value.evolutionData.map(item => item.label)
   const data = chartData.value.evolutionData.map(item => item.value)
   
-  // Pour le graphique global, toutes les barres sont bleues
-  // Pour le graphique spécifique, la barre sélectionnée est différente
+  
   let backgroundColors
   let borderColors
   
   if (chartData.value.type === 'overall') {
-    // Graphique global - toutes les barres en bleu
     backgroundColors = labels.map(() => 'rgba(54, 162, 235, 0.8)')
     borderColors = labels.map(() => 'rgb(54, 162, 235)')
   } else {
-    // Graphique spécifique - barre sélectionnée en bleu, autres en gris
     const selectedIndex = chartData.value.evolutionData.findIndex(
       item => item.label === (chartData.value.type === 'daily' 
         ? chartData.value.label 
@@ -744,14 +725,12 @@ const createChart = () => {
 }
 
 
-// Nettoyer le graphique quand le composant est détruit
 onUnmounted(() => {
   if (chartInstance) {
     chartInstance.destroy()
   }
 })
 
-// Détruire le graphique quand le dialogue se ferme
 watch(showChart, (newValue) => {
   if (!newValue && chartInstance) {
     chartInstance.destroy()
