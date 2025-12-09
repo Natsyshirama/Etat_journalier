@@ -95,7 +95,6 @@
           />
         </v-col>
 
-        <!-- FILTRE PAR MOIS -->
         <v-col cols="12" sm="2" v-if="!compare">
           <v-select
             v-model="selectedMonths"
@@ -173,7 +172,7 @@
   <v-col cols="12">
     <v-card class="elevation-3">
       <v-card-text class="pa-0">
-        <div class="table-container">
+        <div class="table-container"  v-if="!showGraphe">
           <table class="encours-table">
             <thead>
               <tr>
@@ -253,65 +252,246 @@
 </v-row>
 
 <div v-if="showGraphe && hasResults" class="mt-8">
-  <v-card class="elevation-3 pa-4">
-    <Line
-  :data="{
-    labels: graphLabels,
-    datasets: [
-      {
-        label: 'Montant total',
-        data: graphValues,
-        borderColor: '#1976d2',
-        tension: 0.4,
-        pointRadius: 4,
-        borderWidth: 3
-      }
-    ]
-  }"
-  :options="{
-    responsive: true,
-    plugins: {
-      legend: { display: true, position: 'top' },
-      title: { 
-        display: true, 
-        text: 'Évolution des décaissements', 
-        font: { size: 18 } 
-      },
-      tooltip: {
-        useHTML: true,
-        mode: 'index',
-        intersect: false,
-        callbacks: {
-          label: (context) => {
-            const montant = context.parsed.y
-            const idx = context.dataIndex
-            const ecart = graphEcarts[idx] || 0
-              let sign = '⚫'
-                if (ecart > 0) sign = '🟢'
-                else if (ecart < 0) sign = '🔴​'
-            return [
-              `Montant total: ${formatNumber(montant)}`,
-              `Écart:${sign} ${formatEcart(ecart)} `
-            ]
+  <v-card class="elevation-4 pa-4 rounded-lg">
+    <div class="graph-header d-flex justify-space-between align-center mb-4">
+      <div>
+        <h3 class="text-h5 font-weight-bold graph-title">
+          <v-icon color="primary" class="mr-2">mdi-trending-up</v-icon>
+          Évolution Decaissement
+        </h3>
+        <div class="graph-subtitle text-caption text-medium-emphasis">
+          Analyse temporelle des montants totaux
+        </div>
+      </div>
+      
+      <div class="graph-legend d-flex align-center gap-3">
+        <div class="legend-item d-flex align-center">
+          <span class="text-caption">⚫No ecart</span>
+        </div>
+        <div class="legend-item d-flex align-center">
+          <span class="text-caption">🔵Montant total</span>
+        </div>
+        <div class="legend-item d-flex align-center">
+          <span class="text-caption">🟢Hausse</span>
+        </div>
+        <div class="legend-item d-flex align-center">
+          <span class="text-caption">🔴Baisse</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="graph-container" style="position: relative; height: 600px;">
+      <Line
+        :data="{
+          labels: graphLabels,
+          datasets: [
+            {
+              label: 'Montant total',
+              data: graphValues,
+              borderColor: '#1976d2',
+              backgroundColor: 'rgba(25, 118, 210, 0.1)',
+              fill: true,
+              tension: 0.3,
+              pointBackgroundColor: '#1976d2',
+              pointBorderColor: '#fff',
+              pointBorderWidth: 2,
+              pointRadius: 6,
+              pointHoverRadius: 8,
+              borderWidth: 3,
+              pointStyle: 'circle'
+            }
+          ]
+        }"
+        :options="{
+          responsive: true,
+          maintainAspectRatio: false,
+          interaction: {
+            intersect: false,
+            mode: 'index'
+          },
+          plugins: {
+            legend: { 
+              display: false,
+              position: 'top',
+              labels: {
+                usePointStyle: true,
+                padding: 20
+              }
+            },
+            tooltip: {
+              usePointStyle: true,
+              borderWidth: 1,
+              cornerRadius: 8,
+              padding: 12,
+              boxPadding: 6,
+              callbacks: {
+                title: (context) => {
+                  return ` ${context[0].label}`
+                },
+                label: (context) => {
+                  const montant = context.parsed.y
+                  const idx = context.dataIndex
+                  const ecart = graphEcarts[idx] || 0
+                  const color = ecart > 0 ? '#4caf50' : ecart < 0 ? '#f44336' : '#666'
+                  const icon = ecart > 0 ? '🟢' : ecart < 0 ? '🔴' : '⚫'
+                  
+                  return [
+                    ` Montant total: ${formatNumber(montant)}`,
+                    ` Écart: ${icon} ${formatEcart(ecart)}`
+                  ]
+                },
+                labelColor: (context) => {
+                  return {
+                    borderColor: '#1976d2',
+                    backgroundColor: '#1976d2',
+                    borderWidth: 2
+                  }
+                }
+              }
+            },
+            annotation: {
+              annotations: graphValues.map((value, index) => {
+                if (index === 0) return null
+                const ecart = graphEcarts[index] || 0
+                if (ecart === 0) return null
+                
+                return {
+                  type: 'line',
+                  mode: 'vertical',
+                  scaleID: 'x',
+                  value: index - 0.5,
+                  borderColor: ecart > 0 ? 'rgba(76, 175, 80, 0.3)' : 'rgba(244, 67, 54, 0.3)',
+                  borderWidth: 2,
+                  borderDash: [5, 5]
+                }
+              }).filter(Boolean)
+            }
+          },
+          scales: {
+            x: {
+              grid: {
+                display: true,
+                color: 'rgba(0, 0, 0, 0.05)',
+                drawBorder: false
+              },
+              ticks: {
+                padding: 10,
+                font: {
+                  size: 12,
+                  weight: '500'
+                }
+              },
+              title: {
+                display: true,
+                text: 'Période',
+                color: '#666',
+                font: {
+                  size: 14,
+                  weight: '600'
+                },
+                padding: { top: 10, bottom: 5 }
+              }
+            },
+            y: {
+              beginAtZero: true,
+              grid: {
+                display: true,
+                color: 'rgba(0, 0, 0, 0.05)',
+                drawBorder: false
+              },
+              ticks: {
+                padding: 10,
+                callback: function(value) {
+                  if (value >= 1000000) {
+                    return (value / 1000000).toFixed(1) + 'M'
+                  } else if (value >= 1000) {
+                    return (value / 1000).toFixed(0) + 'k'
+                  }
+                  return formatNumber(value)
+                },
+                font: {
+                  size: 12,
+                  weight: '500'
+                }
+              },
+              title: {
+                display: true,
+                text: 'Montant (en unités)',
+                color: '#666',
+                font: {
+                  size: 14,
+                  weight: '600'
+                },
+                padding: { top: 5, bottom: 10 }
+              }
+            }
+          },
+          elements: {
+            line: {
+              tension: 0.3
+            },
+            point: {
+              hoverBackgroundColor: '#fff',
+              hoverBorderColor: '#1976d2',
+              hoverBorderWidth: 3
+            }
+          },
+          animation: {
+            duration: 1000,
+            easing: 'easeInOutQuart'
+          },
+          hover: {
+            mode: 'nearest',
+            intersect: true
           }
-        }
-      }
-    },
-    scales: {
-      x: { title: { display: true, text: 'Date ou Mois', font: { size: 15 } } },
-      y: { 
-        title: { display: true, text: 'Montant total', font: { size: 15 } }, 
-        beginAtZero: true,
-        ticks: {
-          callback: function(value) {
-            return formatNumber(value)
-          }
-        }
-      }
-    }
-  }"
-  style="height:800px;"
-/>
+        }"
+      />
+    </div>
+
+    <div class="graph-footer mt-4 pt-3 border-top">
+      <div class="d-flex justify-space-between align-center">
+        <div class="graph-stats d-flex gap-4">
+          <div class="stat-item">
+            <div class="text-caption text-medium-emphasis">Période couverte</div>
+            <div class="text-body-2 font-weight-medium">
+              {{ graphLabels[0] }} → {{ graphLabels[graphLabels.length - 1] }}
+            </div>
+          </div>
+          <div class="stat-item">
+            <div class="text-caption text-medium-emphasis">Points de données</div>
+            <div class="text-body-2 font-weight-medium">{{ graphValues.length }}</div>
+          </div>
+          <div class="stat-item">
+            <div class="text-caption text-medium-emphasis">Écart moyen</div>
+            <div class="text-body-2 font-weight-medium" :style="{ color: averageEcart >= 0 ? '#4caf50' : '#f44336' }">
+              {{ formatEcart(averageEcart) }}
+            </div>
+          </div>
+        </div>
+        
+        <div class="graph-actions">
+          <v-btn
+            size="small"
+            variant="text"
+            color="primary"
+            @click="downloadChart"
+            class="mr-2"
+          >
+            <v-icon left small>mdi-download</v-icon>
+            Exporter
+          </v-btn>
+          <v-btn
+            size="small"
+            variant="text"
+            color="primary"
+            @click="toggleFullscreen"
+          >
+            <v-icon left small>mdi-fullscreen</v-icon>
+            Plein écran
+          </v-btn>
+        </div>
+      </div>
+    </div>
   </v-card>
 </div>
     </v-card>
@@ -804,7 +984,6 @@ onMounted(() => {
     selectedAgences.value = agencesList.value.map(ag => ag.code)
   }
 })
-// ...existing code...
 onMounted(() => {
   selectedAgences.value = agencesList.value.map(ag => ag.code)
 })
@@ -817,6 +996,32 @@ const graphValues = computed(() =>
 const graphEcarts = computed(() =>
   tableColumns.value.map(col => getTotalEcart(col))
 )
+
+const averageEcart = computed(() => {
+  if (!graphEcarts.value || graphEcarts.value.length === 0) return 0
+  const validEcarts = graphEcarts.value.filter(e => !isNaN(e))
+  if (validEcarts.length === 0) return 0
+  const sum = validEcarts.reduce((a, b) => a + b, 0)
+  return sum / validEcarts.length
+})
+
+const downloadChart = () => {
+  const canvas = document.querySelector('canvas')
+  const link = document.createElement('a')
+  link.download = 'evolution-encours-depots.png'
+  link.href = canvas.toDataURL('image/png')
+  link.click()
+}
+
+const toggleFullscreen = () => {
+  const graphContainer = document.querySelector('.graph-container')
+  if (!document.fullscreenElement) {
+    graphContainer.requestFullscreen?.()
+  } else {
+    document.exitFullscreen?.()
+  }
+}
+
 
 </script>
 
