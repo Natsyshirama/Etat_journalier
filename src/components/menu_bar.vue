@@ -375,7 +375,7 @@ async function selectDate(date,stat_compte) {
     if (stat_compte === 0) {
       router.push({ name: 'Initialise', query: { label: date } })
     } else {
-      window.dispatchEvent(new CustomEvent('table-date-selected', { detail: { date, stat_compte } }))
+      window.dispatchEvent(new CustomEvent('table-date-selected', { detail: { date : date, stat_compte: stat_compte } }))
     }
   }
 }  

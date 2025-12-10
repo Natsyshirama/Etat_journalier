@@ -271,17 +271,80 @@ const exportDavToExcel = () => exportToExcel('DAV')
 const exportDatToExcel = () => exportToExcel('DAT')
 const exportEprToExcel = () => exportToExcel('EPR')
 
+const fetchAndSetLatestDate = async () => {
+  try {
+    const res = await axios.get(`${api}/api/history_insert`)
+    const history = res.data.response?.data || []
+    
+    if (Array.isArray(history) && history.length > 0) {
+      // Trier par date décroissante
+      const sorted = [...history].sort((a, b) => b.label.localeCompare(a.label))
+      const latest = sorted[0]
+      
+      // Si pas encore de table sélectionnée, prendre la dernière
+      if (!selectedTable.value && latest.label) {
+        selectedTable.value = latest.label
+        popupStore.selected_date = latest.label
+        popupStore.selected_date_stat_compte = latest.stat_compte
+        localStorage.setItem("selectedTable", latest.label)
+        
+        console.log("📅 Date automatiquement sélectionnée :", latest.label)
+        
+        // Émettre l'événement si nécessaire
+        window.dispatchEvent(new CustomEvent('table-date-selected', { 
+          detail: { 
+            date: latest.label,
+            stat_compte: latest.stat_compte 
+          }
+        }))
+      }
+    }
+  } catch (err) {
+    console.error("Erreur lors du chargement de l'historique :", err)
+  }
+}
+
+onMounted(async () => {
+  // Synchronise la sélection au chargement
+  const savedTable = localStorage.getItem("selectedTable")
+  if (savedTable) {
+    if (savedTable.startsWith('{') || savedTable.startsWith('[')) {
+      console.error("Données corrompues dans localStorage, nettoyage...")
+      localStorage.removeItem("selectedTable")
+      selectedTable.value = null
+    } else {
+      selectedTable.value = savedTable
+      popupStore.selected_date = savedTable
+    }
+  }
+  
+  // get last date si pas de date selectionne
+  if (!selectedTable.value) {
+    await fetchAndSetLatestDate()
+  }
+  
+  // ecouteur
+  window.addEventListener('export-dav-data', handleExportEvent)
+  window.addEventListener('table-date-selected', handleDateSelection)
+  
+  await fetchTables()
+})
+
 
 const handleDateSelection = (event) => {
-  selectedTable.value = event.detail.date
-  popupStore.selected_date_stat_compte = event.detail.stat_compte 
-  console.log("📅 Table sélectionnée via event:", selectedTable.value)
-  console.log("📅 Table sélectionnée - Initialisée:", isInitialized.value)
-
+  
+  const dateString = event.detail?.date?.label || event.detail?.date
+  const stat = event.detail?.stat_compte
+  
+  if (dateString) {
+    selectedTable.value = dateString
+    popupStore.selected_date = dateString
+    popupStore.selected_date_stat_compte = stat
+    console.log("📅 Table sélectionnée via event:", dateString)
+  }
 }
 
 onMounted(() => {
-  // Synchronise la sélection au chargement
   const savedTable = localStorage.getItem("selectedTable")
   if (savedTable) {
     selectedTable.value = savedTable
@@ -326,7 +389,18 @@ watch(() => popupStore.selected_date, (newDate) => {
   }
 }, { immediate: true })
 
-
+watch(() => popupStore.selected_date, (newDate) => {
+  let dateValue = newDate
+  if (newDate && typeof newDate === 'object' && newDate.label) {
+    dateValue = newDate.label
+  }
+  
+  if (dateValue) {
+    selectedTable.value = dateValue
+    localStorage.setItem("selectedTable", dateValue)
+    console.log("📅 Table sélectionnée via store:", dateValue)
+  }
+}, { immediate: true })
 </script>
 
 <style scoped>
