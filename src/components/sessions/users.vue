@@ -1,6 +1,6 @@
 <template>
   <div>
-    <h2 class="text-h5 mb-4">👥 Liste des utilisateurs</h2>
+    <h2 class="text-h5 mb-4"> Liste des utilisateurs</h2>
     
     <v-card elevation="3" class="rounded-lg">
       <v-card-text class="pa-0">

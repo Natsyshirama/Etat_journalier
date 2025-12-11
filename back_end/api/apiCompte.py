@@ -15,6 +15,7 @@ from controller.DavUnique import DavUnique
 from controller.decaissementReport import decaissementReport
 from controller.decaissement import DecaissementOptimise
 from controller.Users import Users
+from controller.importController import  importController
 
 
 router = APIRouter()
@@ -138,6 +139,7 @@ async def create_esri_precompute(
         months_list = months.split(",") if months else None
         
         # Appeler la fonction de traitement
+        #contreoller/OperationEsri.py
         rows, columns, bilan = operation_esri.process_esri_data_fast(
             date_debut=date_debut,
             date_fin=date_fin,
@@ -216,6 +218,7 @@ def create_change_report(request: Request,date_debut: str, date_fin: str):
         limit = db_get.getHistoryDate()
         if limit and (date_debut > limit or date_fin > limit):
             raise Exception(f"Les données apres le {limit} ne sont pas encore disponible.")
+        #controller/changeMandy.py
         result = change_mandy.generate_tables_report(date_debut, date_fin)
         
         if not result:
@@ -280,6 +283,7 @@ def get_dat_resume(request: Request,table_name: str):
         if current_user.get("privillege") not in ["user","admin", "superadmin"]:
             raise HTTPException(status_code=403, detail="Accès refusé : privilège insuffisant")
 
+#controller/DatReport.py
         summary = dat_report.getResumeDat(table_name)
         if not summary:
             return JSONResponse(status_code=404, content={"error": "Résumé introuvable ou table vide"})
@@ -311,10 +315,11 @@ def get_graphe_dat(
 ):
 
     try:
+        
         current_user = user.get_current_user(request)
         if current_user.get("privillege") not in ["user","admin", "superadmin"]:
             raise HTTPException(status_code=403, detail="Accès refusé : privilège insuffisant")
-
+        #controller/DatReport.py
         data = dat_report.get_graphe_data(x, y, table_name)
         print(data)
         return data
@@ -870,8 +875,60 @@ def export_multi(
 from fastapi import UploadFile, File
 import pandas as pd
 import re
+import_controller = importController()
 
 @router.post("/import/multi")
+async def import_multi(files: List[UploadFile] = File(...)):
+    errors = []
+    success = []
+    try:
+        # Validation de base
+        if not files:
+            raise HTTPException(
+                status_code=400,
+                detail="Aucun fichier fourni"
+            )
+        
+        # Valider les extensions
+        invalid_files = []
+        for file in files:
+            if not file.filename.lower().endswith('.csv'):
+                invalid_files.append(file.filename)
+        
+        if invalid_files:
+            raise HTTPException(
+                status_code=400,
+                detail=f"Fichiers non CSV détectés: {', '.join(invalid_files)}"
+            )
+        
+        # Limiter le nombre de fichiers
+        if len(files) > 50:
+            raise HTTPException(
+                status_code=400,
+                detail="Trop de fichiers. Maximum 50 fichiers par import."
+            )
+        
+        # Traiter les fichiers via le controller
+        result = import_controller.process_multiple_files(files)
+        success.append(f"Import réussi : {file.filename}")
+
+        return {
+            "success": success,
+            "errors": errors,
+            "summary": result["summary"],
+            "details": result["results"]
+        }
+        
+    except HTTPException as he:
+        raise he
+    except Exception as e:
+        errors.append(f"Erreur insertion ligne: {e}")
+        raise HTTPException(
+            status_code=500,
+            detail=f"Erreur lors de l'import: {str(e)}"
+        )
+
+@router.post("/import/multi2")
 async def import_multi(files: List[UploadFile] = File(...)):
     db = DB()
     conn = db.connect()

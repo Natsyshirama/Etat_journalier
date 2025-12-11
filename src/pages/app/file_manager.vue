@@ -159,16 +159,198 @@
          class="export-floating_import">Importer Fichiers</v-btn>
       </template>
       <v-card>
-          <v-card-title>Importer des fichiers</v-card-title>
-          <v-card-text>
-            <input type="file" multiple accept=".csv" @change="handleImportFiles" ref="importFilesInput" />
-            <v-alert v-if="importError" type="error" class="mt-2">{{ importError }}</v-alert>
-            <v-alert v-if="importSuccess" type="success" class="mt-2">{{ importSuccess }}</v-alert>
-          </v-card-text>
-          <v-card-actions>
-            <v-btn color="primary" @click="triggerImport">Importer</v-btn>
-            <v-btn text @click="importDialog = false">Fermer</v-btn>
-          </v-card-actions>
+        <v-card-title>
+          <v-icon left>mdi-upload</v-icon>
+          Importer des fichiers CSV
+        </v-card-title>
+        
+        <v-card-text>
+          <!-- Sélection de fichiers -->
+          <div class="mb-4">
+            <v-btn 
+              color="primary" 
+              prepend-icon="mdi-file-plus"
+              @click="triggerImportFileSelect"
+              class="mb-2"
+            >
+              Sélectionner des fichiers
+            </v-btn>
+            <input 
+              type="file" 
+              multiple 
+              accept=".csv" 
+              @change="handleImportFiles" 
+              ref="importFilesInput" 
+              style="display: none"
+            />
+            
+            <!-- Liste des fichiers sélectionnés -->
+            <div v-if="selectedFiles.length > 0" class="mt-4">
+              <v-card variant="outlined">
+                <v-card-title class="text-subtitle-1 font-weight-bold">
+                  Fichiers à importer ({{ selectedFiles.length }})
+                </v-card-title>
+                <v-card-text>
+                  <v-list density="compact">
+                    <v-list-item 
+                      v-for="(file, index) in selectedFiles" 
+                      :key="index"
+                      class="mb-1"
+                    >
+                      <template v-slot:prepend>
+                        <v-icon color="blue" class="mr-2">mdi-file-document-outline</v-icon>
+                      </template>
+                      <v-list-item-title>
+                        {{ file.name }}
+                      </v-list-item-title>
+                      <v-list-item-subtitle>
+                        {{ formatFileSize(file.size) }} • 
+                        Type: {{ getFileType(file.name) }}
+                      </v-list-item-subtitle>
+                      <template v-slot:append>
+                        <v-btn
+                          icon
+                          size="small"
+                          variant="text"
+                          @click="removeFile(index)"
+                          color="error"
+                        >
+                          <v-icon>mdi-close</v-icon>
+                        </v-btn>
+                      </template>
+                    </v-list-item>
+                  </v-list>
+                </v-card-text>
+              </v-card>
+            </div>
+          </div>
+          
+          <!-- Messages d'erreur -->
+          <v-alert 
+            v-if="importError" 
+            type="error" 
+            class="mt-2"
+            :text="importError"
+            closable
+            @click:close="importError = ''"
+          />
+          
+          <!-- Messages de succès -->
+          <v-alert 
+            v-if="importSuccess.length > 0" 
+            type="success" 
+            class="mt-2"
+          >
+            <div class="d-flex align-center">
+              <v-icon class="mr-2">mdi-check-circle</v-icon>
+              <span>Importation réussie !</span>
+            </div>
+            <div class="mt-2">
+              <strong>Détails :</strong>
+              <ul class="ml-4 mt-1">
+                <li v-for="(success, index) in importSuccess" :key="index">
+                  {{ success }}
+                </li>
+              </ul>
+            </div>
+          </v-alert>
+          
+          <!-- resultat apres import -->
+          <v-expansion-panels v-if="importResults.length > 0" class="mt-4">
+            <v-expansion-panel>
+              <v-expansion-panel-title>
+                <v-icon left>mdi-information</v-icon>
+                Détails de l'importation
+              </v-expansion-panel-title>
+              <v-expansion-panel-text>
+                <v-table density="compact">
+                  <thead>
+                    <tr>
+                      <th>Fichier</th>
+                      <th>Statut</th>
+                      <th>Lignes</th>
+                      <th>Message</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <tr v-for="(result, index) in importResults" :key="index">
+                      <td>{{ result.filename }}</td>
+                      <td>
+                        <v-chip 
+                          :color="result.errors.length > 0 ? 'error' : 'success'" 
+                          size="small"
+                        >
+                          {{ result.errors.length > 0 ? 'Erreur' : 'Succès' }}
+                        </v-chip>
+                      </td>
+                      <td>{{ result.rows_inserted }}</td>
+                      <td>
+                        <span v-if="result.success.length > 0" class="text-success">
+                          {{ result.success.join(', ') }}
+                        </span>
+                        <span v-if="result.errors.length > 0" class="text-error">
+                          {{ result.errors.join(', ') }}
+                        </span>
+                      </td>
+                    </tr>
+                  </tbody>
+                </v-table>
+              </v-expansion-panel-text>
+            </v-expansion-panel>
+          </v-expansion-panels>
+          
+          <!-- Résumé après import -->
+          <v-alert 
+            v-if="importSummary" 
+            type="info" 
+            variant="tonal" 
+            class="mt-4"
+          >
+            <div class="d-flex justify-space-between">
+              <div>
+                <strong>Résumé :</strong><br>
+                Fichiers : {{ importSummary.total_files }}<br>
+                Lignes insérées : {{ importSummary.total_rows_inserted }}<br>
+                Dates : {{ importSummary.dates_imported ? importSummary.dates_imported.join(', ') : 'N/A' }}
+              </div>
+              <v-btn 
+                v-if="importSummary.success_count > 0"
+                color="success" 
+                prepend-icon="mdi-check-all"
+                @click="resetImport"
+              >
+                Nouvel import
+              </v-btn>
+            </div>
+          </v-alert>
+        </v-card-text>
+        
+        <v-card-actions class="pa-4">
+          <v-btn 
+            color="primary" 
+            @click="triggerImport" 
+            :loading="importLoading"
+            :disabled="selectedFiles.length === 0 || importLoading"
+            prepend-icon="mdi-database-import"
+          >
+            {{ importLoading ? 'Importation en cours...' : 'Importer' }}
+          </v-btn>
+          <v-btn 
+            text 
+            @click="resetImportDialog"
+            :disabled="importLoading"
+          >
+            Annuler
+          </v-btn>
+          <v-spacer />
+          <v-chip 
+            v-if="selectedFiles.length > 0" 
+            color="primary" 
+            variant="outlined"
+          >
+            {{ selectedFiles.length }} fichier(s)
+          </v-chip>
+        </v-card-actions>
       </v-card>
     </v-dialog>
 
@@ -537,106 +719,173 @@ const exportMulti = async () => {
 }
 
 
+
+
+
 const importDialog = ref(false)
 const importError = ref("")
-const importSuccess = ref("")
+const importSuccess = ref([])
 const importFilesInput = ref(null)
 const selectedFiles = ref([])
+const importLoading = ref(false)
+const importResults = ref([])
+const importSummary = ref(null)
 
+// Fonctioselection fichier
+const triggerImportFileSelect = () => {
+  importFilesInput.value.click()
+}
+
+// Gestion selection fichier
 const handleImportFiles = (event) => {
-  selectedFiles.value = Array.from(event.target.files)
+  const files = Array.from(event.target.files)
+  
+  // Valide
+  const invalidFiles = []
+  const validFiles = []
+  
+  files.forEach(file => {
+    if (!file.name.toLowerCase().endsWith('.csv')) {
+      invalidFiles.push(file.name)
+    } else if (!/^(dav|dat|epr|decaissement)_\d{8}\.csv$/i.test(file.name)) {
+      invalidFiles.push(`Format invalide: ${file.name}`)
+    } else {
+      validFiles.push(file)
+    }
+  })
+  
+  if (invalidFiles.length > 0) {
+    importError.value = `Fichiers invalides : ${invalidFiles.join(', ')}`
+  }
+  
+  selectedFiles.value = [...selectedFiles.value, ...validFiles]
+  
+  event.target.value = ''
+}
+
+
+const formatFileSize = (bytes) => {
+  if (bytes === 0) return '0 Bytes'
+  const k = 1024
+  const sizes = ['Bytes', 'KB', 'MB', 'GB']
+  const i = Math.floor(Math.log(bytes) / Math.log(k))
+  return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i]
+}
+
+const getFileType = (filename) => {
+  const match = filename.match(/^(dav|dat|epr|decaissement)_/)
+  if (match) {
+    const type = match[1]
+    const typeMap = {
+      'dav': 'Dépôts à vue',
+      'dat': 'Dépôts à terme',
+      'epr': 'Épargne',
+      'decaissement': 'Décaissement'
+    }
+    return typeMap[type] || type.toUpperCase()
+  }
+  return 'Inconnu'
+}
+
+const removeFile = (index) => {
+  selectedFiles.value.splice(index, 1)
+}
+
+
+
+const resetImportDialog = () => {
+  selectedFiles.value = []
+  importError.value = ""
+  importSuccess.value = []
+  importResults.value = []
+  importSummary.value = null
+  importLoading.value = false
+  importDialog.value = false
+}
+
+const resetImport = () => {
+  selectedFiles.value = []
+  importError.value = ""
+  importSuccess.value = []
+  importResults.value = []
+  importSummary.value = null
 }
 
 const triggerImport = async () => {
   importError.value = ""
-  importSuccess.value = ""
+  importSuccess.value = []
+  importResults.value = []
+  importSummary.value = null
+  importLoading.value = true
+  
   if (!selectedFiles.value.length) {
     importError.value = "Veuillez sélectionner au moins un fichier."
+    importLoading.value = false
     return
   }
+  
+  if (selectedFiles.value.length > 1000) {
+    importError.value = "Maximum 1000 fichiers par import."
+    importLoading.value = false
+    return
+  }
+  
   const formData = new FormData()
   selectedFiles.value.forEach(file => formData.append("files", file))
+  
   try {
-    const res = await fetch(`${api}/api/import/multi`, {
+    const response = await fetch(`${api}/api/import/multi`, {
       method: "POST",
       body: formData
     })
-    const data = await res.json()
-    if (data.errors && data.errors.length) {
+    
+    if (!response.ok) {
+      throw new Error(`Erreur HTTP ${response.status}`)
+    }
+    
+    const data = await response.json()
+    
+    if (data.errors && data.errors.length > 0) {
       importError.value = data.errors.join("\n")
     }
-    if (data.success && data.success.length) {
-      importSuccess.value = data.success.join("\n")
+    
+    if (data.success && data.success.length > 0) {
+      importSuccess.value = data.success
     }
-  } catch (e) {
-    importError.value = "Erreur réseau ou serveur"
-  }
-}
-const extractDate = (filename) => {
-  const match = filename.match(/\d{8}/);
-  return match ? match[0] : null;
-};
-
-const downloadFile = async (item) => {
-  dialog.value = true
-  download_file_name.value=item.title
-  const date = extractDate(item.title);
-  if (!date) {
-    console.error("Impossible d'extraire la date");
-    return;
-  }
-
-  try {
-    console.log("Préparation du téléchargement...");
-
-    const response = await fetch(
-      `${api}/api/download-file?filename=${encodeURIComponent(item.title)}&date=${date}`
-    );
-
-    if (!response.ok) {
-      throw new Error("Erreur API");
+    
+    if (data.details && Array.isArray(data.details)) {
+      importResults.value = data.details
     }
-
-    const reader = response.body.getReader();
-    const contentLength = +response.headers.get("Content-Length") || 0;
-    let receivedLength = 0;
-    const chunks = [];
-
-    console.log("Téléchargement en cours...");
-
-    while (true) {
-      const { done, value } = await reader.read();
-      if (done) break;
-      chunks.push(value);
-      receivedLength += value.length;
-
-      if (contentLength) {
-        const percent = ((receivedLength / contentLength) * 100).toFixed(2);
-        percentage.value = percent+ '%'
-        if(percent==100){
-          setTimeout(() => {
-            dialog.value = false
-            percentage.value=0
-          }, 500);
-        }
-        console.log(`Téléchargé : ${percent}%`);
+    
+    if (data.summary) {
+      importSummary.value = data.summary
+      
+      if (data.summary.success_count > 0) {
+        usePopupStore().show_notification.status = true
+        usePopupStore().show_notification.message = `Importation réussie : ${data.summary.success_count} fichier(s) traité(s)`
+        usePopupStore().show_notification.ico = 'mdi mdi-check'
       }
     }
-
-    const blob = new Blob(chunks);
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement("a");
-    a.href = url;
-    a.download = item.title;
-    a.click();
-    URL.revokeObjectURL(url);
-
-    console.log("Téléchargement terminé ✅");
-
-  } catch (err) {
-    console.error("Erreur téléchargement :", err);
+    
+    if (data.status === "completed" && data.summary.error_count === 0) {
+      // Ne pas vider la liste immédiatement pour permettre la visualisation
+      // selectedFiles.value = []
+    }
+    
+  } catch (error) {
+    console.error("Erreur lors de l'import :", error)
+    importError.value = `Erreur lors de l'import : ${error.message}`
+    
+    usePopupStore().show_notification.status = true
+    usePopupStore().show_notification.message = "Erreur lors de l'importation"
+    usePopupStore().show_notification.ico = 'mdi mdi-alert'
+    
+  } finally {
+    importLoading.value = false
   }
-};
+}
+
+
 
 
 </script>
@@ -781,7 +1030,86 @@ const downloadFile = async (item) => {
   }
 }
 
+/* Styles pour le dialogue d'import */
+.import-file-list {
+  max-height: 300px;
+  overflow-y: auto;
+  border: 1px solid #e0e0e0;
+  border-radius: 4px;
+  padding: 8px;
+}
 
+.import-file-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 8px;
+  border-bottom: 1px solid #f0f0f0;
+}
+
+.import-file-item:last-child {
+  border-bottom: none;
+}
+
+.import-file-info {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.import-file-name {
+  font-weight: 500;
+}
+
+.import-file-size {
+  font-size: 0.8em;
+  color: #666;
+}
+
+.import-status-chip {
+  font-size: 0.7em;
+  padding: 2px 8px;
+  border-radius: 12px;
+}
+
+.import-success {
+  background-color: #e8f5e8;
+  color: #2e7d32;
+}
+
+.import-error {
+  background-color: #ffebee;
+  color: #c62828;
+}
+
+.import-warning {
+  background-color: #fff3e0;
+  color: #ef6c00;
+}
+
+/* Animation pour les notifications */
+.fade-enter-active, .fade-leave-active {
+  transition: opacity 0.3s;
+}
+.fade-enter, .fade-leave-to {
+  opacity: 0;
+}
+
+/* Bouton flottant d'import */
+.export-floating_import {
+  position: absolute;
+  top: 100px;
+  right: 70px;
+  z-index: 500;
+  font-weight: bold;
+  width: 250px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+}
+
+.export-floating_import:hover {
+  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.2);
+  transform: translateY(-1px);
+}
 
 
 </style>

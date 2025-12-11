@@ -52,9 +52,8 @@
         </v-col>
       </v-row>
 
-    <!-- Contenu des onglets -->
     <v-window v-model="activeTab">
-      <!-- Onglet DAT -->
+      <!--  DAT -->
       <v-window-item>
         <div v-if="selectedTable">
           <TableauDat

@@ -11,7 +11,6 @@
       />
     </div>
 
-    <!-- 📊 Zone scrollable -->
     <div class="table-scroll">
       <v-data-table
         :headers="headers"

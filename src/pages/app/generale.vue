@@ -7,7 +7,7 @@
        <div class="navigation-container mb-6">
         <div class="navigation-header">
           <div class="header-title">
-            <h1 class="text-h6 font-weight-bold mb-0">Decaissement Analyse</h1>
+            <h1 class="text-h6 font-weight-bold mb-0">En cours Compte</h1>
           </div>
           <div class="navigation-buttons">
             <v-btn
@@ -38,7 +38,6 @@
         </div>
       </div>
       
-      <!-- FORMULAIRE -->
       <v-row dense class="px-4">
         <v-col cols="12" sm="3">
           <v-select

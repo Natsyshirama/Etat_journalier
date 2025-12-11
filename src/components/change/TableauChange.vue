@@ -107,7 +107,6 @@ watch(
 .fixed-header-table ::v-deep(th) {
   position: sticky;
   top: 0;
-  background: linear-gradient(180deg, #1e1e1e 0%, #2d2d2d 100%); /* ✅ Fond différent et contrasté */
   font-weight: 600;
   text-transform: uppercase;
   letter-spacing: 0.5px;
@@ -119,7 +118,6 @@ watch(
 }
 
 .fixed-header-table ::v-deep(td) {
-  background-color: #181818; color: #dcdcdc;
   border-bottom: 1px solid #333;
   padding: 8px 12px;
   font-size: 14px;
@@ -127,7 +125,6 @@ watch(
 }
 
 .fixed-header-table ::v-deep(tr:hover td) {
-  background-color: #2a2a2a;
   cursor: pointer;
 }
 
