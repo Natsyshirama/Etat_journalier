@@ -54,6 +54,20 @@
     >
       {{ message }}
     </v-alert>
+    <v-snackbar v-model="showSnackbar" :color="snackbarColor" timeout="3000">
+        <div class="d-flex align-center">
+          <v-icon class="mr-2">
+            {{ snackbarIcon }}
+          </v-icon>
+          {{ snackbarMessage }}
+        </div>
+        
+        <template #actions>
+          <v-btn icon @click="showSnackbar = false">
+            <v-icon>mdi-close</v-icon>
+          </v-btn>
+        </template>
+      </v-snackbar>
     <v-card   v-if="status === 'success' && bilan.length" class="mt-4 mb-6 pa-6 bilan-card"
   outlined>
       <v-list>
@@ -177,6 +191,35 @@ const tableEsriRef = ref(null)
 const api = inject('api') 
 const bilan = ref([])
 
+const showSnackbar = ref(false)
+const snackbarMessage = ref('')
+const snackbarColor = ref('success')
+const snackbarIcon = ref('mdi-check-circle')
+
+const showNotification = (message, type = 'success') => {
+  snackbarMessage.value = message
+  snackbarColor.value = type
+  
+  // Définir l'icône selon le type
+  switch(type) {
+    case 'success':
+      snackbarIcon.value = 'mdi-check-circle'
+      break
+    case 'error':
+      snackbarIcon.value = 'mdi-alert-circle'
+      break
+    case 'info':
+      snackbarIcon.value = 'mdi-information'
+      break
+    case 'warning':
+      snackbarIcon.value = 'mdi-alert'
+      break
+    default:
+      snackbarIcon.value = 'mdi-information'
+  }
+  
+  showSnackbar.value = true
+}
 const showTotal = ref(false)
 
 const compareMode = ref(false) 
@@ -244,6 +287,7 @@ const fetchEsriData = async () => {
       
       status.value = "error"
       message.value = data.message || "Erreur lors du chargement des données."
+      showNotification('Erreur lors du chargement des données ESRI.', 'error')
       return
     }
 
@@ -253,7 +297,7 @@ const fetchEsriData = async () => {
     columns.value = data.columns || []
     rows.value = data.rows || []
     bilan.value = data.bilan || []
-
+    showNotification('Données ESRI chargées avec succès.', 'success')
    localStorage.setItem(
   "esriData",
   JSON.stringify({
@@ -270,6 +314,7 @@ const fetchEsriData = async () => {
       message.value = err.response.data.message
     } else {
       message.value = "Erreur serveur ou réseau."
+      showNotification('Erreur serveur ou réseau lors du chargement des données ESRI.', 'error')
     }
 
     status.value = "error"
@@ -310,11 +355,13 @@ const exportToExcel = () => {
     
     message.value = "Export Excel réussi !"
     status.value = "success"
+    showNotification('Export Excel réussi !', 'success')
     
   } catch (error) {
     console.error("Erreur lors de l'export Excel:", error)
     message.value = "Erreur lors de l'export Excel."
     status.value = "error"
+    showNotification('Erreur lors de l\'export Excel.', 'error')
   } finally {
     exporting.value = false
   }

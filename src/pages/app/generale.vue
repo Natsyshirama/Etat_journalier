@@ -265,7 +265,7 @@
       >
         {{ message }}
       </v-alert>
-      <v-snackbar v-model="showSnackbar" :color="snackbarColor" timeout="3000">
+      <v-snackbar v-model="showSnackbar" :color="snackbarColor" timeout="4000">
         <div class="d-flex align-center">
           <v-icon class="mr-2">
             {{ snackbarIcon }}

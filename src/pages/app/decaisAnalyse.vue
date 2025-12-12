@@ -149,6 +149,21 @@
         {{ message }}
       </v-alert>
 
+      <v-snackbar v-model="showSnackbar" :color="snackbarColor" timeout="3000">
+        <div class="d-flex align-center">
+          <v-icon class="mr-2">
+            {{ snackbarIcon }}
+          </v-icon>
+          {{ snackbarMessage }}
+        </div>
+        
+        <template #actions>
+          <v-btn icon @click="showSnackbar = false">
+            <v-icon>mdi-close</v-icon>
+          </v-btn>
+        </template>
+      </v-snackbar>
+      
       <v-row v-if="hasResults" class="mt-8">
         <v-col cols="12" md="4" class="text-md-left">
           <v-btn
@@ -486,6 +501,7 @@ import { useAgences } from '@/composables/useAgences'
 ChartJS.register(Title, Tooltip, Legend, BarElement, CategoryScale, LinearScale)
 
 const router = useRouter()
+
 const goToDetail = (columnKey, agenceCode) => {
   router.push({
     path: "/app/detailDecais",
@@ -499,7 +515,34 @@ const goToAnalyseEncours = () => {
 
 const api = inject("api")
 
+const showSnackbar = ref(false)
+const snackbarMessage = ref('')
+const snackbarColor = ref('success')
+const snackbarIcon = ref('mdi-check-circle')
 
+const showNotification = (message, type = 'success') => {
+  snackbarMessage.value = message
+  snackbarColor.value = type
+  
+  switch(type) {
+    case 'success':
+      snackbarIcon.value = 'mdi-check-circle'
+      break
+    case 'error':
+      snackbarIcon.value = 'mdi-alert-circle'
+      break
+    case 'info':
+      snackbarIcon.value = 'mdi-information'
+      break
+    case 'warning':
+      snackbarIcon.value = 'mdi-alert'
+      break
+    default:
+      snackbarIcon.value = 'mdi-information'
+  }
+  
+  showSnackbar.value = true
+}
 const selectedAgences = ref([])
 const dateDebut = ref("")
 
@@ -774,7 +817,8 @@ const analyserEncours = async () => {
 
     messageType.value = "success"
     message.value = `Analyse terminée : ${agencesData.value.length} agences, ${datesList.value.length} dates disponibles`
-     
+    showNotification(`Analyse terminée : ${agencesData.value.length} agences, ${datesList.value.length} dates disponibles`, 'success')
+
     try {
       saveToLocalStorage()
       console.log('Snapshot auto-sauvegardé après analyse')
@@ -785,6 +829,7 @@ const analyserEncours = async () => {
     console.error("Erreur analyse:", error)
     messageType.value = "error"
     message.value = "❌ Erreur lors de l'analyse des encours"
+    showNotification("Erreur lors de l'analyse des encours", 'error')
   } finally {
     loading.value = false
   }
@@ -826,11 +871,15 @@ const fetchAllAgencesData = async (agences) => {
           const date = item.date_agence.date
           allData.decaissement[agenceCode][date] = item.data
         })
+
+        showNotification(`Données décaissement récupérées pour l'agence ${agenceCode}`, 'success')
       } else {
         console.log(`Aucune donnée pour décaissement - ${agenceCode}`)
+        showNotification(`Aucune donnée décaissement pour l'agence ${agenceCode}`, 'info')
       }
     } catch (error) {
       console.error(`Erreur récupération décaissement - ${agenceCode}:`, error)
+      showNotification(`Erreur lors de la récupération des données décaissement pour l'agence ${agenceCode}`, 'error')
     }
   }
 
