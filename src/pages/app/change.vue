@@ -42,6 +42,20 @@
     >
       {{ message }}
     </v-alert>
+    <v-snackbar v-model="showSnackbar" :color="snackbarColor" timeout="3000">
+        <div class="d-flex align-center">
+          <v-icon class="mr-2">
+            {{ snackbarIcon }}
+          </v-icon>
+          {{ snackbarMessage }}
+        </div>
+        
+        <template #actions>
+          <v-btn icon @click="showSnackbar = false">
+            <v-icon>mdi-close</v-icon>
+          </v-btn>
+        </template>
+      </v-snackbar>
 
     <v-tabs v-if="hasData" v-model="activeTab" class="mb-4">
       <v-tab>Synthèse</v-tab>
@@ -99,6 +113,35 @@ const etatColumns = ref([])
 const allocationRows = ref([])
 const allocationColumns = ref([])
 
+const showSnackbar = ref(false)
+const snackbarMessage = ref('')
+const snackbarColor = ref('success')
+const snackbarIcon = ref('mdi-check-circle')
+
+const showNotification = (message, type = 'success') => {
+  snackbarMessage.value = message
+  snackbarColor.value = type
+  
+  // Définir l'icône selon le type
+  switch(type) {
+    case 'success':
+      snackbarIcon.value = 'mdi-check-circle'
+      break
+    case 'error':
+      snackbarIcon.value = 'mdi-alert-circle'
+      break
+    case 'info':
+      snackbarIcon.value = 'mdi-information'
+      break
+    case 'warning':
+      snackbarIcon.value = 'mdi-alert'
+      break
+    default:
+      snackbarIcon.value = 'mdi-information'
+  }
+  
+  showSnackbar.value = true
+}
 const api = inject('api') 
 
 const hasData = computed(() =>
@@ -149,7 +192,7 @@ const fetchChangeData = async () => {
 
     if (data.status === "success") {
       message.value = `Rapport généré avec succès pour la période ${dateDebut.value} - ${dateFin.value}`
-
+      showNotification(`Rapport Change généré avec succès pour la période ${dateDebut.value} - ${dateFin.value}`, 'success')
       if (data.synthese?.length) {
         syntheseColumns.value = Object.keys(data.synthese[0])
         syntheseRows.value = data.synthese
@@ -169,14 +212,17 @@ const fetchChangeData = async () => {
 
     } else {
       message.value = data.message || "Erreur lors de la génération du rapport."
+      showNotification(`Erreur lors de la génération du rapport Change: ${message.value}`, 'error')
     }
   } catch (err) {
     console.error("Erreur lors du chargement des données Change:", err)
     status.value = "error"
+    showNotification('Erreur serveur ou réseau lors du chargement des données Change.', 'error')
   if (err.response?.data?.message) {
     message.value = err.response.data.message
   } else {
     message.value = "Erreur serveur ou réseau."
+    showNotification('Erreur serveur ou réseau lors du chargement des données Change.', 'error')
   }
 
 }finally {
@@ -212,10 +258,12 @@ const exportToExcel = () => {
 
     message.value = "Export Excel réussi !"
     status.value = "success"
+    showNotification('Export Excel réussi !', 'success')
   } catch (error) {
     console.error("Erreur lors de l'export Excel:", error)
     message.value = "Erreur lors de l'export Excel."
     status.value = "error"
+    showNotification('Erreur lors de l\'export Excel.', 'error')
   } finally {
     exporting.value = false
   }
