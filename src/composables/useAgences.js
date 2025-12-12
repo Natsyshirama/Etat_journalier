@@ -67,7 +67,6 @@ export function useAgences(api) {
     }
   }
 
-  // Charger depuis le cache local
   const loadFromCache = () => {
     try {
       const cache = localStorage.getItem('agences_cache')
@@ -104,7 +103,6 @@ export function useAgences(api) {
     return agence ? (agence.souscode || code) : code
   }
 
-  // Vérifier si une agence existe
   const agenceExists = (code) => {
     return agencesList.value.some(ag => ag.code === code)
   }
@@ -113,7 +111,6 @@ export function useAgences(api) {
   const agencesCount = computed(() => agencesList.value.length)
   const agencesCodes = computed(() => agencesList.value.map(ag => ag.code))
 
-  // Initialiser
   const initialize = () => {
     if (!initialized.value) {
       const cached = loadFromCache()
@@ -125,7 +122,6 @@ export function useAgences(api) {
     }
   }
 
-  // Appeler initialize au démarrage
   onMounted(() => {
     initialize()
   })

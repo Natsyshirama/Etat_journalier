@@ -180,23 +180,15 @@ const bilan = ref([])
 const showTotal = ref(false)
 
 const compareMode = ref(false) 
+import { useAgences } from '@/composables/useAgences'
 
-const agencesList = ref([
-  { code: "MG0010009", nom: "Andavamamba" },
-  { code: "MG0010004", nom: "Analamahitsy" },
-  { code: "MG0010024", nom: "Andravoahangy" },
-  { code: "MG0010052", nom: "Imerinafovoany" },
-  { code: "MG0010011", nom: "Andoharanofotsy" },
-  { code: "MG0010012", nom: "Anosizato" },
-  { code: "MG0010010", nom: "67 Hectares" },
-  { code: "MG0011001", nom: "Antanimena" },
-  { code: "MG0010003", nom: "Antsahabe" },
-  { code: "MG0010022", nom: "Behoririka" },
-  { code: "MG0010053", nom: "Ivandry" },
-  { code: "MG0010013", nom: "Mahamasina" },
-  { code: "MG0010041", nom: "Soixante Sept Hectares" },
-  { code: "MG0010023", nom: "Tanjombato" }
-])
+const { 
+  agencesList, 
+  loading: agencesLoading, 
+  error: agencesError,
+  getAgenceByCode 
+} = useAgences(api)
+
 
 const selectedAgences = ref([]) 
 

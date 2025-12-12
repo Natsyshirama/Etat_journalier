@@ -465,6 +465,9 @@ const saveAgence = async () => {
           filteredAgences.value = [...agences.value]
         }
         
+        deleteAgencesCache()
+
+
         showNotification('Agence mise à jour avec succès', 'success')
         closeDialog()
       }
@@ -487,6 +490,10 @@ const saveAgence = async () => {
         })
         filteredAgences.value = [...agences.value]
         
+        
+        deleteAgencesCache()
+
+
         showNotification('Agence créée avec succès', 'success')
         closeDialog()
       }
@@ -497,6 +504,26 @@ const saveAgence = async () => {
     showNotification(message, 'error')
   } finally {
     saving.value = false
+  }
+}
+
+const deleteAgencesCache = () => {
+  try {
+    localStorage.removeItem('agences_cache')
+    
+    const cacheKeys = Object.keys(localStorage)
+    cacheKeys.forEach(key => {
+      if (key.includes('agence') || key.includes('agences')) {
+        localStorage.removeItem(key)
+        console.log(`🗑️ Cache supprimé: ${key}`)
+      }
+    })
+    
+    window.dispatchEvent(new CustomEvent('agences-updated'))
+    
+    console.log('✅ Cache des agences supprimé avec succès')
+  } catch (error) {
+    console.error('❌ Erreur lors de la suppression du cache:', error)
   }
 }
 
