@@ -190,6 +190,7 @@ const isDecaissementAnalyse = computed(() => route.path === '/app/decaisAnalyse'
 const isDepotAnalyse = computed(() => route.path === '/app/depotAnalyse')
 const isDepotDetail = computed(() => route.path === '/app/analyseDetails')
 const isDecDetal = computed(() => route.path === '/app/detailDecais')
+const isAgence =  computed(() => route.path === '/app/Agence')
 
 const toolbarTitle = computed(() => {
   if (isEsriPage.value) return 'ESRI'
@@ -203,6 +204,7 @@ const toolbarTitle = computed(() => {
   if (isDepotAnalyse.value) return ' Dépôt'
   if (isDepotDetail.value) return 'Détail Dépôt'
   if (isDecDetal.value) return 'Détail Décaissement'
+  if (isAgence.value) return 'Gestion des Agences'
 
  return 'Encours Credits'
 })
@@ -401,11 +403,9 @@ async function selectDate(date,stat_compte) {
 async function selectDateStatOf(date, stat_of) {
   selectedDate.value = date
 
-  // 🔹 Met à jour le store Pinia
   popupStore.selected_date = date
   popupStore.selected_date_stat_of = stat_of
 
-  // 🔹 Ferme le menu
   menu.value = false
 
   // 🔹 Émet un événement global

@@ -16,6 +16,7 @@ from controller.decaissementReport import decaissementReport
 from controller.decaissement import DecaissementOptimise
 from controller.Users import Users
 from controller.importController import  importController
+from controller.AgenceController import AgenceController
 
 
 router = APIRouter()
@@ -30,6 +31,7 @@ change_mandy = ChangeMandy()
 decaissement = DecaissementOptimise()
 decaissement_report = decaissementReport()
 user= Users()
+agence_controller = AgenceController()
 
 #INITIALISATION COMPTE
 def get_user_from_request(request: Request):
@@ -882,14 +884,12 @@ async def import_multi(files: List[UploadFile] = File(...)):
     errors = []
     success = []
     try:
-        # Validation de base
         if not files:
             raise HTTPException(
                 status_code=400,
                 detail="Aucun fichier fourni"
             )
         
-        # Valider les extensions
         invalid_files = []
         for file in files:
             if not file.filename.lower().endswith('.csv'):
@@ -901,14 +901,12 @@ async def import_multi(files: List[UploadFile] = File(...)):
                 detail=f"Fichiers non CSV détectés: {', '.join(invalid_files)}"
             )
         
-        # Limiter le nombre de fichiers
         if len(files) > 50:
             raise HTTPException(
                 status_code=400,
                 detail="Trop de fichiers. Maximum 50 fichiers par import."
             )
         
-        # Traiter les fichiers via le controller
         result = import_controller.process_multiple_files(files)
         success.append(f"Import réussi : {file.filename}")
 
@@ -927,61 +925,183 @@ async def import_multi(files: List[UploadFile] = File(...)):
             status_code=500,
             detail=f"Erreur lors de l'import: {str(e)}"
         )
+        
 
-@router.post("/import/multi2")
-async def import_multi(files: List[UploadFile] = File(...)):
-    db = DB()
-    conn = db.connect()
-    errors = []
-    success = []
-    import numpy as np
-    import pandas as pd
-    import re
+@router.get("/agences")
+async def get_all_agences():
 
-    pattern = re.compile(r"^(dav|dat|epr|decaissement)_(\d{8})\.csv$")
-    for file in files:
-        match = pattern.match(file.filename)
-        if not match:
-            errors.append(f"Nom de fichier invalide : {file.filename}")
-            continue
-        type_table, date_str = match.groups()
-        table_name = f"{type_table}_{date_str}"
-        try:
-            # Lire le CSV avec encodage
-            df = pd.read_csv(file.file, encoding='utf-8')
-            
-            
-            # Nettoyer les colonnes
-            df.columns = [col.strip().replace(" ", "_").replace("é", "e").replace("è", "e").replace("à", "a") for col in df.columns]
-            df = df.replace({np.nan: None})
-            
-            if df.empty:
-                errors.append(f"Fichier vide ou mal lu : {file.filename}")
-                continue
-            
-            # ...avant la boucle d'insertion...
-            print("Colonnes du DataFrame:", df.columns)
-            print("Première ligne:", df.iloc[0].to_dict() if not df.empty else "DataFrame vide")
-            columns = ", ".join([f"`{col}` TEXT" for col in df.columns])
-            create_sql = f"CREATE TABLE IF NOT EXISTS `{table_name}` ({columns})"
-            conn.execute(text(create_sql))
-            for row in df.to_dict(orient="records"):
-                try:
-                    for k, v in row.items():
-                        if v is not None and (str(v).lower() == "nan" or v == ""):
-                            row[k] = None
-                    cols = ", ".join([f"`{col}`" for col in row.keys()])
-                    vals = ", ".join([f":{col}" for col in row.keys()])
-                    insert_sql = text(f"INSERT INTO `{table_name}` ({cols}) VALUES ({vals})")
-                    conn.execute(insert_sql, row)
-                    conn.commit()
+    try:
+        result = agence_controller.get_all_agences()
+        
+        if not result.get("success"):
+            raise HTTPException(status_code=500, detail=result.get("error"))
+        
+        return {
+            "response": result
+        }
+        
+    except Exception as e:
+        print(f"[ERREUR route get_all_agences] {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+    
+@router.get("/agences/{code}")
+async def get_agence(code: str):
+    """Récupérer une agence par son code"""
+    try:
+        result = agence_controller.get_agence_by_code(code)
+        
+        if not result.get("success"):
+            raise HTTPException(status_code=404, detail=result.get("error"))
+        
+        return {
+            "response": result
+        }
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        print(f"[ERREUR route get_agence] {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+    
+    
+from pydantic import BaseModel
+from typing import Optional
 
-                except Exception as e:
-                    print(f"Erreur insertion ligne: {row}\n{e}")
-                    errors.append(f"Erreur insertion ligne: {e}")
-            success.append(f"Import réussi : {file.filename}")
-        except Exception as e:
-            errors.append(f"Erreur import {file.filename} : {e}")
-    conn.close()
-    return {"success": success, "errors": errors}
+class AgenceCreate(BaseModel):
+    code: str 
+    souscode: str
+    nom: str
+
+class AgenceUpdate(BaseModel):
+    souscode: Optional[str] = None
+    nom: Optional[str] = None
+    
+@router.post("/agences/create_agence")
+async def create_agence(agence_data: AgenceCreate):
+    """Créer une nouvelle agence"""
+    try:
+        # Validation simple
+        if not agence_data.code or not agence_data.souscode or not agence_data.nom:
+            raise HTTPException(status_code=400, detail="Tous les champs sont requis")
+        
+        result = agence_controller.create_agence(
+            code=agence_data.code,
+            souscode=agence_data.souscode,
+            nom=agence_data.nom
+        )
+        
+        if not result.get("success"):
+            raise HTTPException(status_code=400, detail=result.get("error"))
+        
+        return {
+            "response": result
+        }
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        print(f"[ERREUR route create_agence] {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+    
+    
+
+@router.put("/agences/{code}")
+async def update_agence(code: str, agence_data: AgenceUpdate):
+    """Mettre à jour une agence"""
+    try:
+        # Vérifier qu'au moins un champ est fourni
+        if agence_data.souscode is None and agence_data.nom is None:
+            raise HTTPException(
+                status_code=400, 
+                detail="Au moins un champ (souscode ou nom) doit être fourni"
+            )
+        
+        result = agence_controller.update_agence(
+            code=code,
+            souscode=agence_data.souscode,
+            nom=agence_data.nom
+        )
+        
+        if not result.get("success"):
+            error_msg = result.get("error", "Erreur inconnue")
+            status_code = 404 if "non trouvée" in error_msg else 400
+            raise HTTPException(status_code=status_code, detail=error_msg)
+        
+        return {
+            "response": result
+        }
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        print(f"[ERREUR route update_agence] {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+@router.delete("/delete_agence/{code}")
+async def delete_agence(code: str):
+    """Supprimer une agence"""
+    try:
+        result = agence_controller.delete_agence(code)
+        
+        if not result.get("success"):
+            error_msg = result.get("error", "Erreur inconnue")
+            status_code = 404 if "non trouvée" in error_msg else 400
+            raise HTTPException(status_code=status_code, detail=error_msg)
+        
+        return {
+            "response": result
+        }
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        print(f"[ERREUR route delete_agence] {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+    
+@router.get("/search_agence/")
+async def search_agences(search: str = Query(..., min_length=1, description="Terme de recherche")):
+    """Rechercher des agences"""
+    try:
+        result = agence_controller.search_agences(search)
+        
+        if not result.get("success"):
+            raise HTTPException(status_code=500, detail=result.get("error"))
+        
+        return {
+            "response": result
+        }
+        
+    except Exception as e:
+        print(f"[ERREUR route search_agences] {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+@router.post("/batch/")
+async def create_batch_agences(agences_data: List[AgenceCreate]):
+    """Créer plusieurs agences en une seule requête"""
+    try:
+        conn = None
+        results = []
+        
+        for agence in agences_data:
+            result = agence_controller.create_agence(
+                code=agence.code,
+                souscode=agence.souscode,
+                nom=agence.nom
+            )
+            results.append(result)
+        
+        # Vérifier si toutes les opérations ont réussi
+        success_count = sum(1 for r in results if r.get("success"))
+        
+        return {
+            "response": {
+                "success": True,
+                "message": f"{success_count}/{len(results)} agences créées",
+                "details": results
+            }
+        }
+        
+    except Exception as e:
+        print(f"[ERREUR route create_batch_agences] {e}")
+        raise HTTPException(status_code=500, detail=str(e))
 api_router2 = router
