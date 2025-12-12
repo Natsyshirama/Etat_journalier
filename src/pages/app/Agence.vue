@@ -302,7 +302,6 @@ const router = useRouter()
 
 const api = inject("api")
 
-// Références
 const agences = ref([])
 const filteredAgences = ref([])
 const loading = ref(false)
@@ -310,7 +309,6 @@ const searchTerm = ref('')
 const itemsPerPage = ref(10)
 const lastUpdate = ref(new Date())
 
-// Dialogue gestion
 const showDialog = ref(false)
 const showDeleteDialog = ref(false)
 const isEditing = ref(false)
@@ -321,20 +319,17 @@ const agenceForm = ref(null)
 const agenceToDelete = ref(null)
 const deleteError = ref('')
 
-// Form data
 const formData = ref({
   code: '',
   souscode: '',
   nom: ''
 })
 
-// Snackbar
 const showSnackbar = ref(false)
 const snackbarMessage = ref('')
 const snackbarColor = ref('success')
 const snackbarIcon = ref('mdi-check-circle')
 
-// Règles de validation
 const codeRules = [
   v => !!v || 'Le code est requis',
   v => (v && v.length >= 5) || 'Minimum 5 caractères',
@@ -355,7 +350,6 @@ const nomRules = [
   v => (v && v.length <= 100) || 'Maximum 100 caractères'
 ]
 
-// Computed
 const apiStatusClass = computed(() => {
   return agences.value.length > 0 ? 'text-success' : 'text-warning'
 })
@@ -364,7 +358,6 @@ const apiStatusText = computed(() => {
   return agences.value.length > 0 ? 'Connecté' : 'En attente...'
 })
 
-// Méthodes
 const loadAgences = async () => {
   loading.value = true
   try {
@@ -444,7 +437,6 @@ const saveAgence = async () => {
   
   try {
     if (isEditing.value) {
-      // Mise à jour
       const response = await axios.put(
         `${api}/api/agences/${formData.value.code}`,
         {
@@ -454,7 +446,6 @@ const saveAgence = async () => {
       )
       
       if (response.data.response?.success) {
-        // Mettre à jour la liste locale
         const index = agences.value.findIndex(a => a.code === formData.value.code)
         if (index !== -1) {
           agences.value[index] = {

@@ -265,6 +265,20 @@
       >
         {{ message }}
       </v-alert>
+      <v-snackbar v-model="showSnackbar" :color="snackbarColor" timeout="3000">
+        <div class="d-flex align-center">
+          <v-icon class="mr-2">
+            {{ snackbarIcon }}
+          </v-icon>
+          {{ snackbarMessage }}
+        </div>
+        
+        <template #actions>
+          <v-btn icon @click="showSnackbar = false">
+            <v-icon>mdi-close</v-icon>
+          </v-btn>
+        </template>
+      </v-snackbar>
 
       <!-- TABLEAUX -->
       <v-row dense class="mt-8">
@@ -467,6 +481,38 @@ const goToAnalyseDecaissement = () => {
 const api = inject("api")
 
 const compare = ref(false)
+
+
+
+const showSnackbar = ref(false)
+const snackbarMessage = ref('')
+const snackbarColor = ref('success')
+const snackbarIcon = ref('mdi-check-circle')
+
+const showNotification = (message, type = 'success') => {
+  snackbarMessage.value = message
+  snackbarColor.value = type
+  
+  switch(type) {
+    case 'success':
+      snackbarIcon.value = 'mdi-check-circle'
+      break
+    case 'error':
+      snackbarIcon.value = 'mdi-alert-circle'
+      break
+    case 'info':
+      snackbarIcon.value = 'mdi-information'
+      break
+    case 'warning':
+      snackbarIcon.value = 'mdi-alert'
+      break
+    default:
+      snackbarIcon.value = 'mdi-information'
+  }
+  
+  showSnackbar.value = true
+}
+
 
 const typeTable = ref("all")
 const agence = ref("")
@@ -694,13 +740,18 @@ if (typeTable.value === 'all') {
     if (total) {
       messageType.value = "success"
       message.value = `Résultats trouvés : ${total}`
+      showNotification(`Résultats trouvés : ${total}`, 'success')
+
     } else {
       messageType.value = "info"
       message.value = "Aucun résultat trouvé."
+      showNotification(`Aucun résultat trouvé.`, 'info')
+
     }
   } catch {
     messageType.value = "error"
     message.value = "❌ Une erreur est survenue lors de la recherche."
+    showNotification('Une erreur est survenue lors de la recherche.', 'error')
   } finally {
     loading.value = false
   }

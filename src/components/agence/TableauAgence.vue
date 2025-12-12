@@ -187,7 +187,6 @@ const router = useRouter()
 const search = ref('')
 const currentPage = ref(1)
 
-// Headers du tableau
 const headers = [
   {
     title: 'Code',
@@ -228,7 +227,6 @@ const headers = [
   }
 ]
 
-// Computed
 const pageCount = computed(() => {
   return Math.ceil(props.agences.length / props.itemsPerPage)
 })
@@ -242,7 +240,6 @@ const pageEnd = computed(() => {
   return end > props.agences.length ? props.agences.length : end
 })
 
-// Méthodes
 const formatDate = (dateString) => {
   if (!dateString) return 'N/A'
   const date = new Date(dateString)
@@ -254,7 +251,6 @@ const formatDate = (dateString) => {
 }
 
 const viewDetails = (agence) => {
-  // Naviguer vers la page de détails de l'agence
   router.push({
     path: '/app/agence-details',
     query: { code: agence.code }
@@ -276,7 +272,6 @@ const viewDetails = (agence) => {
   background-color: rgba(25, 118, 210, 0.04) !important;
 }
 
-/* Style pour les boutons d'action */
 .v-btn--icon.v-btn--density-default {
   width: 32px;
   height: 32px;

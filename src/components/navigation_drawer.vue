@@ -64,7 +64,7 @@ const list_menu = [
   { icon: 'mdi-bank', title: 'My Account', to: '/app/dav', access: 'all' },
   { icon: 'mdi-account', title: 'ESRI', to: '/app/esri', access: 'all' },
      { icon: 'mdi-magnify', title: 'Rechercher', to: '/app/generale', access: 'admin' }, 
-{ icon: 'mdi-map-marker-radius', title: 'Agence', to: '/app/Agence', access: 'admin' },
+{ icon: 'mdi-map-marker-radius', title: 'Agences', to: '/app/Agence', access: 'admin' },
   { icon: 'mdi-swap-horizontal', title: 'CHANGE', to: '/app/change', access: 'all' },
 { icon: 'mdi-shield-account', title: 'Admin', to: '/app/session', access: 'admin', badge: () => notificationStore.demandesValidation },  
 { icon: 'mdi-file-table-box-multiple-outline', title: 'Mes Fichiers', to: '/app/file_manager', access: 'admin' },
