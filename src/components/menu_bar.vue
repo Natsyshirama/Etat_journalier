@@ -355,6 +355,8 @@ async function fetchData(baseUrl, date = null) {
     if (!response.ok) throw new Error(`Erreur HTTP : ${response.status}`)
 
     const data = await response.json()
+        console.log("📊 menu_bar - Données reçues:", data)
+
     return data.response.data
   } catch (error) {
     console.error('❌ Erreur de chargement :', error)
@@ -363,6 +365,23 @@ async function fetchData(baseUrl, date = null) {
 }
 
 async function selectDate(date,stat_compte) {
+  try {
+    //update mise a jour
+    const response = await fetch(`${api}/api/update_used_status?selected_date=${date}`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' }
+    });
+    
+    if (!response.ok) {
+      console.warn("⚠️ Échec de la mise à jour du statut 'used'");
+    }
+    
+    const result = await response.json();
+    console.log("✅ Statut 'used' mis à jour:", result);
+    
+  } catch (error) {
+    console.error("❌ Erreur lors de la mise à jour du statut 'used':", error);
+  }
   
   selectedDate.value = date
   popupStore.selected_date = date

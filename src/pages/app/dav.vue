@@ -361,7 +361,9 @@ onUnmounted(() => {
 
 const fetchTables = async () => {
   try {
-    const res = await axios.get(`${api}/api/history/liste`)
+    const res = await axios.get(`${api}/api/history_insert`)
+        console.log("📊 dav.vue - Données history/liste:", res.data)
+
     history.value = res.data.history || []
   } catch (err) {
     console.error("Erreur lors du chargement de l'history:", err)

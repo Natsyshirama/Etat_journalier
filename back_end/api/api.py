@@ -462,6 +462,25 @@ async def history_insert( ):
     except Exception as e:
         print(f"[ERREUR route get_encours_credits] {e}")
         raise HTTPException(status_code=500, detail=str(e))
+    
+@router.post("/update_used_status")
+async def update_used_status_endpoint(selected_date: str = Query(..., description="Date label à marquer comme utilisée")):
+    try:
+        if not selected_date or not selected_date.isdigit() or len(selected_date) != 8:
+            raise HTTPException(status_code=400, detail="Format de date invalide. Utilisez YYYYMMDD")
+        
+        response = credit_outstanding_report.update_used_status(selected_date)
+        
+        if response is None or not response.get("success"):
+            raise HTTPException(status_code=500, detail=response.get("error", "Échec de la mise à jour"))
+        
+        return {"response": response}
+
+    except HTTPException:
+        raise
+    except Exception as e:
+        print(f"[ERREUR route update_used_status] {e}")
+        raise HTTPException(status_code=500, detail=str(e))
 
 @router.get("/get_local_ref")
 async def get_local_ref(date: str = Query(...)): 

@@ -384,7 +384,40 @@ class Credit_outstanding_report:
                 except Exception as close_err:
                     print(f"[ERREUR] Fermeture de connexion échouée : {close_err}")
 
+    def update_used_status(self, selected_date):
+        conn = None 
+        try:  
+            query = text("""
+                UPDATE `history_insert` 
+                SET `used` = CASE 
+                    WHEN `label` = :label THEN 1 
+                    ELSE 0 
+                END
+            """)
             
+            conn = self.db.connect()
+            result = conn.execute(query, {"label": selected_date})
+            conn.commit()
+            
+            return {
+                "success": True, 
+                "message": f"Statut 'used' mis à jour pour la date {selected_date}",
+                "rows_affected": result.rowcount
+            }
+
+        except Exception as e:
+            print(f"[ERREUR] Impossible de mettre à jour le statut used : {e}")
+            if conn:
+                conn.rollback()
+            return {"success": False, "error": str(e)}
+
+        finally:
+            if conn:
+                try:
+                    conn.close()
+                except Exception as close_err:
+                    print(f"[ERREUR] Fermeture de connexion échouée : {close_err}")
+                            
     def get_local_reference(self, date: str):
         conn = None
         try:
