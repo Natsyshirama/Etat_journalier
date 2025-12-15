@@ -8,10 +8,17 @@
           label="Date début (YYYYMMDD)"
           outlined
           dense
+          hide-details
         />
+        <v-checkbox
+            v-model="mode_unique"
+            label="date unique"
+            class="mt-0"
+            hide-details
+          />
       </v-col>
 
-      <v-col cols="12" md="3">
+      <v-col cols="12" md="3" v-if="!mode_unique">
         <v-text-field
           v-model="dateFin"
           label="Date fin (YYYYMMDD)"
@@ -191,6 +198,7 @@ const tableEsriRef = ref(null)
 const api = inject('api') 
 const bilan = ref([])
 
+const mode_unique = ref(false)
 const showSnackbar = ref(false)
 const snackbarMessage = ref('')
 const snackbarColor = ref('success')
@@ -257,10 +265,22 @@ const typesList = ref([{code:"RIA.PAYMENT", nom:"RIA"},
 
 
 const fetchEsriData = async () => {
-  if (!dateDebut.value || !dateFin.value) {
+  if (!dateDebut.value) {
     status.value = "error"
-    message.value = "Veuillez remplir toutes les informations."
+    message.value = "Veuillez remplir la date de début."
+    showNotification('Veuillez remplir la date de début.', 'error')
     return
+  }
+  
+  if (!mode_unique.value && !dateFin.value) {
+    status.value = "error"
+    message.value = "Veuillez remplir la date de fin."
+    showNotification('Veuillez remplir la date de fin.', 'error')
+    return
+  }
+  
+  if (mode_unique.value) {
+    dateFin.value = ''
   }
   
   loading.value = true
@@ -277,17 +297,17 @@ const fetchEsriData = async () => {
           date_debut: dateDebut.value,
           date_fin: dateFin.value,
           compare: compareMode.value,
+          unique: mode_unique.value,
 
         },
       }
     )
 
-
-    if (res.status === "error") {
+    if (res.status === "warning" || res.status === "error") {
       
-      status.value = "error"
+      status.value = "warning"
       message.value = data.message || "Erreur lors du chargement des données."
-      showNotification('Erreur lors du chargement des données ESRI.', 'error')
+      showNotification('Erreur lors du chargement des données ESRI.', 'warning')
       return
     }
 

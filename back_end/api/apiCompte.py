@@ -165,25 +165,28 @@ async def create_esri_precompute(
 
 
 @router.post("/esri/create_esri_precompute")
-def create_esri_precompute( request: Request, date_debut: str = Query(...), date_fin: str = Query(...),    compare: bool = Query(False)  # Nouveau paramètre
+def create_esri_precompute( request: Request, date_debut: str = Query(...), date_fin: str = Query(...),    compare: bool = Query(False) , unique: bool = Query(False)
 ):
     try:
-        # current_user = user.get_current_user(request)
-        # if current_user.get("privillege") not in ["user","admin", "superadmin"]:
-        #     raise HTTPException(status_code=403, detail="Accès refusé : privilège insuffisant")
+        current_user = user.get_current_user(request)
+        if current_user.get("privillege") not in ["user","admin", "superadmin"]:
+            raise HTTPException(status_code=403, detail="Accès refusé : privilège insuffisant")
 
         limit = db_get.getHistoryDate()
         if limit and (date_debut > limit or date_fin > limit):
             raise Exception(f"Les données apres le {limit} ne sont pas encore disponible.")
        
-        result_df,columns ,bilan= operation_esri.process_esri_data_fast(date_debut, date_fin, compare_mode=compare)
+        result_df,columns ,bilan= operation_esri.process_esri_data_fast(date_debut, date_fin, compare_mode=compare ,unique_mode=unique)
 
         if  result_df.empty and bilan.empty:
             return JSONResponse(
                 content={
-                    "status": "error",
-                    "message": f"Aucune donnée trouvée entre {date_debut} et {date_fin}",
-                   
+                    "status": "warning",
+                    "message": f"Aucune donnée trouvée entre {date_debut} - {date_fin}",
+                   "columns": [],
+                    "rows": [],
+                    "bilan": [],
+                    "count": 0
                 },
                 status_code=200
             )
@@ -193,7 +196,7 @@ def create_esri_precompute( request: Request, date_debut: str = Query(...), date
         return JSONResponse(
             content={
                 "status": "success",
-                "message": f"Données ESRI  entre {date_debut} et {date_fin} ",
+                "message": f"Données ESRI  entre {date_debut} - {date_fin} ",
                 
                 "columns": columns,
                 "rows": data_json,
@@ -207,8 +210,17 @@ def create_esri_precompute( request: Request, date_debut: str = Query(...), date
         import traceback
         print(f"[ERREUR] create_esri_precompute : {e}")
         print(traceback.format_exc())
-        return JSONResponse(content={"status": "error", "message": str(e)}, status_code=500)
-
+        return JSONResponse(
+            content={
+                "status": "error", 
+                "message": str(e),
+                "columns": [],
+                "rows": [],
+                "bilan": [],
+                "count": 0
+            }, 
+            status_code=500
+        )
 #change
 @router.post("/change/generate_report")
 def create_change_report(request: Request,date_debut: str, date_fin: str):

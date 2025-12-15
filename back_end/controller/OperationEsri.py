@@ -149,10 +149,13 @@ class OperationEsri:
             return None
         return codes_dict.get(str(country_code).strip().upper())
 
-    def process_esri_data_fast(self, date_debut: str, date_fin:str, compare_mode: bool = False):
+    def process_esri_data_fast(self, date_debut: str, date_fin:str, compare_mode: bool = False, unique_mode: bool = False):
         conn = None
         try:
             conn = self.db.connect()
+            if unique_mode and date_fin is None or date_fin == "":
+                date_fin = date_debut
+                print(f"[INFO] Seulement date_debut fourni. Utilisation de la même date : {date_debut}")
             if compare_mode:
                 query = text("""
                     SELECT 
@@ -170,28 +173,46 @@ class OperationEsri:
                     ORDER BY value_date_1;
                 """)
             else:
-                query = text("""
-                SELECT 
-                    co_code AS Agence,
-                    'EUR' AS Devise,
-                    'SIPEM' AS Banque,
-                    '0' AS `Donneur resident`,
-                    '' AS `Code pays donneur d'ordre`,
-                    DATE_FORMAT(value_date_1, '%Y/%m/%d') AS Date,
-                    amount_local_1 AS Montant,
-                    local_ref
-                FROM teller_mcbc_his_full
-                WHERE transaction_code IN (40, 53)
-                AND value_date_1 BETWEEN :date_debut AND :date_fin
-                ORDER BY value_date_1;
-            """)
+                if unique_mode and date_debut == date_fin:
+                    query = text("""
+                        SELECT 
+                            co_code AS Agence,
+                            'EUR' AS Devise,
+                            'SIPEM' AS Banque,
+                            '0' AS `Donneur resident`,
+                            '' AS `Code pays donneur d'ordre`,
+                            DATE_FORMAT(value_date_1, '%Y/%m/%d') AS Date,
+                            amount_local_1 AS Montant,
+                            local_ref
+                        FROM teller_mcbc_his_full
+                        WHERE transaction_code IN (40, 53)
+                        AND value_date_1 = :date_debut
+                        ORDER BY value_date_1;
+                    """)
+                    
+                else:
+                    query = text("""
+                    SELECT 
+                        co_code AS Agence,
+                        'EUR' AS Devise,
+                        'SIPEM' AS Banque,
+                        '0' AS `Donneur resident`,
+                        '' AS `Code pays donneur d'ordre`,
+                        DATE_FORMAT(value_date_1, '%Y/%m/%d') AS Date,
+                        amount_local_1 AS Montant,
+                        local_ref
+                    FROM teller_mcbc_his_full
+                    WHERE transaction_code IN (40, 53)
+                    AND value_date_1 BETWEEN :date_debut AND :date_fin
+                    ORDER BY value_date_1;
+                """)
                 
             df = pd.read_sql(query, conn, params={"date_debut": date_debut, "date_fin": date_fin})
 
             
             if df.empty:
                 print(f"[INFO] Aucune donnée ESRI trouvée entre {date_debut} et {date_fin}.")
-                return pd.DataFrame()
+                return pd.DataFrame(), [], pd.DataFrame()
 
 
             extracted_data = []
