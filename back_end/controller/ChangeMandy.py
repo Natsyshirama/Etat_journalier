@@ -10,15 +10,25 @@ class ChangeMandy:
         """Crée les fonctions de calcul dans MySQL"""
         try:
             with self.db.connect() as conn:
+                # Création d'une fonction qui peut gérer une seule date
                 create_function_query = """
                 CREATE FUNCTION calculate_currency_totals(
                     p_date_debut DATE,
-                    p_date_fin DATE
+                    p_date_fin DATE,
+                    p_unique_mode BOOLEAN
                 )
                 RETURNS TEXT
                 DETERMINISTIC
                 BEGIN
                     DECLARE result TEXT DEFAULT '';
+                    DECLARE v_date_fin DATE;
+                    
+                    -- Si mode unique, utiliser date_debut comme date_fin
+                    IF p_unique_mode THEN
+                        SET v_date_fin = p_date_debut;
+                    ELSE
+                        SET v_date_fin = p_date_fin;
+                    END IF;
                     
                     SELECT CONCAT(
                         SUM(CASE WHEN currency_1 = 'EUR' AND transaction_code = 23 THEN amount_fcy_1 ELSE 0 END), '|',
@@ -32,7 +42,11 @@ class ChangeMandy:
                     ) INTO result
                     FROM teller_mcbc_his_full
                     WHERE transaction_code IN (23, 26)
-                    AND value_date_1 BETWEEN p_date_debut AND p_date_fin;
+                    AND (
+                        (p_unique_mode AND value_date_1 = p_date_debut)
+                        OR
+                        (NOT p_unique_mode AND value_date_1 BETWEEN p_date_debut AND v_date_fin)
+                    );
                     
                     RETURN IFNULL(result, '0|0|0|0|0|0|0|0');
                 END
@@ -49,10 +63,15 @@ class ChangeMandy:
             print(f"[ERREUR] create_calcul_functions : {e}")
             return False
 
-    def create_unified_temp_table(self, date_debut: str, date_fin: str):
+    def create_unified_temp_table(self, date_debut: str, date_fin: str, unique_mode: bool = False):
         conn = None
         try:
-            query = """
+            if unique_mode:
+                where_condition = "AND tel.value_date_1 = :date_debut"
+            else:
+                where_condition = "AND tel.value_date_1 BETWEEN :date_debut AND :date_fin"
+            
+            query = f"""
                 CREATE TEMPORARY TABLE temp_change_unified AS
                 SELECT
                     LEFT(tel.id, LENGTH(tel.id) - 1) AS `CODE_OPERATIONS`,
@@ -83,16 +102,23 @@ class ChangeMandy:
                     teller_mcbc_his_full AS tel
                 WHERE
                     transaction_code IN (35, 38, 23, 26)
-                    AND tel.value_date_1 BETWEEN :date_debut AND :date_fin
+                    {where_condition}
             """
             
             conn = self.db.connect()
             drop_query = "DROP TEMPORARY TABLE IF EXISTS temp_change_unified"
             conn.execute(text(drop_query))
-            conn.execute(text(query), {"date_debut": date_debut, "date_fin": date_fin})
+            
+            # Préparer les paramètres selon le mode
+            params = {"date_debut": date_debut}
+            if not unique_mode:
+                params["date_fin"] = date_fin
+                
+            conn.execute(text(query), params)
             conn.commit()
             
-            print("[INFO] Table temporaire unifiée créée avec succès ✅")
+            mode_str = "unique" if unique_mode else "période"
+            print(f"[INFO] Table temporaire unifiée créée avec succès (mode {mode_str}) ✅")
             return True
             
         except Exception as e:
@@ -227,12 +253,12 @@ class ChangeMandy:
                 except Exception as close_err:
                     print(f"[ERREUR] Fermeture connexion : {close_err}")
 
-    def generate_tables_report(self, date_debut: str, date_fin: str):
+    def generate_tables_report(self, date_debut: str, date_fin: str, unique_mode: bool = False):
         try:
             if not self.create_calcul_functions():
                 return False
             
-            if not self.create_unified_temp_table(date_debut, date_fin):
+            if not self.create_unified_temp_table(date_debut, date_fin, unique_mode):
                 return False
             
             if not self.create_report_tables(date_debut, date_fin):

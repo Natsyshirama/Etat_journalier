@@ -7,10 +7,17 @@
           label="Date début (YYYYMMDD)"
           outlined
           dense
+           hide-details
         />
+        <v-checkbox
+            v-model="mode_unique"
+            label="date unique"
+            class="mt-0"
+            hide-details
+          />
       </v-col>
 
-      <v-col cols="12" md="3">
+      <v-col cols="12" md="3" v-if= !mode_unique>
         <v-text-field
           v-model="dateFin"
           label="Date fin (YYYYMMDD)"
@@ -98,6 +105,7 @@ import * as XLSX from "xlsx"
 import { watch } from "vue"
 import TableauChange from "@/components/change/TableauChange.vue"
 
+const mode_unique = ref(false)
 const dateDebut = ref("")
 const dateFin = ref("")
 const loading = ref(false)
@@ -164,10 +172,22 @@ const saveToLocalStorage = () => {
 }
 
 const fetchChangeData = async () => {
-  if (!dateDebut.value || !dateFin.value) {
+if (!dateDebut.value) {
     status.value = "error"
-    message.value = "Veuillez remplir les dates de début et de fin."
+    message.value = "Veuillez remplir la date de début."
+    showNotification('Veuillez remplir la date de début.', 'error')
     return
+  }
+  
+  if (!mode_unique.value && !dateFin.value) {
+    status.value = "error"
+    message.value = "Veuillez remplir la date de fin."
+    showNotification('Veuillez remplir la date de fin.', 'error')
+    return
+  }
+  
+  if (mode_unique.value) {
+    dateFin.value = ''
   }
 
   loading.value = true
@@ -183,6 +203,7 @@ const fetchChangeData = async () => {
         params: {
           date_debut: dateDebut.value,
           date_fin: dateFin.value,
+          unique: mode_unique.value
         },
       }
     )

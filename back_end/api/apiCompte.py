@@ -223,7 +223,7 @@ def create_esri_precompute( request: Request, date_debut: str = Query(...), date
         )
 #change
 @router.post("/change/generate_report")
-def create_change_report(request: Request,date_debut: str, date_fin: str):
+def create_change_report(request: Request,date_debut: str, date_fin: str, unique: bool = Query(False)):
     try:
         current_user = user.get_current_user(request)
         if current_user.get("privillege") not in ["user","admin", "superadmin"]:
@@ -233,7 +233,7 @@ def create_change_report(request: Request,date_debut: str, date_fin: str):
         if limit and (date_debut > limit or date_fin > limit):
             raise Exception(f"Les données apres le {limit} ne sont pas encore disponible.")
         #controller/changeMandy.py
-        result = change_mandy.generate_tables_report(date_debut, date_fin)
+        result = change_mandy.generate_tables_report(date_debut, date_fin, unique_mode=unique)
         
         if not result:
             raise Exception("Aucune donnée disponible pour cette période.")
