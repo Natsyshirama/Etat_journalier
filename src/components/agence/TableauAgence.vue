@@ -14,15 +14,16 @@
     <!-- Tableau -->
     <v-data-table
       :headers="headers"
-      :items="agences"
-      :items-per-page="itemsPerPage"
+      :items="paginatedAgences"
       :loading="loading"
       :search="search"
+      hide-default-footer
       class="elevation-0"
       item-value="code"
       density="comfortable"
       hover
     >
+    
       <!-- En-têtes personnalisées -->
       <template #headers>
         <tr>
@@ -153,7 +154,7 @@
           <v-pagination
             v-model="currentPage"
             :length="pageCount"
-            :total-visible="5"
+            :total-visible="10"
             density="comfortable"
           />
         </div>
@@ -163,7 +164,7 @@
 </template>
 
 <script setup>
-import { ref, computed, defineProps, defineEmits } from 'vue'
+import { ref, watch,computed, defineProps, defineEmits } from 'vue'
 import { useRouter } from 'vue-router'
 
 const props = defineProps({
@@ -250,12 +251,24 @@ const formatDate = (dateString) => {
   })
 }
 
+
+const paginatedAgences = computed(() => {
+  const start = (currentPage.value - 1) * props.itemsPerPage
+  const end = start + props.itemsPerPage
+  return props.agences.slice(start, end)
+})
+
+
 const viewDetails = (agence) => {
   router.push({
     path: '/app/agence-details',
     query: { code: agence.code }
   })
 }
+watch(() => props.agences, () => {
+  currentPage.value = 1
+})
+
 </script>
 
 <style scoped>
