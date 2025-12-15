@@ -178,7 +178,7 @@ def create_esri_precompute( request: Request, date_debut: str = Query(...), date
        
         result_df,columns ,bilan= operation_esri.process_esri_data_fast(date_debut, date_fin, compare_mode=compare ,unique_mode=unique)
 
-        if  result_df.empty and bilan.empty:
+        if  result_df.empty :
             return JSONResponse(
                 content={
                     "status": "warning",

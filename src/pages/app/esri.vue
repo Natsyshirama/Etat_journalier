@@ -303,11 +303,18 @@ const fetchEsriData = async () => {
       }
     )
 
-    if (res.status === "warning" || res.status === "error") {
+    if (res.status === "warning" ) {
       
       status.value = "warning"
       message.value = data.message || "Erreur lors du chargement des données."
-      showNotification('Erreur lors du chargement des données ESRI.', 'warning')
+      showNotification(``, 'warning')
+      return
+    }
+    if (res.status === "error" ) {
+      
+      status.value = "error"
+      message.value = data.message || "Erreur lors du chargement des données."
+      showNotification(`${data.message}`, 'error')
       return
     }
 
@@ -317,7 +324,6 @@ const fetchEsriData = async () => {
     columns.value = data.columns || []
     rows.value = data.rows || []
     bilan.value = data.bilan || []
-    showNotification('Données ESRI chargées avec succès.', 'success')
    localStorage.setItem(
   "esriData",
   JSON.stringify({
