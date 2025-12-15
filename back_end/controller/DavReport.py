@@ -15,7 +15,6 @@ class DavReport:
         try:
             conn = self.db.connect()
 
-            # Requête pour récupérer les noms des tables commençant par dav_
             query = text("""
                 SELECT table_name
                 FROM information_schema.tables
@@ -24,7 +23,7 @@ class DavReport:
             """)
 
             result = conn.execute(query)
-            # Transformer en liste Python
+            # Transformer en liste
             tables = [row[0] for row in result.fetchall()]
             return tables
 
@@ -66,7 +65,6 @@ class DavReport:
 
         except Exception as e:
             print(f"[ERREUR] getDav : {e}")
-            # Retourner une structure cohérente même en cas d'erreur
             return {
                 "columns": [],
                 "data": [],
@@ -371,6 +369,8 @@ class DavReport:
                     filtered_tables = [t for t in all_tables if t.replace(f"{type_table}_", "") in [date_debut, date_fin]]
                 elif date_debut and date_fin:
                     filtered_tables = [t for t in all_tables if date_debut <= t.replace(f"{type_table}_", "") <= date_fin]
+                elif date_debut or  date_fin:
+                    filtered_tables = [t for t in all_tables if t.replace(f"{type_table}_", "") == date_debut or t.replace(f"{type_table}_", "") == date_fin]
                 else:
                     filtered_tables = all_tables
 
@@ -418,10 +418,8 @@ class DavReport:
                         """
                     result = conn.execute(text(sql), params).fetchone()
                     if result:
-                        # Construire l'objet date_agence conditionnellement
                         date_agence_data = {"date": table_date}
                         
-                        # Ajouter agence seulement si elle a une valeur
                         if agence:
                             date_agence_data["agence"] = agence
                         
@@ -432,7 +430,7 @@ class DavReport:
                                 "total_credit": round(float(result[2] or 0),2)
                             }
                             
-                            # Calculer l'écart si on a des données précédentes
+                            # calcule ecart
                             ecart_data = {}
                             if previous_data:
                                 for key, current_value in current_data.items():
@@ -440,7 +438,7 @@ class DavReport:
                                     ecart = current_value - previous_value
                                     ecart_data[f"ecart_{key}"] = ecart
                             else:
-                                # Première ligne, écarts à 0
+                                # 1 ere ligne , ecart = 0
                                 for key in current_data.keys():
                                     ecart_data[f"ecart_{key}"] = 0
                             
@@ -450,7 +448,7 @@ class DavReport:
                                 "ecart": ecart_data
                             })
                             
-                            previous_data = current_data  # Mettre à jour pour la prochaine itération
+                            previous_data = current_data  
                             
                         elif type_table == "dat":
                             current_data = {
@@ -459,7 +457,7 @@ class DavReport:
                                 "total_credit": float(result[2] or 0)
                             }
                             
-                            # Calculer l'écart si on a des données précédentes
+                            # calcule ecart
                             ecart_data = {}
                             if previous_data:
                                 for key, current_value in current_data.items():

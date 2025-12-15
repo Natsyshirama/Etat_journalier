@@ -132,6 +132,8 @@ class decaissementReport:
                     filtered_tables = [t for t in all_tables if t.replace(f"decaissement_", "") in [date_debut, date_fin]]
             elif date_debut and date_fin:
                 filtered_tables = [t for t in all_tables if date_debut <= t.replace("decaissement_", "") <= date_fin]    
+            elif date_debut or date_fin:
+                filtered_tables = [t for t in all_tables if t.replace("decaissement_", "") == date_debut or t.replace("decaissement_", "") == date_fin]
             else:
                 filtered_tables = all_tables
 
