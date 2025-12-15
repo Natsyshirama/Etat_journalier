@@ -26,14 +26,17 @@
         />
       </v-col>
 
-      <v-col cols="12" md="3" class="d-flex align-center">
+      <v-col cols="12" md="auto" class="d-flex align-right">
         <v-btn
           color="primary"
+          size="large"
+          rounded="lg"
+
           @click="fetchChangeData"
           :loading="loading"
-          class="mr-2"
+          class="px-6"
         >
-          Charger les données
+          Charger
         </v-btn>
 
         

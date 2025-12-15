@@ -37,7 +37,7 @@
 
        
  
-      <v-col cols="12" sm="auto" class="d-flex align-rignt">
+      <v-col cols="12" sm="auto" class="d-flex align-right">
         <v-btn
           color="primary"
           size="large"
