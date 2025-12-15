@@ -1,7 +1,6 @@
 <template>
   <v-container class="pa-0 full-container" fluid>
     <v-card class="pa-8 rounded-0 elevation-2 fade-in full-card" flat>
-      <!-- En-tête -->
       <div class="navigation-container mb-6">
         <div class="navigation-header">
           <div class="header-title">
@@ -14,7 +13,6 @@
             </p>
           </div>
           
-          <!-- Bouton Ajouter -->
           <div class="navigation-buttons">
             <v-btn
               color="primary"
@@ -583,7 +581,6 @@ onMounted(() => {
   overflow-y: auto;
   padding-bottom: 20px;
   padding: 0 10px; 
-  background: linear-gradient(135deg, #f5f7fa 0%, #e4e8f0 100%);
 }
 
 .full-card {

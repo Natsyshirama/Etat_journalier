@@ -1,6 +1,5 @@
 <template>
   <v-container class="unified-container" fluid>
-
     <!-- si pas encore initialiser -->
     <div v-if="selectedTable && isInitialized === 0" class="text-center py-16">
       <v-icon color="warning" size="80" class="mb-4">mdi-database-alert</v-icon>
@@ -15,23 +14,31 @@
         Initialiser la table
       </v-btn>
     </div>
-<div v-else>
-  <ResumeGlobalGraphe />
-    <ResumerDat v-if="selectedTable && activeTab === 0" :tableName="selectedTable" />
-    <ResumerDav v-if="selectedTable && activeTab === 1" :tableName="selectedTable" />
-    <ResumerEpr v-if="selectedTable && activeTab === 2" :tableName="selectedTable" />
-    <ResumerDec v-if="selectedTable && activeTab === 3" :tableName="selectedTable" />
+    
+    <div v-else>
+      <!-- SECTION GRAPHE GLOBAL AVEC ESPACEMENT -->
+      <div class="global-graphe-section mb-6">
+        <ResumeGlobalGraphe />
+      </div>
+      
+      <!-- SECTION RESUME PAR TAB -->
+      <div class="resumer-section" :class="{'mb-6': displayComponent === 'tableau'}">
+        <ResumerDat v-if="selectedTable && activeTab === 0" :tableName="selectedTable" class="tab-resumer" />
+        <ResumerDav v-if="selectedTable && activeTab === 1" :tableName="selectedTable" class="tab-resumer" />
+        <ResumerEpr v-if="selectedTable && activeTab === 2" :tableName="selectedTable" class="tab-resumer" />
+        <ResumerDec v-if="selectedTable && activeTab === 3" :tableName="selectedTable" class="tab-resumer" />
+      </div>
 
-    <v-tabs v-model="activeTab" class="mb-4">
-      <v-tab>DAT</v-tab>
-      <v-tab>DAV</v-tab>
-      <v-tab>EPR</v-tab>
-      <v-tab>DECAISSEMENT</v-tab>
+      <!-- TABS -->
+      <v-tabs v-model="activeTab" class="mb-4 tabs-container">
+        <v-tab>DAT</v-tab>
+        <v-tab>DAV</v-tab>
+        <v-tab>EPR</v-tab>
+        <v-tab>DECAISSEMENT</v-tab>
+      </v-tabs>
 
-    </v-tabs>
-
-    <!-- Boutons Tableau/Dashboard -->
-    <v-row class="mb-4">
+      <!-- Boutons Tableau/Dashboard -->
+      <v-row class="mb-4 display-toggle-row">
         <v-col cols="12" md="6">
           <v-btn
             color="success"
@@ -52,75 +59,83 @@
         </v-col>
       </v-row>
 
-    <v-window v-model="activeTab">
-      <!--  DAT -->
-      <v-window-item>
-        <div v-if="selectedTable">
-          <TableauDat
-            v-if="displayComponent === 'tableau'"
-            :tableName="selectedTable"
-          />
-          
-          <DatGraphe
-            v-if="displayComponent === 'dashboard'"
-            :tableName="selectedTable"
-          />
-        </div>
-      </v-window-item>
+      <v-window v-model="activeTab" class="content-window">
+        <!--  DAT -->
+        <v-window-item>
+          <div v-if="selectedTable" class="tab-content">
+            <TableauDat
+              v-if="displayComponent === 'tableau'"
+              :tableName="selectedTable"
+              class="tab-component"
+            />
+            
+            <DatGraphe
+              v-if="displayComponent === 'dashboard'"
+              :tableName="selectedTable"
+              class="tab-component"
+            />
+          </div>
+        </v-window-item>
 
-      <!-- Onglet DAV -->
-      <v-window-item>
-        <div v-if="selectedTable">
-          <TableauDav
-            v-if="displayComponent === 'tableau'"
-            :tableName="selectedTable"
-          />
-          <DashboardDav
-            v-if="displayComponent === 'dashboard'"
-            :tableName="selectedTable"
-          />
-          
-        </div>
-      </v-window-item>
-      
-      <!-- Onglet EPR -->
-      
-      <v-window-item>
-        <div v-if="selectedTable">
-          <TableauEpr
-            v-if="displayComponent === 'tableau'"
-            :tableName="selectedTable"
-          />
-          
-          <EprGraphe
-            v-if="displayComponent === 'dashboard'"
-            :tableName="selectedTable"
-          />
-        </div>
-      </v-window-item>
+        <!-- Onglet DAV -->
+        <v-window-item>
+          <div v-if="selectedTable" class="tab-content">
+            <TableauDav
+              v-if="displayComponent === 'tableau'"
+              :tableName="selectedTable"
+              class="tab-component"
+            />
+            <DashboardDav
+              v-if="displayComponent === 'dashboard'"
+              :tableName="selectedTable"
+              class="tab-component"
+            />
+          </div>
+        </v-window-item>
+        
+        <!-- Onglet EPR -->
+        <v-window-item>
+          <div v-if="selectedTable" class="tab-content">
+            <TableauEpr
+              v-if="displayComponent === 'tableau'"
+              :tableName="selectedTable"
+              class="tab-component"
+            />
+            
+            <EprGraphe
+              v-if="displayComponent === 'dashboard'"
+              :tableName="selectedTable"
+              class="tab-component"
+            />
+          </div>
+        </v-window-item>
+        
         <!-- Onglet DECAISSEMENT -->
-      <v-window-item>
-        <div v-if="selectedTable">
-          <TableauDec
-            v-if="displayComponent === 'tableau'"
-            :tableName="selectedTable"
-          />
-          
-          <DecGraphe
-            v-if="displayComponent === 'dashboard'"
-            :tableName="selectedTable"
-          />
-        </div>
-      </v-window-item>
-    </v-window>
-</div>
+        <v-window-item>
+          <div v-if="selectedTable" class="tab-content">
+            <TableauDec
+              v-if="displayComponent === 'tableau'"
+              :tableName="selectedTable"
+              class="tab-component"
+            />
+            
+            <DecGraphe
+              v-if="displayComponent === 'dashboard'"
+              :tableName="selectedTable"
+              class="tab-component"
+            />
+          </div>
+        </v-window-item>
+      </v-window>
+    </div>
+    
     <v-alert
       v-if="!selectedTable"
       type="info"
       border="left"
       color="green"
       dark
-      class="mb-4"
+      class="mb-4 no-table-alert"
     >
       Sélectionnez une table pour afficher les données
     </v-alert>
@@ -403,12 +418,86 @@ watch(() => popupStore.selected_date, (newDate) => {
   }
 }, { immediate: true })
 </script>
-
 <style scoped>
 .unified-container {
   max-height: 90vh;
   overflow-y: auto;
   padding-bottom: 20px;
   padding: 0 10px; 
+}
+
+.global-graphe-section {
+  margin-bottom: 24px;
+  padding-bottom: 16px;
+  border-bottom: 1px solid #e0e0e0;
+}
+
+.resumer-section {
+  margin-bottom: 20px;
+}
+
+.tab-resumer {
+  margin-bottom: 16px;
+}
+
+.tabs-container {
+  margin-top: 16px;
+  margin-bottom: 20px;
+}
+
+.display-toggle-row {
+  margin-bottom: 20px;
+  margin-top: 8px;
+}
+
+.content-window {
+  min-height: 400px;
+}
+
+.tab-content {
+  margin-top: 8px;
+}
+
+.tab-component {
+  margin-top: 16px;
+}
+
+.no-table-alert {
+  margin-top: 20px;
+}
+
+@media (max-width: 960px) {
+  .global-graphe-section {
+    margin-bottom: 20px;
+    padding-bottom: 12px;
+  }
+  
+  .resumer-section {
+    margin-bottom: 16px;
+  }
+  
+  .tabs-container {
+    margin-top: 12px;
+    margin-bottom: 16px;
+  }
+  
+  .display-toggle-row {
+    margin-bottom: 16px;
+  }
+}
+
+@media (max-width: 600px) {
+  .global-graphe-section {
+    margin-bottom: 16px;
+    padding-bottom: 8px;
+  }
+  
+  .resumer-section {
+    margin-bottom: 12px;
+  }
+  
+  .tab-resumer {
+    margin-bottom: 12px;
+  }
 }
 </style>
