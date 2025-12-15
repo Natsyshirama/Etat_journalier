@@ -2,9 +2,9 @@ import pandas as pd
 from sqlalchemy import text
 from db.db import DB
 from controller.DbGet import DbGet
-
+from controller.AgenceController import AgenceController
 db_get = DbGet()
-
+agence_report = AgenceController()
 class decaissementReport:
     def __init__(self):
         self.db = DB()
@@ -79,12 +79,20 @@ class decaissementReport:
     def getDecAn(self, agence: str = None,
                        date_debut: str = None, date_fin: str = None,
                        single_date_if_all: str = "20251028" , compare: bool = False):
-       
-        AGENCES_DISPO = [
-            "MG0010009","MG0010004","MG0010024","MG0010052","MG0010011",
-            "MG0010012","MG0010010","MG0011001","MG0010003","MG0010022",
-            "MG0010053","MG0010013","MG0010041","MG0010023"
-        ]
+        agences_result = agence_report.get_code_Agence()
+        if not agences_result.get("success"):
+                return {
+                    "status": "error",
+                    "message": f"Impossible de récupérer les agences: {agences_result.get('error', 'Erreur inconnue')}",
+                    "data": []
+                }
+        AGENCES_DISPO = [item["code"] for item in agences_result.get("data", [])]
+        if not AGENCES_DISPO:
+                return {
+                    "status": "warning", 
+                    "message": "Aucune agence disponible dans la base de données",
+                    "data": []
+                }
 
         conn = None
         try:
