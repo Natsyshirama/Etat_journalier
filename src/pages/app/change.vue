@@ -213,30 +213,78 @@ if (!dateDebut.value) {
 
     const data = res.data
     status.value = data.status
+    message.value = data.message || ""
 
-    if (data.status === "success") {
-      message.value = `Rapport généré avec succès pour la période ${dateDebut.value} - ${dateFin.value}`
-      showNotification(`Rapport Change généré avec succès pour la période ${dateDebut.value} - ${dateFin.value}`, 'success')
+    if (data.status === "success" ) {
+      // Message personnalisé selon le mode
+      let successMessage = `Rapport généré avec succès`
+      if (mode_unique.value) {
+        successMessage = `Rapport généré avec succès pour le ${dateDebut.value}`
+      } else if (dateFin.value) {
+        successMessage = `Rapport généré avec succès du ${dateDebut.value} au ${dateFin.value}`
+      }
+      
+      message.value = successMessage
+      showNotification(successMessage, 'success')
+      
+      // Mise à jour des données
       if (data.synthese?.length) {
         syntheseColumns.value = Object.keys(data.synthese[0])
         syntheseRows.value = data.synthese
+      } else {
+        syntheseColumns.value = []
+        syntheseRows.value = []
       }
 
       if (data.etat?.length) {
         etatColumns.value = Object.keys(data.etat[0])
         etatRows.value = data.etat
+      } else {
+        etatColumns.value = []
+        etatRows.value = []
       }
 
       if (data.allocation?.length) {
         allocationColumns.value = Object.keys(data.allocation[0])
         allocationRows.value = data.allocation
+      } else {
+        allocationColumns.value = []
+        allocationRows.value = []
       }
 
       saveToLocalStorage()
 
-    } else {
-      message.value = data.message || "Erreur lors de la génération du rapport."
-      showNotification(`Erreur lors de la génération du rapport Change: ${message.value}`, 'error')
+     } else if (data.status === "warning") {
+      // CAS WARNING : Aucune donnée trouvée
+      const warningMsg = data.message || 
+        (mode_unique.value 
+          ? `Aucune donnée trouvée pour le ${dateDebut.value}`
+          : `Aucune donnée trouvée du ${dateDebut.value} au ${dateFin.value}`)
+      
+      message.value = warningMsg
+      showNotification(warningMsg, 'warning')
+      
+      // Réinitialiser les tableaux
+      syntheseColumns.value = []
+      syntheseRows.value = []
+      etatColumns.value = []
+      etatRows.value = []
+      allocationColumns.value = []
+      allocationRows.value = []
+
+    } else if (data.status === "error") {
+      // CAS ERROR : Erreur technique
+      const errorMsg = data.message || "Erreur lors de la génération du rapport."
+      message.value = errorMsg
+      showNotification(`Erreur : ${errorMsg}`, 'error')
+      
+      // Réinitialiser les tableaux
+      syntheseColumns.value = []
+      syntheseRows.value = []
+      etatColumns.value = []
+      etatRows.value = []
+      allocationColumns.value = []
+      allocationRows.value = []
     }
   } catch (err) {
     console.error("Erreur lors du chargement des données Change:", err)

@@ -221,29 +221,79 @@ def create_esri_precompute( request: Request, date_debut: str = Query(...), date
             }, 
             status_code=500
         )
-#change
 @router.post("/change/generate_report")
-def create_change_report(request: Request,date_debut: str, date_fin: str, unique: bool = Query(False)):
+def create_change_report(request: Request, date_debut: str, date_fin: str, unique: bool = Query(False)):
     try:
         current_user = user.get_current_user(request)
-        if current_user.get("privillege") not in ["user","admin", "superadmin"]:
+        if current_user.get("privillege") not in ["user", "admin", "superadmin"]:
             raise HTTPException(status_code=403, detail="Accès refusé : privilège insuffisant")
 
         limit = db_get.getHistoryDate()
         if limit and (date_debut > limit or date_fin > limit):
-            raise Exception(f"Les données apres le {limit} ne sont pas encore disponible.")
-        #controller/changeMandy.py
+            raise Exception(f"Les données après le {limit} ne sont pas encore disponibles.")
+        
+        # Appel du contrôleur
         result = change_mandy.generate_tables_report(date_debut, date_fin, unique_mode=unique)
         
+        if result is False:
+            message = f"Échec de la génération des tables pour la période du {date_debut}"
+            if not unique and date_debut != date_fin:
+                message = f"Échec de la génération des tables du {date_debut} au {date_fin}"
+                
+            return JSONResponse(
+                status_code=200,
+                content={
+                    "status": "warning",
+                    "message": message,
+                    "periode": {"date_debut": date_debut, "date_fin": date_fin},
+                    "etat": [],
+                    "allocation": [],
+                    "synthese": []
+                }
+            )
+        
+        if isinstance(result, dict):
+            if result.get("status") == "warning" or result.get("status") == "error":
+                return JSONResponse(
+                    status_code=200 if result.get("status") == "warning" else 500,
+                    content=result
+                )
+            elif result.get("status") == "success":
+                response_data = {
+                    "status": "success",
+                    "message": result.get("message", ""),
+                    "periode": {"date_debut": date_debut, "date_fin": date_fin},
+                    "etat": result.get("etat", []),
+                    "allocation": result.get("allocation", []),
+                    "synthese": result.get("synthese", []),
+                }
+                return JSONResponse(status_code=200, content=response_data)
+        
+        # Ancienne logique pour compatibilité
         if not result:
-            raise Exception("Aucune donnée disponible pour cette période.")
+            message = f"Aucune donnée disponible pour la période du {date_debut}"
+            if not unique and date_debut != date_fin:
+                message = f"Aucune donnée disponible pour la période du {date_debut} au {date_fin}"
+                
+            return JSONResponse(
+                status_code=200,
+                content={
+                    "status": "warning",
+                    "message": message,
+                    "periode": {"date_debut": date_debut, "date_fin": date_fin},
+                    "etat": [],
+                    "allocation": [],
+                    "synthese": []
+                }
+            )
         
         response_data = {
             "status": "success",
+            "message": result.get("message", ""),
             "periode": {"date_debut": date_debut, "date_fin": date_fin},
-            "etat": result["etat"],
-            "allocation": result["allocation"],
-            "synthese": result["synthese"],
+            "etat": result.get("etat", []),
+            "allocation": result.get("allocation", []),
+            "synthese": result.get("synthese", []),
         }
 
         return JSONResponse(status_code=200, content=response_data)
@@ -253,7 +303,6 @@ def create_change_report(request: Request,date_debut: str, date_fin: str, unique
             status_code=500,
             content={"status": "error", "message": str(e)}
         )
-
 
 ##"""""""""""""DAT REPORT""""""""""""""##
 @router.get("/dat/liste_dat")

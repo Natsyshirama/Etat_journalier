@@ -265,17 +265,46 @@ class ChangeMandy:
                 return False
             
             report_data = self.get_report_data()
+            if not report_data["etat"] :
+                return {
+                "status": "warning",
+                "message": "Aucune donnée disponible pour générer le rapport",
+                "etat": [],
+                "allocation": [],
+                "synthese": []
+            }
+            
             
             return {
                 "status": "success",
+                "message": f"Rapport généré avec succès pour le {date_debut}" if unique_mode else f"Rapport généré avec succès du {date_debut} au {date_fin}",
+
                 "etat": report_data["etat"],
                 "allocation": report_data["allocation"],
                 "synthese": report_data["synthese"]
             }
             
+        except ValueError as ve:
+            print(f"[ERREUR] Validation des dates : {ve}")
+            return {
+                "status": "error",
+                "message": str(ve),
+                "etat": [],
+                "allocation": [],
+                "synthese": []  
+            }
+              
         except Exception as e:
             print(f"[ERREUR] generate_tables_report : {e}")
-            return False
+            import traceback
+            traceback.print_exc()
+            return {
+                    "status": "error",
+                    "message": f"Erreur technique : {str(e)}",
+                    "etat": [],
+                    "allocation": [],
+                    "synthese": []
+                }
 
     def cleanup_tables(self):
         conn = None
