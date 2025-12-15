@@ -268,7 +268,7 @@ class ChangeMandy:
             if not report_data["etat"] :
                 return {
                 "status": "warning",
-                "message": "Aucune donnée disponible pour générer le rapport",
+                "message": f"Aucune donnée disponible pour générer le rapport pour  {date_debut}" if unique_mode else f"Rapport généré avec succès du {date_debut} au {date_fin}",
                 "etat": [],
                 "allocation": [],
                 "synthese": []
