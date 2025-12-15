@@ -26,6 +26,44 @@ class AgenceController:
             conn.execute(query)
             conn.commit()
             print("[INFO] Table 'agence' créée ou déjà existante")
+            agences_data = [
+                ("MG0010002", "A02", "Analamahintsy"),
+                ("MG0010003", "A03", "Andravoahangy"),("MG0010004", "A04", "Imerinafovoany"),("MG0010005", "A05", "Andoharanofotsy"),("MG0010006", "A06", "Anosizato"),
+                ("MG0010007", "A07", "Ankadidramamy"),("MG0010008", "A08", "Itaosy"),("MG0010009", "A09", "Ankorondrano"),("MG0010010", "A10", "Tsaralalana"),
+                ("MG0010011", "A11", "Antsirabe"),("MG0010012", "A12", "By Pass"),("MG0010013", "A13", "Ilafy"),("MG0010021", "A21", "Antsiranana"),
+                ("MG0010022", "A22", "Nosy Be"),("MG0010023", "A23", "Sambava"),("MG0010024", "A24", "Ambanja"),("MG0010025", "A25", "Antalaha"),
+                ("MG0010031", "A31", "Fianarantsoa"),("MG0010041", "A41", "Mahajanga"),("MG0010051", "A51", "Moramanga"),("MG0010052", "A52", "Ambatondrazaka"),
+                ("MG0010053", "A53", "TANAMBAO"),("MG0010054", "A54", "Ankirihiry"),("MG0010061", "A61", "Toliara"),("MG0011001", "A01", "Andavamamba")
+            ]
+            
+            insert_query = text("""
+                INSERT IGNORE INTO agence (code, souscode, nom) 
+                VALUES (:code, :souscode, :nom)
+            """)
+            
+            inserted_count = 0
+            error_count = 0
+            for code, souscode, nom in agences_data:
+                try:
+                    result = conn.execute(insert_query, {
+                        "code": code,
+                        "souscode": souscode,
+                        "nom": nom
+                    })
+                    
+                    if result.rowcount == 1:
+                        inserted_count += 1
+                        print(f"[INFO] Agence {code} insérée")
+                    else:
+                        print(f"[INFO] Agence {code} existe déjà, ignorée")
+                        
+                except Exception as e:
+                    error_count += 1
+                    print(f"[ERREUR] Impossible d'insérer l'agence {code}: {e}")
+            
+            conn.commit()
+            print(f"[INFO] Insertion terminée: {inserted_count} nouvelles agences insérées, {error_count} erreurs")
+            
         except Exception as e:
             print(f"[ERREUR] Impossible de créer la table agence : {e}")
             if conn:

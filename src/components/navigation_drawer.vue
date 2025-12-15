@@ -59,16 +59,59 @@ const demandesValidation = ref(0)
 
 const api = inject('api') 
 
-const list_menu = [
-  { icon: 'mdi-home-city', title: 'Crédits', to: '/app/credits', access: 'all' },
-  { icon: 'mdi-bank', title: 'My Account', to: '/app/dav', access: 'all' },
-  { icon: 'mdi-account', title: 'ESRI', to: '/app/esri', access: 'all' },
-     { icon: 'mdi-magnify', title: 'Rechercher', to: '/app/generale', access: 'admin' }, 
-{ icon: 'mdi-map-marker-radius', title: 'Agences', to: '/app/Agence', access: 'admin' },
-  { icon: 'mdi-swap-horizontal', title: 'CHANGE', to: '/app/change', access: 'all' },
-{ icon: 'mdi-shield-account', title: 'Admin', to: '/app/session', access: 'admin', badge: () => notificationStore.demandesValidation },  
-{ icon: 'mdi-file-table-box-multiple-outline', title: 'Mes Fichiers', to: '/app/file_manager', access: 'admin' },
-];
+const list_menu =[
+  
+  { 
+    icon: 'mdi-currency-usd',  // ou mdi-cash-multiple, mdi-bank-transfer
+    title: 'Crédits', 
+    to: '/app/credits', 
+    access: 'all' 
+  },
+  { 
+    icon: 'mdi-account-cash',  // ou mdi-bank-outline
+    title: 'Comptes', 
+    to: '/app/dav', 
+    access: 'all' 
+  },
+  { 
+    icon: 'mdi-earth',  // ou mdi-globe-model
+    title: 'ESRI', 
+    to: '/app/esri', 
+    access: 'all' 
+  },
+  { 
+    icon: 'mdi-database-search', 
+    title: 'Recherche', 
+    to: '/app/generale', 
+    access: 'admin' 
+  },
+  { 
+    icon: 'mdi-bank',  // ou mdi-office-building-outline
+    title: 'Agences', 
+    to: '/app/Agence', 
+    access: 'admin' 
+  },
+  { 
+    icon: 'mdi-bank-transfer',  // ou mdi-swap-horizontal-bold
+    title: 'Change', 
+    to: '/app/change', 
+    access: 'all' 
+  },
+  { 
+    icon: 'mdi-shield-account',  // ou mdi-shield-crown
+    title: 'Administration', 
+    to: '/app/session', 
+    access: 'admin', 
+    badge: () => notificationStore.demandesValidation 
+    
+  },
+  { 
+    icon: 'mdi-folder-multiple-outline',  // ou mdi-file-cabinet
+    title: 'Fichiers', 
+    to: '/app/file_manager', 
+    access: 'admin' 
+  },
+]
 
 const fetchDemandesValidation = async () => {
   try {
