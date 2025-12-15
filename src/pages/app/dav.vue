@@ -51,10 +51,12 @@
 
           <v-btn
             color="success"
+            prepend-icon="mdi-chart-line"
+
             :variant="displayComponent === 'dashboard' ? 'flat' : 'outlined'"
             @click="displayComponent = 'dashboard'"
           >
-            Dashboard
+            Graphe
           </v-btn>
         </v-col>
       </v-row>

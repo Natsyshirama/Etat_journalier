@@ -72,7 +72,7 @@ const props = defineProps({
 const api = inject('api') 
 
 // Champs disponibles pour X et Y
-const fieldsX = ["Agence", "code_client", "Produits"]
+const fieldsX = ["Agence",  "Produits"]
 const fieldsY = [ "frais_de_dossier", "montant_capital"]
 
 const x = ref(localStorage.getItem("x") || null)

@@ -71,8 +71,8 @@ const props = defineProps({
 })
 
 // Champs disponibles pour X et Y
-const fieldsX = ["Agence", "code_client", "Produits"]
-const fieldsY = [ "solde", "Credit", "Debit"]
+const fieldsX = ["Agence"]
+const fieldsY = [  "Credit", "Debit"]
 
 const x = ref(localStorage.getItem("x") || null)
 const y = ref(localStorage.getItem("y") ||null)

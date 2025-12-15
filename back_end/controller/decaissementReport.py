@@ -260,25 +260,30 @@ class decaissementReport:
             conn = self.db.connect()
             
             colone_auto= [
-                 "Agence", "Produits", "montant_capital", "frais_de_dossier", "taux_interet", "charge_rate","code_client"
+                 "Agence", "Produits", "montant_capital", "frais_de_dossier", "taux_d_interet", "charge_rate","code_client"
             ]
             if x not in colone_auto or y not in colone_auto:
                 raise ValueError("Colonnes non autorisées")
             
-            numeric_columns = ["montant_capital", "frais_de_dossier", "Debit", "taux_interet", "charge_rate"]
+            numeric_columns = ["montant_capital", "frais_de_dossier",  "taux_d_interet", "charge_rate"]
+            
+            def format_column(column_name):
+                if column_name in numeric_columns:
+                    return f"ABS(SUM({column_name}))"
+                return column_name
             
             if (x == "Agence" and y == "code_client") or (x == "code_client" and y == "Agence"):
                 select = "Agence, COUNT(DISTINCT code_client) AS value"
                 group_by = "Agence"
                 
             elif x in numeric_columns and y not in numeric_columns:
-                select = f"{y}, SUM({x}) AS value"
+                select = f"{y}, ABS(SUM({x})) AS value"
                 group_by = y
             elif y in numeric_columns and x not in numeric_columns:
-                select = f"{x}, SUM({y}) AS value"
+                select = f"{x}, ABS(SUM({y})) AS value"
                 group_by = x
             elif x in numeric_columns and y in numeric_columns:
-                select = f"SUM({x}) AS value_x, SUM({y}) AS value_y"
+                select = f"ABS(SUM({x})) AS value_x, ABS(SUM({y})) AS value_y"
                 group_by = None 
             else: 
                 select = f"{x}, {y}, COUNT(*) AS value"

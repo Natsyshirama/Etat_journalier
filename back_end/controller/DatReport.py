@@ -12,13 +12,11 @@ class DatReport:
 
 
 
-  #liste des tables dat disponibles
     def getListeDat(self):
         conn = None
         try:
             conn = self.db.connect()
 
-            # Requête pour récupérer les noms des tables commençant par dat_
             query = text("""
                 SELECT table_name
                 FROM information_schema.tables
@@ -27,7 +25,6 @@ class DatReport:
             """)
 
             result = conn.execute(query)
-            # Transformer en liste Python
             tables = [row[0] for row in result.fetchall()]
             return tables
 
@@ -163,7 +160,7 @@ class DatReport:
 
             #colone autorise
             allowed_columns = [
-                "code_client", "Agence", "Produits", "Numero_compte",
+                 "Agence", 
                 "montant_capital", "montant_pay_total"
             ]
             if x not in allowed_columns or y not in allowed_columns:

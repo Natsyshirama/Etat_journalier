@@ -127,43 +127,6 @@ def create_decaissement(date_limit:str):
     
 # ESRI
 
-# Dans votre route FastAPI
-@router.post("/api/esri/create_esri_precompute")
-async def create_esri_precompute(
-    date_debut: str = Query(...),
-    date_fin: str = Query(...),
-    agences: Optional[str] = Query(None),  # Format: "MG0010009,MG0010004"
-    months: Optional[str] = Query(None)    # Format: "202501,202502"
-):
-    try:
-        # Convertir les paramètres
-        agences_list = agences.split(",") if agences else None
-        months_list = months.split(",") if months else None
-        
-        # Appeler la fonction de traitement
-        #contreoller/OperationEsri.py
-        rows, columns, bilan = operation_esri.process_esri_data_fast(
-            date_debut=date_debut,
-            date_fin=date_fin,
-            agences=agences_list,
-            months=months_list
-        )
-        
-        return {
-            "status": "success",
-            "message": f"{len(rows)} lignes chargées",
-            "columns": columns,
-            "rows": rows,
-            "bilan": bilan
-        }
-        
-    except Exception as e:
-        return {
-            "status": "error",
-            "message": str(e)
-        }
-
-
 @router.post("/esri/create_esri_precompute")
 def create_esri_precompute( request: Request, date_debut: str = Query(...), date_fin: str = Query(...),    compare: bool = Query(False) , unique: bool = Query(False)
 ):

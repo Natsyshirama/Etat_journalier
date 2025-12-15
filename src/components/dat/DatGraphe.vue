@@ -1,6 +1,5 @@
 <template>
   <v-card class="pa-4 mb-6" outlined>
-    <!-- Sélecteurs X et Y -->
     <v-row>
       <v-col cols="12" md="4">
         <v-select
@@ -58,10 +57,8 @@ import axios from "axios"
 import { Chart as ChartJS, Title, Tooltip, Legend, BarElement, CategoryScale, LinearScale } from "chart.js"
 import { Bar } from "vue-chartjs"
 
-// Enregistrement des éléments Chart.js
 ChartJS.register(Title, Tooltip, Legend, BarElement, CategoryScale, LinearScale)
 
-// Props venant de dat.vue
 const props = defineProps({
   tableName: {
     type: String,
@@ -73,7 +70,7 @@ const api = inject('api')
 
 // Champs disponibles pour X et Y
 const fieldsY = [ "montant_capital", "montant_pay_total"]
-const fieldsX = ["Agence", "code_client", "Produits"]
+const fieldsX = ["Agence"]
 
 const x = ref(localStorage.getItem("x") || null)
 const y = ref(localStorage.getItem("y") ||null)
