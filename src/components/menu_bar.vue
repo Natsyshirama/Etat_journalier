@@ -291,7 +291,6 @@ const availableMonths = ref([
   { name: 'Décembre', value: '12' }
 ])
 
-// Liste complète des dates
 const allHistoryDates = ref([])
 
 const handleExport = () => {
@@ -349,7 +348,6 @@ const exportDECAISSEMENT = () => {
   window.dispatchEvent(new CustomEvent('export-dav-data', { detail: { type: 'DECAISSEMENT' } }))
 }
 
-// 🗓️ Importation de la date
 const date_last_import_file = ref('')
 
 const get_last_import_file = async () => {
@@ -371,7 +369,6 @@ const get_last_import_file = async () => {
 
 
 
-// Modifiez filteredHistoryDates pour qu'il soit calculé
 const filteredHistoryDates = computed(() => {
   if (!allHistoryDates.value.length) return []
   
@@ -379,7 +376,7 @@ const filteredHistoryDates = computed(() => {
     const year = date.label.substring(0, 4)
     const month = date.label.substring(4, 6)
     
-    // Filtre par année
+    // Filtre par annee
     if (selectedYear.value !== 'all' && year !== selectedYear.value) {
       return false
     }
@@ -394,7 +391,7 @@ const filteredHistoryDates = computed(() => {
 })
 
 
-// Fonction pour extraire les années disponibles
+// Fonction pour extraire les annees disponibles
 function extractAvailableYears(dates) {
   const years = new Set()
   dates.forEach(date => {
@@ -414,7 +411,7 @@ function formatDisplayDate(dateStr) {
 
 // Fonction de filtrage
 function filterDates() {
-  // Pas besoin de faire quoi que ce soit ici, le computed se chargera du filtrage
+  // Pas besoin de faire quoi que ce soit ici
   console.log('Filtrage appliqué:', {
     year: selectedYear.value,
     month: selectedMonth.value,
@@ -422,7 +419,7 @@ function filterDates() {
   })
 }
 
-// Fonction de réinitialisation
+// Fonction de reinitialisation
 function resetFilters() {
   selectedYear.value = 'all'
   selectedMonth.value = 'all'
@@ -434,18 +431,17 @@ const formatDateString = (rawDate) => {
   return `${rawDate.slice(0, 4)}-${rawDate.slice(4, 6)}-${rawDate.slice(6, 8)}`
 }
 
- // Dans onMounted ou là où vous chargez les dates
 onMounted(() => {
   (async () => {
     const data = await fetchData(`${api}/api/history_insert`)
     allHistoryDates.value = data
-    historyDates.value = data // Garde la compatibilité avec le code existant
+    historyDates.value = data 
     availableYears.value = extractAvailableYears(data)
   })();
   get_last_import_file()
 })
 
-// 📦 Données à exporter
+// 📦 Donnee a exporter
 const listes_encours_credits = ref([])
 const listes_remboursement_credits = ref([])
 const listes_limit_avm = ref([])
@@ -467,7 +463,7 @@ watch(() => popupStore.limit_caution_actual_data, (val) => {
   listes_limit_caution.value = val
 }, { immediate: true })
 
-// 📤 Fonction générique d’export
+
 function exportToExcel(data, filenameBase, sheetName = 'Feuille1') {
   if (!data || data.length === 0) {
     alert('Aucune donnée à exporter')
@@ -483,7 +479,6 @@ function exportToExcel(data, filenameBase, sheetName = 'Feuille1') {
   XLSX.writeFile(workbook, filename)
 }
 
-// 🎯 Fonctions spécifiques
 const exportToExcel_encours = () => exportToExcel(listes_encours_credits.value, 'Encours', 'Encours')
 const exportToExcel_remboursement = () => exportToExcel(listes_remboursement_credits.value, 'Etat_de_remboursement', 'Remboursement')
 const exportToExcel_LIMIT_AVM = () => exportToExcel(listes_limit_avm.value, 'Limit_AVM', 'LIMIT_AVM')
@@ -541,6 +536,7 @@ async function selectDate(date,stat_compte) {
     }
   }
 }  
+
 async function selectDateStatOf(date, stat_of) {
   selectedDate.value = date
 
@@ -549,7 +545,6 @@ async function selectDateStatOf(date, stat_of) {
 
   menu.value = false
 
-  // 🔹 Émet un événement global
   window.dispatchEvent(new CustomEvent('table-date-stat-of-selected', {
     detail: { date, stat_of }
   }))
@@ -559,7 +554,6 @@ async function selectDateStatOf(date, stat_of) {
 
 watch(historyDates, (val) => {
   if (Array.isArray(val) && val.length > 0) {
-    // Trie les dates du plus récent au plus ancien
     const sorted = [...val].sort((a, b) => b.label.localeCompare(a.label))
     const lastDate = sorted[0].label
     const lastStatCompte = sorted[0].stat_compte
@@ -569,7 +563,6 @@ watch(historyDates, (val) => {
     popupStore.selected_date_stat_compte = lastStatCompte
     localStorage.setItem("selectedTable", lastDate)
 
-    // Émet l'événement pour synchroniser la sélection
     if (isCompte.value) {
       window.dispatchEvent(new CustomEvent('table-date-selected', { detail: { date: lastDate, stat_compte: lastStatCompte } }))
     }
