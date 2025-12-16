@@ -918,7 +918,6 @@ const triggerImport = async () => {
 }
 .file_loaded{
   background: green;
-  color: white;
 }
 #list_{
   margin:71px 0px;
@@ -937,7 +936,7 @@ const triggerImport = async () => {
   width: 100vw;
   height: 100vh;
   backdrop-filter: blur(4px);
-  background: rgba(0, 0, 0, 0.257);
+  background: rgba(32, 31, 31, 0.257);
   align-items: center;
   justify-content: center;
   z-index: 100;
@@ -945,7 +944,6 @@ const triggerImport = async () => {
 #modal-list{
   display: flex;
   flex-direction: column;
-  background: wheat;
   color: black ;
   padding: 10px 20px;
   border-radius: 5px;
@@ -964,7 +962,6 @@ const triggerImport = async () => {
 }
 #history:hover{
   cursor: pointer;
-  color: white;
 }
 /* Conteneur principal centré */
 #upload-container {
@@ -983,14 +980,12 @@ const triggerImport = async () => {
   flex-direction: column;
   justify-content: center;
   align-items: center;
-  color: white;
   text-align: center;
   padding: 20px;
 }
 
 /* Icône Upload */
 .upload-icon {
-  color: #ccc;
   margin-bottom: 10px;
 }
 
@@ -1008,11 +1003,6 @@ const triggerImport = async () => {
   margin: 10px 0;
 }
 
-/* Bouton pour choisir un fichier */
-.upload-btn {
-  border-color: #fff;
-  color: #fff;
-}
 
 /* Cacher l'input file */
 .hidden-file-input {
@@ -1073,17 +1063,14 @@ const triggerImport = async () => {
 }
 
 .import-success {
-  background-color: #e8f5e8;
   color: #2e7d32;
 }
 
 .import-error {
-  background-color: #ffebee;
   color: #c62828;
 }
 
 .import-warning {
-  background-color: #fff3e0;
   color: #ef6c00;
 }
 
