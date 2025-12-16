@@ -1,4 +1,3 @@
-<!-- src/components/dat/Resumer.vue -->
 <template>
   <v-card
     v-if="resume"
