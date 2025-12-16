@@ -4,38 +4,101 @@
 
       <div class="flex flex-row justify-end items-center space-x-4 mx-4" >
         <h3 class="mr-5 text-xl">Date d'arrêt</h3>
-
-        <v-menu
-        v-if="isCompte"
-        v-model="menu"
-        close-on-content-click
-        offset-y
-        max-width="200"
-        min-width="200"
+<v-menu
+  v-if="isCompte"
+  v-model="menu"
+  close-on-content-click
+  offset-y
+  max-width="250"
+  min-width="250"
+>
+  <template #activator="{ props }">
+    <v-btn v-bind="props" prepend-icon="mdi-calendar-range" variant="outlined">
+      <template #prepend>
+        <v-icon color="success" />
+      </template>
+      <span class="text-2xl">{{ selectedDate }}</span>
+    </v-btn>
+  </template>
+  
+  <v-card @click.stop> 
+    <!-- Filtres Année/Mois -->
+    <div class="pa-3 bg-lighten-4">
+      <div class="d-flex align-center gap-2 mb-2">
+        <v-select
+          v-model="selectedYear"
+          :items="availableYears"
+          label="Année"
+          density="compact"
+          variant="outlined"
+          hide-details
+          class="flex-grow-1"
+          @update:model-value="filterDates"
+          @click.stop 
+        ></v-select>
+        
+        <v-select
+          v-model="selectedMonth"
+          :items="availableMonths"
+          item-title="name"
+          item-value="value"
+          label="Mois"
+          density="compact"
+          variant="outlined"
+          hide-details
+          class="flex-grow-1"
+          @update:model-value="filterDates"
+          @click.stop 
+        ></v-select>
+      </div>
+      
+       <v-btn
+        v-if="selectedYear !== 'all' || selectedMonth !== 'all'"
+        @click="resetFilters"
+        color="primary"
+        variant="text"
+        size="small"
+        block
       >
-        <template #activator="{ props }">
-          <v-btn v-bind="props" prepend-icon="mdi-calendar-range" variant="outlined">
-            <template #prepend>
-              <v-icon color="success" />
-            </template>
-            <span class="text-2xl">{{ selectedDate }}</span>
-          </v-btn>
-        </template>
-        <v-list style="max-height: 200px; overflow-y: auto;">
-          <v-list-item
-            v-for="date in filteredHistoryDates"
-            :key="date.label"
-            @click="() => selectDate(date.label, date.stat_compte)"
-            role="button"
+        Réinitialiser les filtres
+      </v-btn>
+    </div>
+    
+    <!-- Liste des dates filtrées -->
+    <v-list style="max-height: 300px; overflow-y: auto;">
+      <v-list-subheader v-if="filteredHistoryDates.length === 0">
+        Aucune date trouvée
+      </v-list-subheader>
+      
+      <v-list-item
+        v-for="date in filteredHistoryDates"
+        :key="date.label"
+        @click="() => selectDate(date.label, date.stat_compte)"
+        role="button"
+        :active="date.label === selectedDate"
+      >
+        <div class="flex align-center" :title="date.stat_compte !== 1 ? 'Base non initialisée' : ''">
+          <v-icon 
+            v-if="date.stat_compte !== 1" 
+            class="mr-2 text-red-700"
+            size="small"
           >
-            <div class="flex" :title="date.stat_of!='init'? 'Base non initialisé':''">
-              <v-icon v-if="date.stat_compte !== 1 " class=" mr-2 text-red-700">mdi-database-alert</v-icon> 
-              <v-icon v-else color="success" class=" mr-2">mdi-database-check</v-icon> 
-              <v-list-item-title>{{ date.label }}</v-list-item-title>
-            </div>
-          </v-list-item>
-        </v-list>
-      </v-menu>
+            mdi-database-alert
+          </v-icon> 
+          <v-icon 
+            v-else 
+            color="success" 
+            class="mr-2"
+            size="small"
+          >
+            mdi-database-check
+          </v-icon> 
+          <v-list-item-title>{{ formatDisplayDate(date.label) }}</v-list-item-title>
+        </div>
+      </v-list-item>
+    </v-list>
+  </v-card>
+</v-menu>
 
         <v-menu
         v-else
@@ -209,6 +272,27 @@ const toolbarTitle = computed(() => {
  return 'Encours Credits'
 })
 
+const selectedYear = ref('all')
+const selectedMonth = ref('all')
+const availableYears = ref(['all'])
+const availableMonths = ref([
+  { name: 'Tous', value: 'all' },
+  { name: 'Janvier', value: '01' },
+  { name: 'Février', value: '02' },
+  { name: 'Mars', value: '03' },
+  { name: 'Avril', value: '04' },
+  { name: 'Mai', value: '05' },
+  { name: 'Juin', value: '06' },
+  { name: 'Juillet', value: '07' },
+  { name: 'Août', value: '08' },
+  { name: 'Septembre', value: '09' },
+  { name: 'Octobre', value: '10' },
+  { name: 'Novembre', value: '11' },
+  { name: 'Décembre', value: '12' }
+])
+
+// Liste complète des dates
+const allHistoryDates = ref([])
 
 const handleExport = () => {
   if (isEsriPage.value) {
@@ -287,9 +371,62 @@ const get_last_import_file = async () => {
 
 
 
+// Modifiez filteredHistoryDates pour qu'il soit calculé
 const filteredHistoryDates = computed(() => {
-  return historyDates.value
+  if (!allHistoryDates.value.length) return []
+  
+  return allHistoryDates.value.filter(date => {
+    const year = date.label.substring(0, 4)
+    const month = date.label.substring(4, 6)
+    
+    // Filtre par année
+    if (selectedYear.value !== 'all' && year !== selectedYear.value) {
+      return false
+    }
+    
+    // Filtre par mois
+    if (selectedMonth.value !== 'all' && month !== selectedMonth.value) {
+      return false
+    }
+    
+    return true
+  })
 })
+
+
+// Fonction pour extraire les années disponibles
+function extractAvailableYears(dates) {
+  const years = new Set()
+  dates.forEach(date => {
+    if (date.label && date.label.length >= 4) {
+      years.add(date.label.substring(0, 4))
+    }
+  })
+  return ['all', ...Array.from(years).sort((a, b) => b - a)] 
+}
+
+function formatDisplayDate(dateStr) {
+  if (dateStr.length === 8) {
+    return `${dateStr.substring(6, 8)}/${dateStr.substring(4, 6)}/${dateStr.substring(0, 4)}`
+  }
+  return dateStr
+}
+
+// Fonction de filtrage
+function filterDates() {
+  // Pas besoin de faire quoi que ce soit ici, le computed se chargera du filtrage
+  console.log('Filtrage appliqué:', {
+    year: selectedYear.value,
+    month: selectedMonth.value,
+    count: filteredHistoryDates.value.length
+  })
+}
+
+// Fonction de réinitialisation
+function resetFilters() {
+  selectedYear.value = 'all'
+  selectedMonth.value = 'all'
+}
 
 
 const formatDateString = (rawDate) => {
@@ -297,12 +434,16 @@ const formatDateString = (rawDate) => {
   return `${rawDate.slice(0, 4)}-${rawDate.slice(4, 6)}-${rawDate.slice(6, 8)}`
 }
 
- onMounted(() => {
-    (async () => {
-      historyDates.value = await fetchData(`${api}/api/history_insert`)
-    })();
+ // Dans onMounted ou là où vous chargez les dates
+onMounted(() => {
+  (async () => {
+    const data = await fetchData(`${api}/api/history_insert`)
+    allHistoryDates.value = data
+    historyDates.value = data // Garde la compatibilité avec le code existant
+    availableYears.value = extractAvailableYears(data)
+  })();
   get_last_import_file()
- })
+})
 
 // 📦 Données à exporter
 const listes_encours_credits = ref([])
