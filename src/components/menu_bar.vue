@@ -261,7 +261,7 @@ const toolbarTitle = computed(() => {
   if (isCompte.value) return 'Encours Compte'
   if (isSession.value) return 'Gestion des utilisateurs'
   if (isInitialise.value) return 'Initialisation Compte'
-  if (isgenerale.value) return 'Vue'
+  if (isgenerale.value) return 'Compte Vue'
   if (isFilemanager.value) return 'Gestionnaire de fichiers'
   if (isDecaissementAnalyse.value) return ' Décaissement'
   if (isDepotAnalyse.value) return ' Dépôt'

@@ -75,13 +75,13 @@ const list_menu =[
   },
   { 
     icon: 'mdi-earth',  // ou mdi-globe-model
-    title: 'ESRI', 
+    title: 'Esri', 
     to: '/app/esri', 
     access: 'all' 
   },
   { 
     icon: 'mdi-database-search', 
-    title: 'Recherche', 
+    title: 'Vue Compte', 
     to: '/app/generale', 
     access: 'admin' 
   },
