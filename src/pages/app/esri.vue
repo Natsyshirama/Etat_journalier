@@ -133,7 +133,7 @@
       />
       </v-col>
 
-      <v-col cols="12" md="4" class="text-md-right text-center">
+      <v-col cols="12" md="4" class="text-md-right text-center" v-if="isAllowed">
         <v-btn
           :color="showTotal ? 'blue' : 'grey'"
           variant="outlined"
@@ -197,6 +197,14 @@ const rows = ref([])
 const tableEsriRef = ref(null)
 const api = inject('api') 
 const bilan = ref([])
+
+const popupStore = usePopupStore()
+
+
+const isAllowed = computed(() => {
+  const privilege = popupStore.user_access?.access || localStorage.getItem('privillege') || ''
+  return ['admin', 'superadmin'].includes(privilege)
+})
 
 const mode_unique = ref(false)
 const showSnackbar = ref(false)
