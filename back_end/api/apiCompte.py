@@ -582,6 +582,8 @@ def get_total_decaissement(
         return total
     except Exception as e:
         return JSONResponse(status_code=500, content={"error": str(e)})
+    
+    
 @router.get("/resume/total-produit/global")
 def get_total_global(request: Request, agence: str = None, date_debut: str = None, date_fin: str = None):
     try:

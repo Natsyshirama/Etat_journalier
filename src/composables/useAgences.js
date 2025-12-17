@@ -24,44 +24,47 @@ export function useAgences(api) {
     { code: "MG0010023", nom: "Tanjombato", souscode: "A23" }
   ]
 
-  const loadAgences = async () => {
-    loading.value = true
-    error.value = null
-    
-    try {
-      const response = await axios.get(`${api}/api/agences/`, {
-        headers: { 
-          'Authorization': `Bearer ${localStorage.getItem('access_token')}`
-        }
-      })
+  // Dans useAgences.js
+const loadAgences = async () => {
+  loading.value = true
+  error.value = null
+  
+  try {
+    const response = await axios.get(`${api}/api/agences/`, {
+      headers: { 
+        'Authorization': `Bearer ${localStorage.getItem('access_token')}`
+      }
+    })
 
-      if (response.data.response?.success) {
-        agencesList.value = response.data.response.data.map(ag => ({
-          code: ag.code,
-          nom: ag.nom,
-          souscode: ag.souscode || ""
-        }))
-        
-        localStorage.setItem('agences_cache', JSON.stringify({
-          data: agencesList.value,
-          timestamp: new Date().getTime()
-        }))
-      } else {
-        throw new Error('Structure de réponse invalide')
-      }
-    } catch (err) {
-      console.error('Erreur chargement agences:', err)
-      error.value = err.message
+    if (response.data.response?.success) {
+      agencesList.value = response.data.response.data.map(ag => ({
+        code: ag.code,
+        nom: ag.nom,
+        souscode: ag.souscode || "",
+        id_zone: ag.id_zone || null, // AJOUTER CETTE LIGNE
+        nom_zone: ag.nom_zone || "" // Optionnel: nom de la zone
+      }))
       
-      const cached = loadFromCache()
-      if (!cached) {
-        agencesList.value = [...defaultAgences]
-      }
-    } finally {
-      loading.value = false
-      initialized.value = true
+      localStorage.setItem('agences_cache', JSON.stringify({
+        data: agencesList.value,
+        timestamp: new Date().getTime()
+      }))
+    } else {
+      throw new Error('Structure de réponse invalide')
     }
+  } catch (err) {
+    console.error('Erreur chargement agences:', err)
+    error.value = err.message
+    
+    const cached = loadFromCache()
+    if (!cached) {
+      agencesList.value = [...defaultAgences]
+    }
+  } finally {
+    loading.value = false
+    initialized.value = true
   }
+}
 
   const loadFromCache = () => {
     try {
