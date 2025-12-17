@@ -789,6 +789,8 @@ const loadZones = async () => {
 
 const toggleViewByZone = async () => {
   console.log('=== toggleViewByZone ===')
+  console.log('Mode mensuel actif:', selectedMonths.value.length > 0)
+  console.log('Mois sélectionnés:', selectedMonths.value)
   
   if (viewByZone.value) {
     // Si on est déjà en vue zone, revenir à vue agence
@@ -832,10 +834,11 @@ const toggleViewByZone = async () => {
     // Passer en vue zone
     viewByZone.value = true
     
-    showNotification(
-      `Affichage par zone - ${zonesData.value.length} zones`,
-      'success'
-    )
+    const messageText = selectedMonths.value.length > 0
+      ? `Affichage par zone - ${zonesData.value.length} zones (vue mensuelle)`
+      : `Affichage par zone - ${zonesData.value.length} zones`
+    
+    showNotification(messageText, 'success')
     
   } catch (error) {
     console.error('Erreur regroupement par zone:', error)
@@ -846,9 +849,11 @@ const toggleViewByZone = async () => {
 }
 
 const groupDataByZone = async () => {
-  console.log('=== groupDataByZone ===')
+  console.log('=== groupDataByZone (version corrigée) ===')
+  console.log('Mois sélectionnés:', selectedMonths.value)
+  console.log('datesList:', datesList.value)
   
-  // 1. Charger les agences avec zones depuis l'API (frais)
+  // 1. Charger les agences avec zones depuis l'API
   let agencesWithZones = []
   try {
     const response = await axios.get(`${api}/api/agences/`, {
@@ -859,7 +864,6 @@ const groupDataByZone = async () => {
     
     if (response.data.response?.success) {
       agencesWithZones = response.data.response.data
-      console.log('Agences avec zones chargées:', agencesWithZones.length)
     }
   } catch (error) {
     console.error('Erreur chargement agences avec zones:', error)
@@ -875,8 +879,6 @@ const groupDataByZone = async () => {
     }
   })
   
-  console.log('zoneToAgences initialisé:', zoneToAgences)
-  
   // 3. Associer chaque agence à sa zone
   agencesData.value.forEach(agence => {
     const agenceWithZone = agencesWithZones.find(a => a.code === agence.code)
@@ -886,23 +888,29 @@ const groupDataByZone = async () => {
       
       if (zoneToAgences[zoneId]) {
         zoneToAgences[zoneId].agences.push(agence)
-        console.log(`Agence ${agence.code} ajoutée à zone ${zoneId}`)
-      } else {
-        console.log(`Zone ${zoneId} non trouvée pour agence ${agence.code}`)
       }
-    } else {
-      console.log(`Aucune zone trouvée pour agence ${agence.code}`)
     }
   })
   
-  // 4. Calculer les totaux par zone et par date
+  // 4. Calculer les totaux
   const zonesWithData = []
   
   Object.entries(zoneToAgences).forEach(([zoneId, zoneData]) => {
     if (zoneData.agences.length > 0) {
       const zoneEncours = {}
       
-      datesList.value.forEach(date => {
+      // Si on a une sélection de mois, filtrer les dates
+      let datesToProcess = datesList.value
+      if (selectedMonths.value.length > 0) {
+        // Filtrer pour ne garder que les dates des mois sélectionnés
+        datesToProcess = datesList.value.filter(date => {
+          const monthKey = date.substring(0, 6) // YYYYMM
+          return selectedMonths.value.includes(monthKey)
+        })
+      }
+      
+      // Calculer les totaux par date
+      datesToProcess.forEach(date => {
         let totalMontant = 0
         let totalEcart = 0
         
@@ -924,29 +932,53 @@ const groupDataByZone = async () => {
         encours: zoneEncours,
         agenceCount: zoneData.agences.length
       })
-      
-      console.log(`Zone ${zoneId} créée avec ${zoneData.agences.length} agences`)
     }
   })
   
-  console.log('zonesWithData généré:', zonesWithData)
   return zonesWithData
 }
 
-// Méthodes pour la vue par zone
+// Ajouter cette computed property
+const isMonthlyView = computed(() => selectedMonths.value.length > 0)
+
+// Et modifier getZoneCellValue
 const getZoneCellValue = (zone, column) => {
   if (column.type === 'daily') {
+    // Vue journalière
     return zone.encours[column.key]?.montant || 0
+  } else if (column.type === 'monthly') {
+    // Vue mensuelle
+    // Option 1: Si vous avez stocké monthlyEncours
+    if (zone.monthlyEncours && zone.monthlyEncours[column.key]) {
+      return zone.monthlyEncours[column.key].montant || 0
+    }
+    
+    // Option 2: Calculer à la volée
+    const monthKey = column.key
+    const monthDates = datesList.value.filter(date => 
+      date.startsWith(monthKey)
+    )
+    
+    let totalMontant = 0
+    monthDates.forEach(date => {
+      totalMontant += zone.encours[date]?.montant || 0
+    })
+    
+    return totalMontant
+  }
+  return 0
+}
+const getZoneCellEcart = (zone, column) => {
+  if (column.type === 'daily') {
+    return zone.encours[column.key]?.ecart || 0
+  } else if (column.type === 'monthly') {
+    // Pour les mois, on doit calculer l'écart différemment
+    // Soit on calcule l'écart entre mois, soit on le laisse à 0
+    return 0 // Ou implémenter un calcul d'écart mensuel si nécessaire
   }
   return 0
 }
 
-const getZoneCellEcart = (zone, column) => {
-  if (column.type === 'daily') {
-    return zone.encours[column.key]?.ecart || 0
-  }
-  return 0
-}
 
 const getTotalAgenceCount = () => {
   if (!viewByZone.value) return 0
@@ -1189,8 +1221,6 @@ const fetchAllAgencesData = async (agences) => {
 
   return allData
 }
-
-// Analyse principale
 const analyserEncours = async () => {
   loading.value = true
   message.value = ""
@@ -1225,6 +1255,11 @@ const analyserEncours = async () => {
       message.value = " Aucune donnée disponible pour les critères sélectionnés"
       showNotification("Aucune donnée disponible pour les critères sélectionnés", 'info')
       return
+    }
+    
+    // Si on est en vue par zone, recalculer les données zones
+    if (viewByZone.value) {
+      zonesData.value = await groupDataByZone()
     }
     
     messageType.value = "success"
@@ -1324,6 +1359,27 @@ onMounted(() => {
   
   // Charger les zones au démarrage
   loadZones()
+})
+import { watch } from 'vue'
+
+// Ajouter ce watch pour recalculer les données zones quand les mois changent
+watch(selectedMonths, async (newMonths, oldMonths) => {
+  if (viewByZone.value && newMonths.length !== oldMonths.length) {
+    console.log('Mois changés, recalcul des données zones...')
+    
+    // Si on a déjà des données zones, les recalculer
+    if (zonesData.value.length > 0) {
+      loading.value = true
+      try {
+        zonesData.value = await groupDataByZone()
+        showNotification('Données zones recalculées avec le nouveau filtre mois', 'info')
+      } catch (error) {
+        console.error('Erreur recalcul zones:', error)
+      } finally {
+        loading.value = false
+      }
+    }
+  }
 })
 </script>
 
