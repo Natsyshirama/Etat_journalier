@@ -780,13 +780,11 @@ const analyserEncours = async () => {
     if (datesList.value.length === 0){
       messageType.value = "info"
       message.value = "Aucune donnée d'encours de dépôts trouvée pour les critères sélectionnés."
-      showNotification("Aucune donnée disponible pour les critères sélectionnés", 'info')
 
       return
     }
     messageType.value = "success"
     message.value = `Analyse terminée : ${agencesData.value.length} agences, ${datesList.value.length} dates disponibles`
-    showNotification(`Analyse terminée : ${agencesData.value.length} agences, ${datesList.value.length} dates disponibles`, 'success')
 
     try {
       saveToLocalStorage()

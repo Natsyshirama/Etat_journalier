@@ -1,4 +1,3 @@
-// composables/useAgences.js
 import { ref, onMounted, computed } from 'vue'
 import axios from 'axios'
 
@@ -43,7 +42,6 @@ export function useAgences(api) {
           souscode: ag.souscode || ""
         }))
         
-        // Sauvegarder dans le cache local
         localStorage.setItem('agences_cache', JSON.stringify({
           data: agencesList.value,
           timestamp: new Date().getTime()
@@ -55,10 +53,8 @@ export function useAgences(api) {
       console.error('Erreur chargement agences:', err)
       error.value = err.message
       
-      // Essayer de charger depuis le cache
       const cached = loadFromCache()
       if (!cached) {
-        // Sinon utiliser les valeurs par défaut
         agencesList.value = [...defaultAgences]
       }
     } finally {
@@ -73,7 +69,7 @@ export function useAgences(api) {
       if (cache) {
         const { data, timestamp } = JSON.parse(cache)
         const now = new Date().getTime()
-        const CACHE_DURATION = 30 * 60 * 1000 // 30 minutes
+        const CACHE_DURATION = 30 * 60 * 1000 // 30 min
         
         if (now - timestamp < CACHE_DURATION) {
           agencesList.value = data
@@ -86,18 +82,15 @@ export function useAgences(api) {
     return false
   }
 
-  // Obtenir une agence par son code
   const getAgenceByCode = (code) => {
     return agencesList.value.find(ag => ag.code === code)
   }
 
-  // Obtenir le nom d'une agence
   const getAgenceName = (code) => {
     const agence = getAgenceByCode(code)
     return agence ? agence.nom : `Agence ${code}`
   }
 
-  // Obtenir le sous-code d'une agence
   const getAgenceSouscode = (code) => {
     const agence = getAgenceByCode(code)
     return agence ? (agence.souscode || code) : code
@@ -107,7 +100,6 @@ export function useAgences(api) {
     return agencesList.value.some(ag => ag.code === code)
   }
 
-  // Computed properties
   const agencesCount = computed(() => agencesList.value.length)
   const agencesCodes = computed(() => agencesList.value.map(ag => ag.code))
 
