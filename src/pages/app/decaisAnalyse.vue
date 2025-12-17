@@ -815,6 +815,12 @@ const analyserEncours = async () => {
       monthlyEncours: monthlyData[index].monthlyEncours
     }))
 
+    if (agencesData.value.length === 0 || datesList.value.length === 0) {
+      messageType.value = "info"
+      message.value = " Aucune donnée disponible pour les critères sélectionnés"
+      showNotification("Aucune donnée disponible pour les critères sélectionnés", 'info')
+      return
+    }
     messageType.value = "success"
     message.value = `Analyse terminée : ${agencesData.value.length} agences, ${datesList.value.length} dates disponibles`
     showNotification(`Analyse terminée : ${agencesData.value.length} agences, ${datesList.value.length} dates disponibles`, 'success')

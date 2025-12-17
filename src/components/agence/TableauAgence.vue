@@ -129,23 +129,12 @@
                 <v-icon size="small">mdi-delete</v-icon>
               </v-btn>
               
-              <!-- Voir détails -->
-              <v-btn
-                icon
-                size="small"
-                color="info"
-                variant="text"
-                @click="viewDetails(item)"
-                title="Voir détails"
-              >
-                <v-icon size="small">mdi-eye</v-icon>
-              </v-btn>
+              
             </div>
           </td>
         </tr>
       </template>
       
-      <!-- Pied de tableau -->
       <template #bottom>
         <div class="d-flex justify-space-between align-center pa-4">
           <div class="text-caption text-medium-emphasis">

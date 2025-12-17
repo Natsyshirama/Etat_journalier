@@ -495,7 +495,7 @@ def get_total_par_produit(
         if not total:
             return JSONResponse(
                 status_code=404,
-                content={"error": f"Aucune donnée trouvée pour le type {type_table}"}
+                content={"info": f"Aucune donnée trouvée pour cette Periode"}
             )
 
         return total

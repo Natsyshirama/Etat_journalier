@@ -671,11 +671,11 @@ const rechercher = async () => {
   headersDav.value = []
   headersDat.value = []
   headersEpr.value = []
-    resultsEncoursDepot.value = []
-
+  resultsEncoursDepot.value = []
   
-    visibleColumns.value = {
-    info: agence.value === 'all' ? ['date', 'agence'] : ['date'],    dav: ['total_debit'],
+  visibleColumns.value = {
+    info: agence.value === 'all' ? ['date', 'agence'] : ['date'],
+    dav: ['total_debit'],
     dat: ['total_montant'], 
     epr: ['total_debit'], 
     encours_depot: ['encours_depot']
@@ -685,51 +685,81 @@ const rechercher = async () => {
     let types = typeTable.value === 'all' ? ['dav', 'dat', 'epr'] : [typeTable.value]
 
     for (const type of types) {
-      const res = await axios.get(`${api}/api/resume/total-produit/${type}`, {
-              headers: { Authorization: `Bearer ${localStorage.getItem('access_token')}` },
-
-        params: {
-          agence: agence.value,
-          single_date_if_all: singleDate.value,
-          date_debut: dateDebut.value,
-          date_fin: dateFin.value,
-          compare: compare.value
+      try {
+        const res = await axios.get(`${api}/api/resume/total-produit/${type}`, {
+          headers: { Authorization: `Bearer ${localStorage.getItem('access_token')}` },
+          params: {
+            agence: agence.value,
+            single_date_if_all: singleDate.value,
+            date_debut: dateDebut.value,
+            date_fin: dateFin.value,
+            compare: compare.value
+          }
+        })
+        
+        // Gestion des réponses 404 qui contiennent des infos
+        if (res.status === 404 && res.data && res.data.info) {
+          messageType.value = "info"
+          message.value = res.data.info
+          showNotification(res.data.info, 'info')
+          continue // Passer au type suivant
         }
-      })
-      
-      if (Array.isArray(res.data) && res.data.length) {
-  if (type === 'dav') {
-    infoDav.value = res.data.map(item => item.date_agence)
-    resultsDav.value = res.data.map(item => ({
-      ...item.data,
-      ecart: item.ecart
-    }))
-    headersDav.value = generateHeaders(resultsDav.value)
-  }
+        
+        if (Array.isArray(res.data) && res.data.length) {
+          if (type === 'dav') {
+            infoDav.value = res.data.map(item => item.date_agence)
+            resultsDav.value = res.data.map(item => ({
+              ...item.data,
+              ecart: item.ecart
+            }))
+            headersDav.value = generateHeaders(resultsDav.value)
+          }
 
-  if (type === 'dat') {
-    infoDat.value = res.data.map(item => item.date_agence)
-    resultsDat.value = res.data.map(item => ({
-      ...item.data,
-      ecart: item.ecart
-    }))
-    headersDat.value = generateHeaders(resultsDat.value)
-  }
+          if (type === 'dat') {
+            infoDat.value = res.data.map(item => item.date_agence)
+            resultsDat.value = res.data.map(item => ({
+              ...item.data,
+              ecart: item.ecart
+            }))
+            headersDat.value = generateHeaders(resultsDat.value)
+          }
 
-  if (type === 'epr') {
-    infoEpr.value = res.data.map(item => item.date_agence)
-    resultsEpr.value = res.data.map(item => ({
-      ...item.data,
-      ecart: item.ecart
-    }))
-    headersEpr.value = generateHeaders(resultsEpr.value)
-  }
-}
-
-if (typeTable.value === 'all') {
-      calculateEncoursDepot()
+          if (type === 'epr') {
+            infoEpr.value = res.data.map(item => item.date_agence)
+            resultsEpr.value = res.data.map(item => ({
+              ...item.data,
+              ecart: item.ecart
+            }))
+            headersEpr.value = generateHeaders(resultsEpr.value)
+          }
+        } else {
+          // Si la réponse est vide (tableau vide) mais pas d'erreur
+          messageType.value = "info"
+          message.value = `Aucune donnée disponible pour ${type.toUpperCase()}`
+          showNotification(`Aucune donnée disponible pour ${type.toUpperCase()}`, 'info')
+        }
+        
+      } catch (axiosError) {
+        // Gestion spécifique pour les erreurs 404 avec message d'info
+        if (axiosError.response && axiosError.response.status === 404) {
+          if (axiosError.response.data && axiosError.response.data.info) {
+            messageType.value = "info"
+            message.value = axiosError.response.data.info
+            showNotification(axiosError.response.data.info, 'info')
+          } else {
+            messageType.value = "info"
+            message.value = `Aucune donnée trouvée pour ${type.toUpperCase()}`
+            showNotification(`Aucune donnée trouvée pour ${type.toUpperCase()}`, 'info')
+          }
+        } else {
+          // Pour les autres erreurs
+          throw axiosError
+        }
+      }
     }
 
+    if (typeTable.value === 'all') {
+      calculateEncoursDepot()
     }
 
     const total =
@@ -741,22 +771,29 @@ if (typeTable.value === 'all') {
       messageType.value = "success"
       message.value = `Résultats trouvés : ${total}`
       showNotification(`Résultats trouvés : ${total}`, 'success')
-
     } else {
-      messageType.value = "info"
-      message.value = "Aucun résultat trouvé."
-      showNotification(`Aucun résultat trouvé.`, 'info')
-
+      // Pas de message ici car on a déjà affiché les messages pour chaque type
+      if (!message.value) {
+        messageType.value = "info"
+        message.value = "Aucun résultat trouvé."
+        showNotification("Aucun résultat trouvé.", 'info')
+      }
     }
-  } catch {
-    messageType.value = "error"
-    message.value = "❌ Une erreur est survenue lors de la recherche."
-    showNotification('Une erreur est survenue lors de la recherche.', 'error')
+  } catch (error) {
+    // Gestion des vraies erreurs
+    if (error.response && error.response.data && error.response.data.error) {
+      messageType.value = "error"
+      message.value = `❌ ${error.response.data.error}`
+      showNotification(error.response.data.error, 'error')
+    } else {
+      messageType.value = "error"
+      message.value = "❌ Une erreur est survenue lors de la recherche."
+      showNotification('Une erreur est survenue lors de la recherche.', 'error')
+    }
   } finally {
     loading.value = false
   }
 }
-
 
 </script>
   

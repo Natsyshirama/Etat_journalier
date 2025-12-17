@@ -488,7 +488,7 @@ class DavReport:
                             previous_data = current_data  
 
             return results
-        
+            
         except Exception as e:
             print(f"[ERREUR] getTotalParProduit : {e}")
             return {"status": "error", "message": str(e)}
