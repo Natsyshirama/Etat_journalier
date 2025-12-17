@@ -995,10 +995,62 @@ class AgenceCreate(BaseModel):
     code: str 
     souscode: str
     nom: str
+    id_zone: Optional[int] = None
 
 class AgenceUpdate(BaseModel):
     souscode: Optional[str] = None
     nom: Optional[str] = None
+    id_zone: Optional[int] = None
+    
+class ZoneBase(BaseModel):
+    nom: str
+
+class ZoneCreate(ZoneBase):
+    pass
+
+class ZoneResponse(ZoneBase):
+    id: int
+    created_at: Optional[str] = None
+    updated_at: Optional[str] = None
+    
+    class Config:
+        from_attributes = True
+        
+@router.get("/zones")
+async def get_all_zones():
+    """Récupérer toutes les zones"""
+    try:
+        result = agence_controller.get_all_zones()
+        
+        if not result.get("success"):
+            raise HTTPException(status_code=500, detail=result.get("error"))
+        
+        return {
+            "response": result
+        }
+        
+    except Exception as e:
+        print(f"[ERREUR route get_all_zones] {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+@router.get("/zones/{zone_id}")
+async def get_zone(zone_id: int):
+    """Récupérer une zone par son ID"""
+    try:
+        # Vous devez ajouter cette méthode dans le contrôleur
+        result = agence_controller.get_zone_by_id(zone_id)
+        
+        if not result.get("success"):
+            raise HTTPException(status_code=404, detail=result.get("error"))
+        
+        return {
+            "response": result
+        }
+        
+    except Exception as e:
+        print(f"[ERREUR route get_zone] {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
     
 @router.post("/agences/create_agence")
 async def create_agence(agence_data: AgenceCreate):
@@ -1028,22 +1080,16 @@ async def create_agence(agence_data: AgenceCreate):
         raise HTTPException(status_code=500, detail=str(e))
     
     
-
+# Modifier la route update_agence pour accepter id_zone
 @router.put("/agences/{code}")
 async def update_agence(code: str, agence_data: AgenceUpdate):
     """Mettre à jour une agence"""
     try:
-        # Vérifier qu'au moins un champ est fourni
-        if agence_data.souscode is None and agence_data.nom is None:
-            raise HTTPException(
-                status_code=400, 
-                detail="Au moins un champ (souscode ou nom) doit être fourni"
-            )
-        
         result = agence_controller.update_agence(
             code=code,
             souscode=agence_data.souscode,
-            nom=agence_data.nom
+            nom=agence_data.nom,
+            id_zone=agence_data.id_zone
         )
         
         if not result.get("success"):
@@ -1060,7 +1106,8 @@ async def update_agence(code: str, agence_data: AgenceUpdate):
     except Exception as e:
         print(f"[ERREUR route update_agence] {e}")
         raise HTTPException(status_code=500, detail=str(e))
-
+    
+    
 @router.delete("/delete_agence/{code}")
 async def delete_agence(code: str):
     """Supprimer une agence"""

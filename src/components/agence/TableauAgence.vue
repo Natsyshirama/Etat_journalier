@@ -84,8 +84,16 @@
           <td>
             <div class="d-flex align-center">
               <v-icon color="grey" size="small" class="mr-2">mdi-bank</v-icon>
-              {{ item.nom }}
+              {{ item.nom_agence }}
             </div>
+          </td>
+          <!-- Dans le template, ajouter une nouvelle colonne -->
+          <td>
+            <v-chip v-if="item.nom_zone" size="small" color="primary" variant="outlined">
+              <v-icon size="small" class="mr-1">mdi-map-marker</v-icon>
+              {{ item.nom_zone }}
+            </v-chip>
+            <span v-else class="text-caption text-medium-emphasis">Non définie</span>
           </td>
           
           <!-- Date de création -->
@@ -195,6 +203,13 @@ const headers = [
     key: 'nom',
     sortable: true,
     width: '30%'
+  },
+  
+  {
+    title: 'Zone',
+    key: 'nom_zone',
+    sortable: true,
+    width: '15%'
   },
   {
     title: 'Créé le',

@@ -202,6 +202,32 @@
                     </template>
                   </v-text-field>
                 </v-col>
+                <!-- Dans le template, après le champ nom -->
+                <v-col cols="12">
+                  <v-select
+                    v-model="formData.id_zone"
+                    :items="zones"
+                    item-title="nom"
+                    item-value="id"
+                    label="Zone"
+                    placeholder="Sélectionnez une zone"
+                    variant="outlined"
+                    :loading="loadingZones"
+                    clearable
+                    density="comfortable"
+                  >
+                    <template #prepend-inner>
+                      <v-icon color="grey">mdi-map-marker</v-icon>
+                    </template>
+                    <template #item="{ props, item }">
+                      <v-list-item v-bind="props">
+                        <template #prepend>
+                          <v-icon color="primary">mdi-map-marker</v-icon>
+                        </template>
+                      </v-list-item>
+                    </template>
+                  </v-select>
+                </v-col>
               </v-row>
             </v-form>
           </v-card-text>
@@ -428,6 +454,25 @@ const resetForm = () => {
   }
 }
 
+// Ajouter dans les data
+const zones = ref([])
+const loadingZones = ref(false)
+
+// Méthode pour charger les zones
+const loadZones = async () => {
+  loadingZones.value = true
+  try {
+    const response = await axios.get(`${api}/api/zones`)
+    if (response.data.response?.success) {
+      zones.value = response.data.response.data
+    }
+  } catch (error) {
+    console.error('Erreur chargement zones:', error)
+  } finally {
+    loadingZones.value = false
+  }
+}
+
 const saveAgence = async () => {
   if (!formValid.value) return
   
@@ -572,6 +617,7 @@ const formatDate = (date) => {
 // Initialisation
 onMounted(() => {
   loadAgences()
+  loadZones()
 })
 </script>
 
