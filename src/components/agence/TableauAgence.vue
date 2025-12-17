@@ -84,7 +84,7 @@
           <td>
             <div class="d-flex align-center">
               <v-icon color="grey" size="small" class="mr-2">mdi-bank</v-icon>
-              {{ item.nom_agence }}
+              {{ item.nom }}
             </div>
           </td>
           <!-- Dans le template, ajouter une nouvelle colonne -->

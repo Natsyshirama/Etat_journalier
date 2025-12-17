@@ -432,7 +432,9 @@ const openEditDialog = (agence) => {
   formData.value = {
     code: agence.code,
     souscode: agence.souscode,
-    nom: agence.nom
+    nom: agence.nom,
+    id_zone: agence.id_zone || null  // Ajouter cette ligne
+
   }
   isEditing.value = true
   showDialog.value = true
@@ -450,7 +452,8 @@ const resetForm = () => {
   formData.value = {
     code: '',
     souscode: '',
-    nom: ''
+    nom: '',
+    id_zone: null  // Ajouter cette ligne
   }
 }
 
@@ -484,17 +487,23 @@ const saveAgence = async () => {
         `${api}/api/agences/${formData.value.code}`,
         {
           souscode: formData.value.souscode,
-          nom: formData.value.nom
+          nom: formData.value.nom,
+          id_zone: formData.value.id_zone || null  // Ajouter cette ligne
         }
       )
       
       if (response.data.response?.success) {
         const index = agences.value.findIndex(a => a.code === formData.value.code)
         if (index !== -1) {
+          const zoneNom = zones.value.find(z => z.id === formData.value.id_zone)?.nom
+
           agences.value[index] = {
             ...agences.value[index],
             souscode: formData.value.souscode,
-            nom: formData.value.nom
+            nom: formData.value.nom,
+            id_zone: formData.value.id_zone || null,  // Ajouter cette ligne
+            nom_zone: zoneNom  // Mettre à jour le nom de la zone
+
           }
           filteredAgences.value = [...agences.value]
         }
@@ -509,7 +518,12 @@ const saveAgence = async () => {
       // Création
       const response = await axios.post(
         `${api}/api/agences/create_agence`,
-        formData.value
+        {
+          code: formData.value.code,
+          souscode: formData.value.souscode,
+          nom: formData.value.nom,
+          id_zone: formData.value.id_zone  // Ajouter cette ligne
+        }
       )
       
       if (response.data.response?.success) {
@@ -519,6 +533,8 @@ const saveAgence = async () => {
           code: formData.value.code,
           souscode: formData.value.souscode,
           nom: formData.value.nom,
+          id_zone: formData.value.id_zone || null,  // Ajouter cette ligne
+          nom_zone: zoneNom,  // Ajouter cette ligne pour le nom de la zone
           created_at: new Date().toISOString(),
           updated_at: new Date().toISOString()
         })

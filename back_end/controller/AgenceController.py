@@ -211,7 +211,7 @@ class AgenceController:
                     a.id, 
                     a.code, 
                     a.souscode, 
-                    a.nom as nom_agence,
+                    a.nom as nom,
                     a.id_zone,
                     z.nom as nom_zone,
                     DATE_FORMAT(a.created_at, '%Y-%m-%d %H:%i:%s') as created_at,
@@ -219,6 +219,41 @@ class AgenceController:
                 FROM agence a
                 LEFT JOIN zone z ON a.id_zone = z.id
                 ORDER BY a.code
+            """)
+            
+            conn = self.db.connect()
+            result = conn.execute(query)
+            columns = result.keys()
+            data = [dict(zip(columns, row)) for row in result.fetchall()]
+            
+            return {
+                "success": True,
+                "data": data,
+                "count": len(data)
+            }
+            
+        except Exception as e:
+            print(f"[ERREUR] Impossible de récupérer les agences : {e}")
+            return {
+                "success": False,
+                "error": str(e),
+                "data": []
+            }
+            
+        finally:
+            if conn:
+                try:
+                    conn.close()
+                except Exception as close_err:
+                    print(f"[ERREUR] Fermeture connexion: {close_err}")
+                    
+    def get_code_Agence(self):
+        conn = None
+        try:
+            query = text("""
+                SELECT  code
+                FROM agence 
+                ORDER BY code
             """)
             
             conn = self.db.connect()
