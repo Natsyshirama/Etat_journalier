@@ -166,12 +166,15 @@
       
       <v-row v-if="hasResults" class="mt-8">
         <v-col cols="12" md="4" class="text-md-left">
+          <div class="d-flex gap-2">
+
           <v-btn
             :color="showGraphe ? 'blue' : 'grey'"
             variant="outlined"
-            rounded="xl"
+            rounded="lg"
             prepend-icon="mdi-chart-bar"
             @click="showGraphe = !showGraphe"
+
           >
             Voir le graphe
           </v-btn>
@@ -185,6 +188,8 @@
       >
         Vue par Zone
       </v-btn>
+          </div>
+       
       <!-- Indicateur à droite -->
     <div class="text-caption text-medium-emphasis">
       {{ viewByZone ? `${zonesCount} zones` : `${agencesData.length} agences` }}

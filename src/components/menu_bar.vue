@@ -5,7 +5,7 @@
       <div class="flex flex-row justify-end items-center space-x-4 mx-4" >
         <h3 class="mr-5 text-xl">Date d'arrêt</h3>
 <v-menu
-  v-if="isCompte"
+  v-if="isCompte || isEsriPage || isChangePage || isSession || isInitialise || isgenerale || isFilemanager || isDecaissementAnalyse || isDepotAnalyse || isDepotDetail || isDecDetal || isAgence"
   v-model="menu"
   close-on-content-click
   offset-y
@@ -271,6 +271,8 @@ const toolbarTitle = computed(() => {
 
  return 'Encours Credits'
 })
+
+
 
 const selectedYear = ref('all')
 const selectedMonth = ref('all')

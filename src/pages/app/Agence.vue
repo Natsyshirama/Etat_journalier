@@ -6,10 +6,10 @@
           <div class="header-title">
             <h1 class="text-h4 font-weight-bold mb-2">
               <v-icon color="primary" class="mr-3">mdi-bank</v-icon>
-              Gestion des Agences
+               Agence
             </h1>
             <p class="text-subtitle-1 text-medium-emphasis">
-              Gérez les agences bancaires de votre réseau
+              Les agences de votre banque. 
             </p>
           </div>
           
