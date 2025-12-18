@@ -148,31 +148,65 @@
         {{ message }}
       </v-alert>
 
+      <!-- Boutons de vue -->
       <v-row v-if="hasResults" class="mt-8">
-        <v-col cols="12" md="4" class="text-md-left">
-          <v-btn
-            :color="showGraphe ? 'blue' : 'grey'"
-            variant="outlined"
-            prepend-icon="mdi-chart-bar"
-            @click="showGraphe = !showGraphe"
-          >
-            Voir le graphe
-          </v-btn>
+        <v-col cols="12" class="d-flex justify-space-between align-center">
+          <div class="d-flex gap-2">
+            <v-btn
+              :color="showGraphe ? 'blue' : 'grey'"
+              variant="outlined"
+              prepend-icon="mdi-chart-bar"
+              @click="showGraphe = !showGraphe"
+              rounded="xl"
+            >
+              Voir le graphe
+            </v-btn>
+            
+            <!-- Bouton Vue par Zone -->
+            <v-btn
+              :color="viewByZone ? 'blue' : 'grey'"
+              variant="outlined"
+              prepend-icon="mdi-map-marker-multiple"
+              @click="toggleViewByZone"
+              rounded="xl"
+              :loading="zoneLoading"
+            >
+              Vue par Zone
+            </v-btn>
+          </div>
+          
+          <div class="text-caption text-medium-emphasis">
+            {{ viewByZone ? `${zonesCount} zones` : `${agencesData.length} agences` }}
+          </div>
         </v-col>
+      </v-row>
+
+      <v-row v-if="hasResults" class="mt-4">
         <v-col cols="12">
           <v-card class="elevation-3">
             <v-card-text class="pa-0">
               <div class="table-container" v-if="!showGraphe">
-                <div class="text-body-1 text-medium-emphasis">Période couverte: {{ graphLabels[0] }} → {{ graphLabels[graphLabels.length - 1] }}</div>
+                <div class="text-body-1 text-medium-emphasis">
+                  Période couverte: {{ graphLabels[0] }} → {{ graphLabels[graphLabels.length - 1] }}
+                  <v-chip v-if="viewByZone" color="green" size="small" class="ml-2">
+                    Vue par Zone
+                  </v-chip>
+                </div>
 
-                <div class="text-body-1 font-weight-bold ">
-                    
-                  </div>
                 <table class="encours-table">
                   <thead>
                     <tr>
-                      <th class="header-agence">AGENCE</th>
-                      <th class="header-nom">NOM AGENCE</th>
+                      <!-- En-tête dynamique selon la vue -->
+                      <th v-if="!viewByZone" class="header-agence">AGENCE</th>
+                      <th v-if="viewByZone" class="header-agence">ZONE</th>
+                      
+                      <th class="header-nom">{{ viewByZone ? 'NOM ZONE' : 'NOM AGENCE' }}</th>
+                      
+                      <!-- Colonne nombre d'agences uniquement en vue zone -->
+                      <th v-if="viewByZone" class="header-agence-count">
+                        NOMBRE D'AGENCES
+                      </th>
+                      
                       <th 
                         v-for="column in tableColumns" 
                         :key="column.key"
@@ -183,40 +217,87 @@
                     </tr>
                   </thead>
                   <tbody>
-                    <tr v-for="agence in agencesData" :key="agence.code">
-                      <td class="cell-agence">{{ agence.code }}</td>
-                      <td class="cell-nom">{{ agence.nom }}</td>
-                      <td 
-                        v-for="column in tableColumns" 
-                        :key="column.key"
-                        class="cell-montant"
-                      >
-                        <div class="montant-container">
-                          <div 
-                            class="montant-value"
-                            @click="goToDetail(column.key, agence.code)"
-                            style="cursor: pointer;"
-                          >
-                            {{ formatNumber(getCellValue(agence, column)) }}
+                    <!-- Vue par agence -->
+                    <template v-if="!viewByZone">
+                      <tr v-for="agence in agencesData" :key="agence.code">
+                        <td class="cell-agence">{{ agence.code }}</td>
+                        <td class="cell-nom">{{ agence.nom }}</td>
+                        <td 
+                          v-for="column in tableColumns" 
+                          :key="column.key"
+                          class="cell-montant"
+                        >
+                          <div class="montant-container">
+                            <div 
+                              class="montant-value"
+                              @click="goToDetail(column.key, agence.code)"
+                              style="cursor: pointer;"
+                            >
+                              {{ formatNumber(getCellValue(agence, column)) }}
+                            </div>
+                            <div 
+                              v-if="getCellEcart(agence, column) !== 0" 
+                              class="ecart-indicator"
+                              :class="getEcartClass(getCellEcart(agence, column))"
+                            >
+                              {{ formatEcart(getCellEcart(agence, column)) }}
+                            </div>
                           </div>
-                          <div 
-                            v-if="getCellEcart(agence, column) !== 0" 
-                            class="ecart-indicator"
-                            :class="getEcartClass(getCellEcart(agence, column))"
-                          >
-                            {{ formatEcart(getCellEcart(agence, column)) }}
-                          </div>
-                        </div>
-                      </td>
-                    </tr>
+                        </td>
+                      </tr>
+                    </template>
                     
+                    <!-- Vue par zone -->
+                    <template v-else>
+                      <tr v-for="zone in zonesData" :key="zone.id">
+                        <td class="cell-agence">
+                          <v-chip size="small" color="green" variant="outlined">
+                            Z{{ zone.id }}
+                          </v-chip>
+                        </td>
+                        <td class="cell-nom">{{ zone.nom }}</td>
+                        <td class="cell-agence-count">{{ zone.agenceCount }}</td>
+                        <td 
+                          v-for="column in tableColumns" 
+                          :key="column.key"
+                          class="cell-montant"
+                        >
+                          <div class="montant-container">
+                            <div 
+                              class="montant-value"
+                              @click="goToZoneDetail(column.key, zone.id)"
+                              style="cursor: pointer;"
+                            >
+                              {{ formatNumber(getZoneCellValue(zone, column)) }}
+                            </div>
+                            <div 
+                              v-if="getZoneCellEcart(zone, column) !== 0" 
+                              class="ecart-indicator"
+                              :class="getEcartClass(getZoneCellEcart(zone, column))"
+                            >
+                              {{ formatEcart(getZoneCellEcart(zone, column)) }}
+                            </div>
+                          </div>
+                        </td>
+                      </tr>
+                    </template>
+                    
+                    <!-- LIGNE DE TOTAL -->
                     <tr v-if="hasResults" class="total-row">
                       <td class="cell-agence total-cell">
                         <strong>TOTAL</strong>
                       </td>
                       <td class="cell-nom total-cell">
-                        <strong>{{ agencesData.length }} agences</strong>
+                        <strong>
+                          {{ viewByZone ? `${zonesData.length} zones` : `${agencesData.length} agences` }}
+                        </strong>
                       </td>
+                      
+                      <!-- Colonne nombre d'agences uniquement en vue zone -->
+                      <td v-if="viewByZone" class="cell-agence-count total-cell">
+                        <strong>{{ getTotalAgenceCount() }}</strong>
+                      </td>
+                      
                       <td 
                         v-for="column in tableColumns" 
                         :key="column.key"
@@ -224,14 +305,14 @@
                       >
                         <div class="montant-container">
                           <div class="montant-value total-montant">
-                            {{ formatNumber(getTotalValue(column)) }}
+                            {{ formatNumber(getTotalValue(column, viewByZone)) }}
                           </div>
                           <div 
-                            v-if="getTotalEcart(column) !== 0" 
+                            v-if="getTotalEcart(column, viewByZone) !== 0" 
                             class="ecart-indicator total-ecart"
-                            :class="getEcartClass(getTotalEcart(column))"
+                            :class="getEcartClass(getTotalEcart(column, viewByZone))"
                           >
-                            {{ formatEcart(getTotalEcart(column)) }}
+                            {{ formatEcart(getTotalEcart(column, viewByZone)) }}
                           </div>
                         </div>
                       </td>
@@ -251,6 +332,9 @@
               <h3 class="text-h5 font-weight-bold graph-title">
                 <v-icon color="primary" class="mr-2">mdi-chart-bar</v-icon>
                 Évolution des Encours de Dépôts
+                <v-chip v-if="viewByZone" color="green" size="small" class="ml-2">
+                  Vue par Zone
+                </v-chip>
               </h3>
               <div class="graph-subtitle text-caption text-medium-emphasis">
                 Analyse temporelle des montants totaux - Graphique en barres
@@ -466,7 +550,7 @@
 </template>
 
 <script setup>
-import { ref, computed, onMounted, inject } from "vue"
+import { ref, computed, onMounted, inject, watch } from "vue"
 import axios from "axios"
 import { Bar } from "vue-chartjs"
 import {
@@ -483,35 +567,17 @@ import { useRouter } from 'vue-router'
 ChartJS.register(Title, Tooltip, Legend, BarElement, CategoryScale, LinearScale)
 
 const router = useRouter()
-
-const goToDetail = (columnKey, agenceCode) => {
-  router.push({
-    path: "/app/analyseDetails",
-    query: { tableName: columnKey, agence: agenceCode }
-  })
-}
-
-const goToAnalyseDecaissement = () => {
-  router.push('/app/decaisAnalyse')
-}
-
 const api = inject("api")
 import { useAgences } from '@/composables/useAgences'
 
-
-const { 
-  agencesList, 
-  loading: agencesLoading, 
-  error: agencesError,
-  getAgenceByCode 
-} = useAgences(api)
-
+// ========== REFS ==========
 const selectedAgences = ref([])
 const dateDebut = ref("")
 const dateFin = ref("")
 const compare = ref(false)
 const selectedMonths = ref([])
 const loading = ref(false)
+const zoneLoading = ref(false)
 const message = ref("")
 const messageType = ref("info")
 const datesList = ref([])
@@ -520,6 +586,20 @@ const availableMonths = ref([])
 const allData = ref({})
 const showGraphe = ref(false)
 
+// Vue par zone
+const viewByZone = ref(false)
+const zonesData = ref([])
+const zonesList = ref([])
+
+// Composables
+const { 
+  agencesList, 
+  loading: agencesLoading, 
+  error: agencesError,
+  getAgenceByCode 
+} = useAgences(api)
+
+// ========== COMPUTED PROPERTIES ==========
 const allAgencesSelected = computed(() => 
   selectedAgences.value.length === agencesList.value.length
 )
@@ -563,13 +643,36 @@ const tableColumns = computed(() => {
 
 const graphLabels = computed(() => tableColumns.value.map(col => col.label))
 
-const graphValues = computed(() =>
-  tableColumns.value.map(col => getTotalValue(col))
-)
+const graphValues = computed(() => {
+  if (viewByZone.value) {
+    const totals = tableColumns.value.map(column => {
+      return zonesData.value.reduce((sum, zone) => {
+        return sum + getZoneCellValue(zone, column)
+      }, 0)
+    })
+    return totals
+  } else {
+    return tableColumns.value.map(col => getTotalValue(col, false))
+  }
+})
 
-const graphEcarts = computed(() =>
-  tableColumns.value.map(col => getTotalEcart(col))
-)
+const graphEcarts = computed(() => {
+  if (viewByZone.value) {
+    const ecarts = []
+    const values = graphValues.value
+    
+    for (let i = 0; i < values.length; i++) {
+      if (i === 0) {
+        ecarts.push(0)
+      } else {
+        ecarts.push(values[i] - values[i-1])
+      }
+    }
+    return ecarts
+  } else {
+    return tableColumns.value.map(col => getTotalEcart(col, false))
+  }
+})
 
 const averageEcart = computed(() => {
   if (!graphEcarts.value || graphEcarts.value.length === 0) return 0
@@ -579,6 +682,33 @@ const averageEcart = computed(() => {
   return sum / validEcarts.length
 })
 
+const zonesCount = computed(() => zonesList.value.length)
+
+// ========== METHODS ==========
+// Navigation
+const goToDetail = (columnKey, agenceCode) => {
+  router.push({
+    path: "/app/analyseDetails",
+    query: { tableName: columnKey, agence: agenceCode }
+  })
+}
+
+const goToZoneDetail = (date, zoneId) => {
+  router.push({
+    path: "/app/analyseDetailsZone",
+    query: { 
+      tableName: date, 
+      zoneId: zoneId,
+      view: 'zone'
+    }
+  })
+}
+
+const goToAnalyseDecaissement = () => {
+  router.push('/app/decaisAnalyse')
+}
+
+// Sélection agences/mois
 const toggleAllAgences = () => {
   if (allAgencesSelected.value) {
     selectedAgences.value = []
@@ -593,6 +723,191 @@ const toggleAllMonths = () => {
   } else {
     selectedMonths.value = availableMonths.value.map(month => month.value)
   }
+}
+
+// Gestion des zones
+const loadZones = async () => {
+  try {
+    const response = await axios.get(`${api}/api/zones`, {
+      headers: { 
+        'Authorization': `Bearer ${localStorage.getItem('access_token')}`
+      }
+    })
+    
+    if (response.data.response?.success) {
+      zonesList.value = response.data.response.data.map(zone => ({
+        id: zone.id,
+        nom: zone.nom,
+        agences: []
+      }))
+    }
+  } catch (error) {
+    console.error('Erreur chargement zones:', error)
+  }
+}
+
+const toggleViewByZone = async () => {
+  if (viewByZone.value) {
+    // Si on est déjà en vue zone, revenir à vue agence
+    viewByZone.value = false
+    return
+  }
+  
+  // Vérifier qu'on a des données à analyser
+  if (!agencesData.value.length || !datesList.value.length) {
+    messageType.value = "warning"
+    message.value = "Veuillez d'abord analyser des données d'agences"
+    return
+  }
+  
+  zoneLoading.value = true
+  
+  try {
+    // Charger les zones si nécessaire
+    if (zonesList.value.length === 0) {
+      await loadZones()
+    }
+    
+    // Regrouper par zone
+    zonesData.value = await groupDataByZone()
+    
+    if (zonesData.value.length === 0) {
+      messageType.value = "info"
+      message.value = "Aucune donnée disponible pour l'affichage par zone"
+      zoneLoading.value = false
+      return
+    }
+    
+    // Passer en vue zone
+    viewByZone.value = true
+    
+    messageType.value = "success"
+    message.value = `Affichage par zone activé - ${zonesData.value.length} zones`
+    
+  } catch (error) {
+    console.error('Erreur regroupement par zone:', error)
+    messageType.value = "error"
+    message.value = "Erreur lors du regroupement par zone"
+  } finally {
+    zoneLoading.value = false
+  }
+}
+
+const groupDataByZone = async () => {
+  // 1. Charger les agences avec zones depuis l'API
+  let agencesWithZones = []
+  try {
+    const response = await axios.get(`${api}/api/agences/`, {
+      headers: { 
+        'Authorization': `Bearer ${localStorage.getItem('access_token')}`
+      }
+    })
+    
+    if (response.data.response?.success) {
+      agencesWithZones = response.data.response.data
+    }
+  } catch (error) {
+    console.error('Erreur chargement agences avec zones:', error)
+    return []
+  }
+  
+  // 2. Créer un mapping zone -> agences
+  const zoneToAgences = {}
+  zonesList.value.forEach(zone => {
+    zoneToAgences[zone.id] = {
+      nom: zone.nom,
+      agences: []
+    }
+  })
+  
+  // 3. Associer chaque agence à sa zone
+  agencesData.value.forEach(agence => {
+    const agenceWithZone = agencesWithZones.find(a => a.code === agence.code)
+    
+    if (agenceWithZone && agenceWithZone.id_zone) {
+      const zoneId = agenceWithZone.id_zone
+      
+      if (zoneToAgences[zoneId]) {
+        zoneToAgences[zoneId].agences.push(agence)
+      }
+    }
+  })
+  
+  // 4. Calculer les totaux par zone et par date
+  const zonesWithData = []
+  
+  Object.entries(zoneToAgences).forEach(([zoneId, zoneData]) => {
+    if (zoneData.agences.length > 0) {
+      const zoneEncours = {}
+      
+      // Pour chaque date
+      datesList.value.forEach(date => {
+        let totalMontant = 0
+        let totalEcart = 0
+        
+        // Somme des montants de toutes les agences de cette zone
+        zoneData.agences.forEach(agence => {
+          const agenceData = agence.encours[date] || {}
+          totalMontant += agenceData.montant || 0
+          totalEcart += agenceData.ecart || 0
+        })
+        
+        zoneEncours[date] = {
+          montant: totalMontant,
+          ecart: totalEcart
+        }
+      })
+      
+      zonesWithData.push({
+        id: zoneId,
+        nom: zoneData.nom,
+        encours: zoneEncours,
+        agenceCount: zoneData.agences.length
+      })
+    }
+  })
+  
+  return zonesWithData
+}
+
+// Méthodes pour la vue par zone
+const getZoneCellValue = (zone, column) => {
+  if (column.type === 'daily') {
+    return zone.encours[column.key]?.montant || 0
+  } else if (column.type === 'monthly') {
+    // Vue mensuelle - calculer le total du mois
+    const monthKey = column.key // Format: YYYYMM
+    
+    // Filtrer les dates qui appartiennent à ce mois
+    const monthDates = datesList.value.filter(date => 
+      date.startsWith(monthKey)
+    )
+    
+    // Somme des montants pour toutes les dates de ce mois
+    let totalMontant = 0
+    monthDates.forEach(date => {
+      totalMontant += zone.encours[date]?.montant || 0
+    })
+    
+    return totalMontant
+  }
+  return 0
+}
+
+const getZoneCellEcart = (zone, column) => {
+  if (column.type === 'daily') {
+    return zone.encours[column.key]?.ecart || 0
+  } else if (column.type === 'monthly') {
+    // Pour les mois, on pourrait calculer l'écart entre mois
+    // Pour simplifier, on retourne 0 ou on pourrait implémenter un calcul
+    return 0
+  }
+  return 0
+}
+
+const getTotalAgenceCount = () => {
+  if (!viewByZone.value) return 0
+  return zonesData.value.reduce((sum, zone) => sum + zone.agenceCount, 0)
 }
 
 const getCellValue = (agence, column) => {
@@ -611,6 +926,44 @@ const getCellEcart = (agence, column) => {
   }
 }
 
+// Calculs totaux
+const getTotalValue = (column, useZoneView = null) => {
+  const isZoneView = useZoneView !== null ? useZoneView : viewByZone.value
+  
+  if (isZoneView) {
+    let total = 0
+    zonesData.value.forEach(zone => {
+      total += getZoneCellValue(zone, column)
+    })
+    return total
+  } else {
+    let total = 0
+    agencesData.value.forEach(agence => {
+      total += getCellValue(agence, column)
+    })
+    return total
+  }
+}
+
+const getTotalEcart = (column, useZoneView = null) => {
+  const isZoneView = useZoneView !== null ? useZoneView : viewByZone.value
+  
+  if (isZoneView) {
+    let totalEcart = 0
+    zonesData.value.forEach(zone => {
+      totalEcart += getZoneCellEcart(zone, column)
+    })
+    return totalEcart
+  } else {
+    let totalEcart = 0
+    agencesData.value.forEach(agence => {
+      totalEcart += getCellEcart(agence, column)
+    })
+    return totalEcart
+  }
+}
+
+// Utilitaires
 const getMoisDispo = (dates) => {
   const monthSet = new Set()
   const monthLabels = []
@@ -638,6 +991,31 @@ const getMoisDispo = (dates) => {
   return monthLabels.sort((a, b) => a.value.localeCompare(b.value))
 }
 
+const formatDateDisplay = (dateStr) => {
+  if (!dateStr) return ''
+  const year = dateStr.substring(0, 4)
+  const month = dateStr.substring(4, 6)
+  const day = dateStr.substring(6, 8)
+  return `${day}/${month}/${year}`
+}
+
+const formatNumber = (num) => {
+  if (num === undefined || num === null || num === 0) return '0'
+  return new Intl.NumberFormat('fr-FR').format(Math.round(num))
+}
+
+const formatEcart = (ecart) => {
+  if (ecart === undefined || ecart === null || ecart === 0) return ''
+  return ecart > 0 ? `+${formatNumber(ecart)}` : formatNumber(ecart)
+}
+
+const getEcartClass = (ecart) => {
+  if (ecart > 0) return 'ecart-positive'
+  if (ecart < 0) return 'ecart-negative'
+  return ''
+}
+
+// Organisations de données
 const calculateMonthlyEncours = (agences) => {
   const monthlyData = []
 
@@ -730,27 +1108,67 @@ const organizeDailyData = (agences) => {
   return dailyData
 }
 
-const saveToLocalStorage = () => {
-  try {
-    const snapshot = {
-      timestamp: new Date().toISOString(),
-      selectedAgences: selectedAgences.value,
-      dateDebut: dateDebut.value,
-      dateFin: dateFin.value,
-      selectedMonths: selectedMonths.value,
-      datesList: datesList.value,
-      availableMonths: availableMonths.value,
-      agencesData: agencesData.value,
-      message: message.value,
-      messageType: messageType.value
-    }
-    localStorage.setItem("depotAnalyse_snapshot", JSON.stringify(snapshot))
-    console.log('Snapshot saved to localStorage: depotAnalyse_snapshot')
-  } catch (err) {
-    console.error('Failed to save snapshot to localStorage', err)
-  }
+const organizeBaseData = (allData, agences) => {
+  const allDates = new Set()
+  
+  Object.values(allData.dav).forEach(agenceData => {
+    Object.keys(agenceData).forEach(date => allDates.add(date))
+  })
+  Object.values(allData.dat).forEach(agenceData => {
+    Object.keys(agenceData).forEach(date => allDates.add(date))
+  })
+  Object.values(allData.epr).forEach(agenceData => {
+    Object.keys(agenceData).forEach(date => allDates.add(date))
+  })
+
+  datesList.value = Array.from(allDates).sort()
 }
 
+// API calls
+const fetchAllAgencesData = async (agences) => {
+  const allData = {
+    dav: {},
+    dat: {},
+    epr: {}
+  }
+
+  for (const product of ['dav', 'dat', 'epr']) {
+    for (const agenceCode of agences) {
+      const params = {
+        agence: agenceCode,
+        date_debut: dateDebut.value || undefined,
+        date_fin: dateFin.value || undefined,
+        compare: compare.value || undefined
+      }
+
+      Object.keys(params).forEach(key => params[key] === undefined && delete params[key])
+
+      try {
+        const response = await axios.get(`${api}/api/resume/total-produit/${product}`, {
+          headers: { Authorization: `Bearer ${localStorage.getItem('access_token')}` },
+          params
+        })
+
+        if (Array.isArray(response.data) && response.data.length > 0) {
+          if (!allData[product][agenceCode]) {
+            allData[product][agenceCode] = {}
+          }
+          
+          response.data.forEach(item => {
+            const date = item.date_agence.date
+            allData[product][agenceCode][date] = item.data
+          })
+        }
+      } catch (error) {
+        console.error(`Erreur récupération ${product} - ${agenceCode}:`, error)
+      }
+    }
+  }
+
+  return allData
+}
+
+// Analyse principale
 const analyserEncours = async () => {
   loading.value = true
   message.value = ""
@@ -758,6 +1176,8 @@ const analyserEncours = async () => {
   agencesData.value = []
   availableMonths.value = []
   selectedMonths.value = []
+  viewByZone.value = false
+  zonesData.value = []
 
   try {
     const agencesToAnalyze = selectedAgences.value.length > 0 
@@ -777,21 +1197,18 @@ const analyserEncours = async () => {
       ...dailyAgence,
       monthlyEncours: monthlyData[index].monthlyEncours
     }))
+    
     if (datesList.value.length === 0){
       messageType.value = "info"
       message.value = "Aucune donnée d'encours de dépôts trouvée pour les critères sélectionnés."
-
       return
     }
+    
     messageType.value = "success"
     message.value = `Analyse terminée : ${agencesData.value.length} agences, ${datesList.value.length} dates disponibles`
 
-    try {
-      saveToLocalStorage()
-      console.log('Snapshot auto-sauvegardé après analyse')
-    } catch (err) {
-      console.warn('Erreur lors de la sauvegarde automatique:', err)
-    }
+    saveToLocalStorage()
+    
   } catch (error) {
     console.error("Erreur analyse:", error)
     messageType.value = "error"
@@ -801,117 +1218,33 @@ const analyserEncours = async () => {
   }
 }
 
-const fetchAllAgencesData = async (agences) => {
-  const allData = {
-    dav: {},
-    dat: {},
-    epr: {}
-  }
-
-  for (const product of ['dav', 'dat', 'epr']) {
-    console.log(`Récupération des données ${product} pour agences:`, agences)
-
-    for (const agenceCode of agences) {
-      const params = {
-        agence: agenceCode,
-        date_debut: dateDebut.value || undefined,
-        date_fin: dateFin.value || undefined,
-        compare: compare.value || undefined
-      }
-
-      Object.keys(params).forEach(key => params[key] === undefined && delete params[key])
-
-      try {
-        console.log(`Appel API pour ${product} - ${agenceCode}`, params)
-        
-        const response = await axios.get(`${api}/api/resume/total-produit/${product}`, {
-          headers: { Authorization: `Bearer ${localStorage.getItem('access_token')}` },
-          params
-        })
-
-        console.log(`Réponse ${product} - ${agenceCode}:`, response.data)
-
-        if (Array.isArray(response.data) && response.data.length > 0) {
-          if (!allData[product][agenceCode]) {
-            allData[product][agenceCode] = {}
-          }
-          
-          response.data.forEach(item => {
-            const date = item.date_agence.date
-            allData[product][agenceCode][date] = item.data
-          })
-        } else {
-          console.log(`Aucune donnée pour ${product} - ${agenceCode}`)
-        }
-      } catch (error) {
-        console.error(`Erreur récupération ${product} - ${agenceCode}:`, error)
-      }
+// Gestion du cache
+const saveToLocalStorage = () => {
+  try {
+    const snapshot = {
+      timestamp: new Date().toISOString(),
+      selectedAgences: selectedAgences.value,
+      dateDebut: dateDebut.value,
+      dateFin: dateFin.value,
+      selectedMonths: selectedMonths.value,
+      datesList: datesList.value,
+      availableMonths: availableMonths.value,
+      agencesData: agencesData.value,
+      zonesData: zonesData.value,
+      viewByZone: viewByZone.value,
+      message: message.value,
+      messageType: messageType.value
     }
+    localStorage.setItem("depotAnalyse_snapshot", JSON.stringify(snapshot))
+  } catch (err) {
+    console.error('Failed to save snapshot to localStorage', err)
   }
-
-  console.log('Données récupérées:', allData)
-  return allData
-}
-
-const organizeBaseData = (allData, agences) => {
-  const allDates = new Set()
-  
-  Object.values(allData.dav).forEach(agenceData => {
-    Object.keys(agenceData).forEach(date => allDates.add(date))
-  })
-  Object.values(allData.dat).forEach(agenceData => {
-    Object.keys(agenceData).forEach(date => allDates.add(date))
-  })
-  Object.values(allData.epr).forEach(agenceData => {
-    Object.keys(agenceData).forEach(date => allDates.add(date))
-  })
-
-  datesList.value = Array.from(allDates).sort()
-}
-
-const formatDateDisplay = (dateStr) => {
-  if (!dateStr) return ''
-  const year = dateStr.substring(0, 4)
-  const month = dateStr.substring(4, 6)
-  const day = dateStr.substring(6, 8)
-  return `${day}/${month}/${year}`
-}
-
-const formatNumber = (num) => {
-  if (num === undefined || num === null || num === 0) return '0'
-  return new Intl.NumberFormat('fr-FR').format(Math.round(num))
-}
-
-const formatEcart = (ecart) => {
-  if (ecart === undefined || ecart === null || ecart === 0) return ''
-  return ecart > 0 ? `+${formatNumber(ecart)}` : formatNumber(ecart)
-}
-
-const getEcartClass = (ecart) => {
-  if (ecart > 0) return 'ecart-positive'
-  if (ecart < 0) return 'ecart-negative'
-  return ''
-}
-
-const getTotalValue = (column) => {
-  let total = 0
-  agencesData.value.forEach(agence => {
-    total += getCellValue(agence, column)
-  })
-  return total
-}
-
-const getTotalEcart = (column) => {
-  let totalEcart = 0
-  agencesData.value.forEach(agence => {
-    totalEcart += getCellEcart(agence, column)
-  })
-  return totalEcart
 }
 
 const restaurerDataCacher = () => {
   const raw = localStorage.getItem("depotAnalyse_snapshot")
   if (!raw) return false
+  
   try {
     const parsed = JSON.parse(raw)
 
@@ -925,10 +1258,11 @@ const restaurerDataCacher = () => {
     datesList.value = parsed.datesList || []
     availableMonths.value = parsed.availableMonths || (datesList.value.length ? getMoisDispo(datesList.value) : [])
     agencesData.value = parsed.agencesData || []
+    zonesData.value = parsed.zonesData || []
+    viewByZone.value = parsed.viewByZone || false
     message.value = parsed.message || ""
     messageType.value = parsed.messageType || "info"
 
-    console.log("Snapshot restored from localStorage: depotAnalyse_snapshot")
     return true
   } catch (err) {
     console.warn("Failed to parse depotAnalyse_snapshot:", err)
@@ -936,34 +1270,55 @@ const restaurerDataCacher = () => {
   }
 }
 
+// Graphique
 const downloadChart = () => {
   const canvas = document.querySelector('canvas')
-  const link = document.createElement('a')
-  link.download = 'evolution-encours-depots.png'
-  link.href = canvas.toDataURL('image/png')
-  link.click()
+  if (canvas) {
+    const link = document.createElement('a')
+    link.download = 'evolution-encours-depots.png'
+    link.href = canvas.toDataURL('image/png')
+    link.click()
+  }
 }
 
 const toggleFullscreen = () => {
   const graphContainer = document.querySelector('.graph-container')
   if (!document.fullscreenElement) {
-    graphContainer.requestFullscreen?.()
+    graphContainer?.requestFullscreen?.()
   } else {
     document.exitFullscreen?.()
   }
 }
 
+// Watcher pour recalculer quand les mois changent
+watch(selectedMonths, async (newMonths, oldMonths) => {
+  if (viewByZone.value && newMonths.length !== oldMonths.length) {
+    // Si on est en vue zone et que les mois ont changé, recalculer
+    if (zonesData.value.length > 0) {
+      zoneLoading.value = true
+      try {
+        zonesData.value = await groupDataByZone()
+      } catch (error) {
+        console.error('Erreur recalcul zones:', error)
+      } finally {
+        zoneLoading.value = false
+      }
+    }
+  }
+})
+
+// ========== LIFECYCLE ==========
 onMounted(() => {
   const restored = restaurerDataCacher()
   if (!restored) {
     selectedAgences.value = agencesList.value.map(ag => ag.code)
   }
-})
-
-onMounted(() => {
-  selectedAgences.value = agencesList.value.map(ag => ag.code)
+  
+  // Charger les zones au démarrage
+  loadZones()
 })
 </script>
+
 <style scoped>
   .legend-color {
   display: inline-block;
@@ -1152,6 +1507,12 @@ onMounted(() => {
   text-align: center !important;
 }
 
+.header-agence-count {
+  width: 100px;
+  background-color: #546e7a !important;
+  text-align: center !important;
+}
+
 .encours-table tbody tr {
   transition: background 0.2s;
 }
@@ -1171,6 +1532,12 @@ onMounted(() => {
   font-weight: 500;
     vertical-align: top; /* montant en haut */
 
+}
+
+.cell-agence-count {
+  text-align: center;
+  font-weight: 500;
+  color: #546e7a;
 }
 
 .montant-container {
@@ -1198,10 +1565,12 @@ onMounted(() => {
 
 .ecart-positive {
   color: #388e3c;
+  background-color: rgba(56, 142, 60, 0.1);
 }
 
 .ecart-negative {
   color: #c62828;
+  background-color: rgba(198, 40, 40, 0.1);
 }
 
 .v-select,
@@ -1251,7 +1620,8 @@ onMounted(() => {
     padding: 8px 4px;
   }
   .header-agence,
-  .header-nom {
+  .header-nom,
+  .header-agence-count {
     width: 90px;
   }
   .header-date {
@@ -1267,11 +1637,11 @@ onMounted(() => {
   border-bottom: 1px solid #b4afaf;
   text-align: left;
   font-family: 'Segoe UI', Arial, sans-serif;
-  border-right: 1px solid #ada9a9; /* Ajoute la bordure verticale */
+  border-right: 1px solid #ada9a9; 
 }
 
 .encours-table th:last-child,
 .encours-table td:last-child {
-  border-right: none; /* Pas de bordure sur la dernière colonne */
+  border-right: none; 
 }
 </style>
