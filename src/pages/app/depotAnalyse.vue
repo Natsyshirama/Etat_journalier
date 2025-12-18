@@ -148,7 +148,6 @@
         {{ message }}
       </v-alert>
 
-      <!-- Boutons de vue -->
       <v-row v-if="hasResults" class="mt-8">
         <v-col cols="12" class="d-flex justify-space-between align-center">
           <div class="d-flex gap-2">
@@ -162,7 +161,6 @@
               Voir le graphe
             </v-btn>
             
-            <!-- Bouton Vue par Zone -->
             <v-btn
               :color="viewByZone ? 'blue' : 'grey'"
               variant="outlined"
@@ -196,13 +194,11 @@
                 <table class="encours-table">
                   <thead>
                     <tr>
-                      <!-- En-tête dynamique selon la vue -->
                       <th v-if="!viewByZone" class="header-agence">AGENCE</th>
                       <th v-if="viewByZone" class="header-agence">ZONE</th>
                       
                       <th class="header-nom">{{ viewByZone ? 'NOM ZONE' : 'NOM AGENCE' }}</th>
                       
-                      <!-- Colonne nombre d'agences uniquement en vue zone -->
                       <th v-if="viewByZone" class="header-agence-count">
                         NOMBRE D'AGENCES
                       </th>
@@ -217,7 +213,7 @@
                     </tr>
                   </thead>
                   <tbody>
-                    <!-- Vue par agence -->
+                    <!-- Vue  agence -->
                     <template v-if="!viewByZone">
                       <tr v-for="agence in agencesData" :key="agence.code">
                         <td class="cell-agence">{{ agence.code }}</td>
@@ -265,8 +261,7 @@
                           <div class="montant-container">
                             <div 
                               class="montant-value"
-                              @click="goToZoneDetail(column.key, zone.id)"
-                              style="cursor: pointer;"
+                              
                             >
                               {{ formatNumber(getZoneCellValue(zone, column)) }}
                             </div>
@@ -282,7 +277,7 @@
                       </tr>
                     </template>
                     
-                    <!-- LIGNE DE TOTAL -->
+                    <!-- total ligne -->
                     <tr v-if="hasResults" class="total-row">
                       <td class="cell-agence total-cell">
                         <strong>TOTAL</strong>
@@ -293,7 +288,7 @@
                         </strong>
                       </td>
                       
-                      <!-- Colonne nombre d'agences uniquement en vue zone -->
+                      <!--nombre agence -->
                       <td v-if="viewByZone" class="cell-agence-count total-cell">
                         <strong>{{ getTotalAgenceCount() }}</strong>
                       </td>
@@ -684,23 +679,11 @@ const averageEcart = computed(() => {
 
 const zonesCount = computed(() => zonesList.value.length)
 
-// ========== METHODS ==========
-// Navigation
+//nav vers details
 const goToDetail = (columnKey, agenceCode) => {
   router.push({
     path: "/app/analyseDetails",
     query: { tableName: columnKey, agence: agenceCode }
-  })
-}
-
-const goToZoneDetail = (date, zoneId) => {
-  router.push({
-    path: "/app/analyseDetailsZone",
-    query: { 
-      tableName: date, 
-      zoneId: zoneId,
-      view: 'zone'
-    }
   })
 }
 

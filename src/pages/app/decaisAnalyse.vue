@@ -274,8 +274,7 @@
                             <div class="montant-container">
                               <div 
                                 class="montant-value"
-                                @click="goToZoneDetail(column.key, zone.id)"
-                                style="cursor:pointer;"
+                               
                               >
                                 {{ formatNumber(getZoneCellValue(zone, column)) }}
                               </div>
@@ -291,7 +290,7 @@
                         </tr>
                       </template>
                       
-                      <!-- LIGNE DE TOTAL (adaptée selon la vue) -->
+                      <!-- LIGNE DE TOTAL  -->
                       <tr v-if="hasResults" class="total-row">
                         <td class="cell-agence total-cell">
                           <strong>TOTAL</strong>
@@ -302,7 +301,7 @@
                           </strong>
                         </td>
                         
-                        <!-- Colonne nombre d'agences uniquement en vue zone -->
+                        <!-- colonne par zone -->
                         <td v-if="viewByZone" class="cell-agence-count total-cell">
                           <strong>{{ getTotalAgenceCount() }}</strong>
                         </td>
@@ -707,16 +706,6 @@ const goToDetail = (columnKey, agenceCode) => {
   })
 }
 
-const goToZoneDetail = (date, zoneId) => {
-  router.push({
-    path: "/app/detailDecaisZone",
-    query: { 
-      tableName: date, 
-      zoneId: zoneId,
-      view: 'zone'
-    }
-  })
-}
 
 const goToAnalyseEncours = () => {
   router.push('/app/depotAnalyse')
