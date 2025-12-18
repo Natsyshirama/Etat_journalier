@@ -697,7 +697,6 @@ const averageEcart = computed(() => {
 
 const zonesCount = computed(() => zonesList.value.length)
 
-// ========== METHODS ==========
 // Navigation
 const goToDetail = (columnKey, agenceCode) => {
   router.push({
@@ -782,7 +781,7 @@ const toggleViewByZone = async () => {
   console.log('Mois sélectionnés:', selectedMonths.value)
   
   if (viewByZone.value) {
-    // Si on est déjà en vue zone, revenir à vue agence
+    // passage vers le zone ou agence
     viewByZone.value = false
     showNotification(
       `Affichage par agence - ${agencesData.value.length} agences`,
@@ -791,7 +790,7 @@ const toggleViewByZone = async () => {
     return
   }
   
-  // Vérifier qu'on a des données à analyser
+  // if on a les donne a annalyser
   if (!agencesData.value.length || !datesList.value.length) {
     showNotification(
       'Veuillez d\'abord analyser des données d\'agences',
