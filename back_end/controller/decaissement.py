@@ -189,7 +189,7 @@ CREATE FUNCTION calcul_montant_capital(
         try:
             from datetime import datetime, timedelta
 
-            original_date_limite = date_limite  # Conserve la date d'origine pour le nom de la table
+            original_date_limite = date_limite  
 
             if date_limite[6:] == "01":
                 dt = datetime.strptime(date_limite, "%Y%m%d")
@@ -203,9 +203,8 @@ CREATE FUNCTION calcul_montant_capital(
 
             table_name = f"decaissement_{original_date_limite}"
 
-            # Calculer le premier et dernier jour du mois de date_limite
             first_day_of_month = f"{date_limite[:6]}01"
-            last_day_of_month = f"{date_limite[:6]}31"  # MySQL gère bien les dates supérieures au max du mois
+            last_day_of_month = f"{date_limite[:6]}31" 
 
             query = f"""
                 CREATE TABLE {table_name} AS
@@ -267,7 +266,7 @@ CREATE FUNCTION calcul_montant_capital(
                     arr.product_line = 'LENDING'
                     AND arr.arr_status IN ('AUTH', 'CURRENT')
                     AND acc.opening_date BETWEEN '{first_day_of_month}' AND '{last_day_of_month}'
-                    AND em.proc_status = 'DISBURSED' LIMIT 100; 
+                    AND em.proc_status = 'DISBURSED' limit 100; 
             """
 
             with self.db.connect() as conn:

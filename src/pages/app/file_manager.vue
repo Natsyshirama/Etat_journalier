@@ -7,7 +7,6 @@
                 max-width="200"
                 max-height="400"
                 persistent  
-                style=" background-color: #000000EE;"           
               >
               
                 <div class="   w-full flex-col flex items-center justify-center"  >    
@@ -414,7 +413,7 @@ const handleFileUpload = (event) => {
   const files = event.target.files;
   const elt_ = document.getElementById('file_name');
 
-  if (files.length < 5 || files.length > 21) {
+  if (files.length < 5 || files.length > 30) {
     alert("Vous ne pouvez sélectionner que de 18 à 21  fichiers.");
     event.target.value = ""; // reset
     file_name.value = "Importer un fichier";
@@ -926,7 +925,6 @@ const triggerImport = async () => {
   height: 1px;
   margin-top: 20px;
   margin-bottom: 12px;
-  background: gray;
 }
 #modal-content{
   display: flex;
@@ -936,7 +934,6 @@ const triggerImport = async () => {
   width: 100vw;
   height: 100vh;
   backdrop-filter: blur(4px);
-  background: rgba(32, 31, 31, 0.257);
   align-items: center;
   justify-content: center;
   z-index: 100;
@@ -944,7 +941,6 @@ const triggerImport = async () => {
 #modal-list{
   display: flex;
   flex-direction: column;
-  color: black ;
   padding: 10px 20px;
   border-radius: 5px;
 
@@ -952,7 +948,6 @@ const triggerImport = async () => {
 #title{
   font-size: 19px;
   font-weight: bold;
-  color: rgb(49, 49, 49);
 }
 #history{
   position: absolute;
@@ -974,8 +969,7 @@ const triggerImport = async () => {
 /* Boîte d'upload */
 .upload-box {
   width: 500px;
-  background: #00000000;
-  border: 2px dashed #666;
+  border: 2px dashed ;
   display: flex;
   flex-direction: column;
   justify-content: center;
@@ -999,7 +993,6 @@ const triggerImport = async () => {
 /* Texte secondaire */
 .upload-subtext {
   font-size: 14px;
-  color: #bbb;
   margin: 10px 0;
 }
 
@@ -1024,7 +1017,7 @@ const triggerImport = async () => {
 .import-file-list {
   max-height: 300px;
   overflow-y: auto;
-  border: 1px solid #e0e0e0;
+  border: 1px solid ;
   border-radius: 4px;
   padding: 8px;
 }
@@ -1053,7 +1046,6 @@ const triggerImport = async () => {
 
 .import-file-size {
   font-size: 0.8em;
-  color: #666;
 }
 
 .import-status-chip {

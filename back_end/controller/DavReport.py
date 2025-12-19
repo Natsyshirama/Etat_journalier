@@ -165,16 +165,16 @@ class DavReport:
                         query = text(f"""
                             SELECT 
                                 COUNT(DISTINCT code_client) AS nb_clients,
-                                SUM(Debit) AS total_debit_epr,
-                                SUM(Credit) AS total_credit_epr
+                                ABS(SUM(Debit)) AS total_debit_epr,
+                                ABS(SUM(Credit)) AS total_credit_epr
                             FROM `{table_name_vrai}`
                         """)
                     elif type_table == "decaissement":
                         query = text(f"""
                             SELECT 
                                 COUNT(DISTINCT code_client) AS nb_clients,
-                                 SUM(montant_capital) AS total_montant_capital,
-                                 SUM(frais_de_dossier) AS total_frais_de_dossier
+                                 ABS(SUM(montant_capital)) AS total_montant_capital,
+                                 ABS(SUM(frais_de_dossier)) AS total_frais_de_dossier
                             FROM `{table_name_vrai}`
                         """)
                     result = conn.execute(query).fetchone()
