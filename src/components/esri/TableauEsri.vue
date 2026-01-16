@@ -804,7 +804,7 @@ watch(showChart, (newValue) => {
 }
 
 .fixed-header-table ::v-deep(tr:hover td) {
-  background-color: #2a2a2a;
+  background-color: #6a6969;
   cursor: pointer;
 }
 

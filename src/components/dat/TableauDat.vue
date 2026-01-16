@@ -141,7 +141,7 @@ watch(() => props.tableName, fetchTableData, { immediate: true })
 }
 
 .fixed-header-table ::v-deep(tr:hover td) {
-  background-color: #615b5b;
+  background-color: #6a6969;
   cursor: pointer;
 }
 </style>

@@ -22,7 +22,7 @@
         <form @submit.prevent="handleSubmit">
           <input type="text" placeholder="Votre nom d'utilisateur" v-model="username" />
           <input type="password" placeholder="Mot de passe" v-model="password" />
-          <input v-if="activeTab !== 'signIn'" type="Verification mot de passe" placeholder="Verification mot de passe" v-model="verif_password" />
+          <input  v-if="activeTab !== 'signIn'" type="password" placeholder="Verification mot de passe" v-model="verif_password" />
           <input v-if="activeTab !== 'signIn'"  type="text" placeholder="Immatricule" v-model="immatricule" />
           <a href="#" v-if="activeTab === 'signIn'" class="forgot">Mot de passe oublier?</a>
           <button type="submit">{{ activeTab === 'signIn' ? 'Connexion' : 'Inscription' }}</button>

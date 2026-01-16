@@ -143,7 +143,7 @@ watch(() => props.tableName, fetchTableData)
 
 /* ✅ Effet au survol pour mieux distinguer la ligne active */
 .fixed-header-table ::v-deep(tr:hover td) {
-  background-color: #615b5b;
+  background-color: #6a6969;
   cursor: pointer;
 }
 .table-scroll::-webkit-scrollbar {

@@ -41,7 +41,7 @@ class Users:
         "ALTER TABLE users ADD COLUMN IF NOT EXISTS validate_status BOOLEAN DEFAULT FALSE",
         "ALTER TABLE users ADD COLUMN IF NOT EXISTS block_by VARCHAR(255) NULL",
         "ALTER TABLE users ADD COLUMN IF NOT EXISTS block_at TIMESTAMP NULL",
-        "ALTER TABLE users ADD COLUMN IF NOT EXISTS block_status BOOLEAN DEFAULT FALSE"
+        "ALTER TABLE users ADD COLUMN IF NOT EXISTS is_blocked BOOLEAN DEFAULT FALSE"
     ]
             for q in alter_queries:
                 conn.execute(text(q))
@@ -211,7 +211,7 @@ class Users:
                     validate_status = FALSE,
                     block_by = :admin_name,
                     block_at = NOW(),
-                    block_status = TRUE
+                    is_blocked = TRUE
                 WHERE username = :username
             """)
             result = conn.execute(query, {
@@ -289,7 +289,7 @@ class Users:
                     created_at,
                     block_by,
                     block_at,
-                    block_status
+                    is_blocked
                 FROM users
                 ORDER BY created_at DESC
             """)
