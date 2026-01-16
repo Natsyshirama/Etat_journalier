@@ -413,7 +413,7 @@ const handleFileUpload = (event) => {
   const files = event.target.files;
   const elt_ = document.getElementById('file_name');
 
-  if (files.length < 5 || files.length > 30) {
+  if (files.length < 1 || files.length > 1) {
     alert("Vous ne pouvez sélectionner que de 18 à 21  fichiers.");
     event.target.value = ""; // reset
     file_name.value = "Importer un fichier";

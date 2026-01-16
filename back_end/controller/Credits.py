@@ -432,6 +432,7 @@ class Credits:
             `dav_status` Boolean DEFAULT FALSE,
             `dat_status` Boolean DEFAULT FALSE,
             `epr_status`  Boolean DEFAULT FALSE,
+            `dec_status`  Boolean DEFAULT FALSE,
             `stat_compte` Boolean DEFAULT FALSE
         );
         """
