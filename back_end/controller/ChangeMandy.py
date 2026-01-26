@@ -142,18 +142,14 @@ class ChangeMandy:
                 SELECT 
                     CODE_OPERATIONS,
                     Date_Operation,
-                    Nom_Beneficiaire,
+                    Agence,
                     Adresse_Beneficiaire,
-                    REF_TITRE_TRANSPORT,
-                    DESTINATION_PRINCIPALE,
                     NATURE_VOYAGE,
                     CODE_DEVISE,
                     COURS,
                     MONTANT_OPERATION_DEVISE,
                     MONTANT_CV_MGA,
-                    MODE_PAIEMENT,
-                    OBSERVATIONS,
-                    Agence
+                    MODE_PAIEMENT
                 FROM temp_change_unified
             """
             conn.execute(text(query_etat))
@@ -164,18 +160,15 @@ class ChangeMandy:
                 SELECT 
                     CODE_OPERATIONS,
                     Date_Operation,
-                    Nom_Beneficiaire,
+                    Agence,
                     Adresse_Beneficiaire,
-                    REF_TITRE_TRANSPORT,
-                    DESTINATION_PRINCIPALE,
                     NATURE_VOYAGE,
                     CODE_DEVISE,
                     COURS,
                     MONTANT_OPERATION_DEVISE,
                     MONTANT_CV_MGA,
-                    MODE_PAIEMENT,
-                    OBSERVATIONS,
-                    Agence
+                    MODE_PAIEMENT
+                    
                 FROM temp_change_unified 
                 WHERE transaction_code = 26
             """
