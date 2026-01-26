@@ -337,7 +337,7 @@
             {{ item[header.key] !== undefined && item[header.key] !== null ? formatNumber(item[header.key]) : '' }}
             <div v-if="index > 0 && item.ecart && item.ecart['ecart_' + header.key] !== 0">
               <small :style="{ color: item.ecart['ecart_' + header.key] > 0 ? '#43a047' : '#e53935' }">
-                ({{ item.ecart['ecart_' + header.key] > 0 ? '+' : '' }}{{ (item.ecart['ecart_' + header.key]).toFixed(2) }})
+                ({{ item.ecart['ecart_' + header.key] > 0 ? '+' : '' }}{{ formatNumber(item.ecart['ecart_' + header.key]) }})
               </small>
             </div>
           </div>
@@ -375,7 +375,7 @@
             {{ item[header.key] !== undefined && item[header.key] !== null ? formatNumber(item[header.key] ): '' }}
             <div v-if="index > 0 && item.ecart && item.ecart['ecart_' + header.key] !== 0">
               <small :style="{ color: item.ecart['ecart_' + header.key] > 0 ? '#43a047' : '#e53935' }">
-                ({{ item.ecart['ecart_' + header.key] > 0 ? '+' : '' }}{{ (item.ecart['ecart_' + header.key]).toFixed(2) }})
+                ({{ item.ecart['ecart_' + header.key] > 0 ? '+' : '' }}{{ formatNumber(item.ecart['ecart_' + header.key]) }})
               </small>
             </div>
           </div>
@@ -413,7 +413,7 @@
             {{ item[header.key] !== undefined && item[header.key] !== null ? formatNumber(item[header.key] ): '' }}
             <div v-if="index > 0 && item.ecart && item.ecart['ecart_' + header.key] !== 0">
               <small :style="{ color: item.ecart['ecart_' + header.key] > 0 ? '#43a047' : '#e53935' }">
-                ({{ item.ecart['ecart_' + header.key] > 0 ? '+' : '' }}{{ (item.ecart['ecart_' + header.key]).toFixed(2) }})
+                ({{ item.ecart['ecart_' + header.key] > 0 ? '+' : '' }}{{ formatNumber(item.ecart['ecart_' + header.key]) }})
               </small>
             </div>
           </div>
@@ -447,7 +447,7 @@
             >
               <div>
                 {{ item[header.key] !== undefined && item[header.key] !== null ? formatNumber(item[header.key]) : '' }}
-                <div v-if="index > 0 && item.ecart && item.ecart['ecart_' + header.key] !== 0">
+                <div v-if="index > 0 && item.ecart && item.ecart['ecart_' + header.key] !== 0 && !isAllAgence">
                   <small :style="{ color: item.ecart['ecart_' + header.key] > 0 ? '#43a047' : '#e53935' }">
                     ({{ item.ecart['ecart_' + header.key] > 0 ? '+' : '' }}{{ formatNumber(item.ecart['ecart_' + header.key]) }})
                   </small>
