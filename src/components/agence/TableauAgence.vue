@@ -74,7 +74,7 @@
           
           <!-- Sous-code -->
           <td>
-            <v-chip size="small" ">
+            <v-chip size="small" >
               <v-icon size="small" class="mr-1">mdi-tag</v-icon>
               {{ item.souscode }}
             </v-chip>

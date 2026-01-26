@@ -202,7 +202,7 @@ if (!dateDebut.value) {
       `${api}/api/change/generate_report`,
       null,
       {
-        headers: { Authorization: `Bearer ${localStorage.getItem('access_token')}` },
+        headers: { 'Authorization': `Bearer ${localStorage.getItem('access_token')}` },
         params: {
           date_debut: dateDebut.value,
           date_fin: dateFin.value,

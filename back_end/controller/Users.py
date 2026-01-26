@@ -164,7 +164,7 @@ class Users:
                     validate_status = TRUE,
                     validate_by = :admin_name,
                     validate_at = NOW(),
-                    block_status = FALSE
+                    is_blocked = FALSE
 
                 WHERE username = :username
             """)
@@ -310,7 +310,7 @@ class Users:
         try:
             conn = self.db.connect()
             query = text("""
-                SELECT id, username, password,immatricule, privillege, created_at, validate_by, validate_at,validate_status, block_by, block_at, block_status
+                SELECT id, username, password,immatricule, privillege, created_at, validate_by, validate_at,validate_status, block_by, block_at, is_blocked
                 FROM users
                 WHERE id = :user_id
             """)

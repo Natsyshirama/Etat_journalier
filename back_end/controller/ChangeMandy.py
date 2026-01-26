@@ -184,27 +184,16 @@ class ChangeMandy:
             conn.execute(text("DROP TABLE IF EXISTS report_change_synthese"))
             query_synthese = """
                 CREATE TABLE report_change_synthese AS
-                SELECT 
-                    'ACHAT' AS Type_transaction,
+                SELECT
+                    CASE WHEN transaction_code = 23 THEN 'ACHAT' ELSE 'VENTE' END AS Type_transaction,
                     SUM(CASE WHEN CODE_DEVISE = 'EUR' THEN MONTANT_OPERATION_DEVISE ELSE 0 END) AS EUR_Montant,
                     SUM(CASE WHEN CODE_DEVISE = 'EUR' THEN MONTANT_CV_MGA ELSE 0 END) AS EUR_Montant_CV_MGA,
                     SUM(CASE WHEN CODE_DEVISE = 'USD' THEN MONTANT_OPERATION_DEVISE ELSE 0 END) AS USD_Montant,
                     SUM(CASE WHEN CODE_DEVISE = 'USD' THEN MONTANT_CV_MGA ELSE 0 END) AS USD_Montant_CV_MGA,
-                    SUM(CASE WHEN CODE_DEVISE IN ('EUR', 'USD') THEN MONTANT_CV_MGA ELSE 0 END) AS Total_MGA
-                FROM temp_change_unified 
-                WHERE transaction_code = 23
-                
-                UNION ALL
-                
-                SELECT 
-                    'VENTE' AS Type_transaction,
-                    SUM(CASE WHEN CODE_DEVISE = 'EUR' THEN MONTANT_OPERATION_DEVISE ELSE 0 END) AS EUR_Montant,
-                    SUM(CASE WHEN CODE_DEVISE = 'EUR' THEN MONTANT_CV_MGA ELSE 0 END) AS EUR_Montant_CV_MGA,
-                    SUM(CASE WHEN CODE_DEVISE = 'USD' THEN MONTANT_OPERATION_DEVISE ELSE 0 END) AS USD_Montant,
-                    SUM(CASE WHEN CODE_DEVISE = 'USD' THEN MONTANT_CV_MGA ELSE 0 END) AS USD_Montant_CV_MGA,
-                    SUM(CASE WHEN CODE_DEVISE IN ('EUR', 'USD') THEN MONTANT_CV_MGA ELSE 0 END) AS Total_MGA
-                FROM temp_change_unified 
-                WHERE transaction_code = 26
+                    SUM(CASE WHEN CODE_DEVISE IN ('EUR','USD') THEN MONTANT_CV_MGA ELSE 0 END) AS Total_MGA
+                FROM temp_change_unified
+                WHERE transaction_code IN (23, 26)
+                GROUP BY Type_transaction
             """
             conn.execute(text(query_synthese))
             

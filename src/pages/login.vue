@@ -77,7 +77,7 @@ const handleSubmit = async () => {
 
       localStorage.setItem("access_token", data.access_token);
       localStorage.setItem("privilege", data.privilege);
-      location.replace('/app/credits');
+      location.replace('/app/dav');
 
     } else {
       // Inscription

@@ -61,12 +61,12 @@ const api = inject('api')
 
 const list_menu =[
   
-  { 
-    icon: 'mdi-currency-usd',  // ou mdi-cash-multiple, mdi-bank-transfer
-    title: 'Crédits', 
-    to: '/app/credits', 
-    access: 'all' 
-  },
+  // { 
+  //   icon: 'mdi-currency-usd',  // ou mdi-cash-multiple, mdi-bank-transfer
+  //   title: 'Crédits', 
+  //   to: '/app/credits', 
+  //   access: 'all' 
+  // },
   { 
     icon: 'mdi-account-cash',  // ou mdi-bank-outline
     title: 'Comptes', 
