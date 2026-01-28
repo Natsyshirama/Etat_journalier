@@ -1480,41 +1480,31 @@ watch(selectedMonths, async (newMonths, oldMonths) => {
   box-shadow: 0 2px 12px rgba(44, 62, 80, 0.07);
   
 }
-/* Styles pour la ligne de total */
+/* Styles pour colonne "NOMBRE D'AGENCES" et mise en forme tableau (copié depuis depotAnalyse) */
 .total-row {
   border-top: 2px solid #dee2e6;
 }
-
 .total-cell {
   font-weight: bold !important;
 }
-
 .total-montant {
   font-size: 1rem !important;
   color: #698bab !important;
-      vertical-align: top; /* montant en haut */
-
+  vertical-align: top;
 }
-
 .total-ecart {
   font-size: 0.9rem !important;
   background-color: rgba(164, 174, 185, 0.1) !important;
 }
-
-/* Amélioration du style des cellules de total */
 .total-row td {
   border-top: 2px solid #b4afaf !important;
   border-bottom: 2px solid #b4afaf !important;
 }
-
 .total-row .cell-agence,
 .total-row .cell-nom {
   background: linear-gradient(135deg, #4b4c4e, #1565c0) !important;
-  color: white !important;
-  text-align: center !important;
+  text-align: left !important;
 }
-
-/* Effet de survol pour la ligne de total */
 .total-row:hover {
   background-color: #e3f2fd !important;
 }
@@ -1524,16 +1514,8 @@ watch(selectedMonths, async (newMonths, oldMonths) => {
   border-collapse: separate;
   border-spacing: 0;
   font-size: 1rem;
- border-radius: 12px;
+  border-radius: 12px;
   overflow: hidden;
-}
-
-.encours-table th,
-.encours-table td {
-  padding: 14px 10px;
-  border-bottom: 1px solid #e0e0e0;
-  text-align: left;
-  font-family: 'Segoe UI', Arial, sans-serif;
 }
 
 .encours-table th {
@@ -1547,22 +1529,25 @@ watch(selectedMonths, async (newMonths, oldMonths) => {
 
 .header-agence {
   width: 120px;
-  background-color: #cdd2d6 !important;
-  color: #fff !important;
+  background-color: #7f8992 !important;
   text-align: center !important;
   border-top-left-radius: 12px;
 }
 
 .header-nom {
   width: 200px;
-  background-color: #97a2ae !important;
-  color: #fff !important;
+  background-color: hsl(211, 12%, 64%) !important;
 }
 
 .header-date {
   width: 140px;
-    background-color: #324559 !important;
+  background-color: #324559 !important;
+  text-align: center !important;
+}
 
+.header-agence-count {
+  width: 100px;
+  background-color: #546e7a !important;
   text-align: center !important;
 }
 
@@ -1584,10 +1569,14 @@ watch(selectedMonths, async (newMonths, oldMonths) => {
   text-align: right;
   font-family: 'Roboto Mono', 'Courier New', monospace;
   font-weight: 500;
-    vertical-align: top; /* montant en haut */
-
+  vertical-align: top;
 }
 
+.cell-agence-count {
+  text-align: center;
+  font-weight: 500;
+  color: #546e7a;
+}
 .montant-container {
   display: flex;
   flex-direction: column;
