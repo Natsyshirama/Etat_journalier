@@ -19,7 +19,7 @@
               <span v-else-if="usePopupStore().cdi_list_file_stream[i] && usePopupStore().cdi_list_file_stream[i].success" style="padding: 15px; color: #53e053; font-size: 18px;" class="mdi mdi-check-circle" ></span>
               <v-progress-circular v-else  :size="15" :width="5" color="green"  ></v-progress-circular>
               <div v-if="usePopupStore().cdi_list_file_stream[i]"  style=" display: flex; flex-direction: column;">
-                <span style=" font-size: 14px; color: white; ">{{item.title}}</span>
+                <span style=" font-size: 14px; color: gray; ">{{item.title}}</span>
                 <div style=" display: flex;">
 
                 <span style=" font-size: 10px; color: gray; ">{{ usePopupStore().cdi_list_file_stream[i].task}}</span>
