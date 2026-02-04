@@ -1065,7 +1065,8 @@ async def create_agence(agence_data: AgenceCreate):
         result = agence_controller.create_agence(
             code=agence_data.code,
             souscode=agence_data.souscode,
-            nom=agence_data.nom
+            nom=agence_data.nom,
+            id_zone=agence_data.id_zone
         )
         
         if not result.get("success"):

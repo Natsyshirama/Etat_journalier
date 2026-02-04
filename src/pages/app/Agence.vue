@@ -534,13 +534,13 @@ const saveAgence = async () => {
           souscode: formData.value.souscode,
           nom: formData.value.nom,
           id_zone: formData.value.id_zone || null,  // Ajouter cette ligne
-          nom_zone: zoneNom,  // Ajouter cette ligne pour le nom de la zone
           created_at: new Date().toISOString(),
           updated_at: new Date().toISOString()
         })
         filteredAgences.value = [...agences.value]
         
-        
+          await loadAgences()
+
         deleteAgencesCache()
 
 
@@ -550,7 +550,11 @@ const saveAgence = async () => {
     }
   } catch (error) {
     console.error('Erreur sauvegarde agence:', error)
-    const message = error.response?.data?.detail || 'Erreur lors de la sauvegarde'
+    const message =
+      error.response?.data?.detail ||
+      error.response?.data?.response?.error ||
+      error.response?.data?.message ||
+      'Erreur lors de la sauvegarde'
     showNotification(message, 'error')
   } finally {
     saving.value = false

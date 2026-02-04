@@ -166,26 +166,36 @@ class AgenceController:
     def create_agence(self, code: str, souscode: str, nom: str, id_zone: Optional[int] = None):
         conn = None
         try:
-            query = text("""
+            conn = self.db.connect()
+
+            # Vérifier doublon code
+            check_code_q = text("SELECT id FROM agence WHERE code = :code LIMIT 1")
+            if conn.execute(check_code_q, {"code": code}).fetchone():
+                return {"success": False, "error": "Code d'agence déjà existant"}
+
+            # Vérifier doublon souscode
+            check_souscode_q = text("SELECT id FROM agence WHERE souscode = :souscode LIMIT 1")
+            if conn.execute(check_souscode_q, {"souscode": souscode}).fetchone():
+                return {"success": False, "error": "Sous-code déjà existant"}
+
+            insert_q = text("""
                 INSERT INTO agence (code, souscode, nom, id_zone)
                 VALUES (:code, :souscode, :nom, :id_zone)
             """)
-            
-            conn = self.db.connect()
-            result = conn.execute(query, {
+            result = conn.execute(insert_q, {
                 "code": code,
                 "souscode": souscode,
                 "nom": nom,
                 "id_zone": id_zone
             })
             conn.commit()
-            
+
             return {
                 "success": True,
                 "message": "Agence créée avec succès",
                 "id": result.lastrowid
             }
-            
+
         except Exception as e:
             print(f"[ERREUR] Impossible de créer l'agence : {e}")
             if conn:
@@ -194,7 +204,6 @@ class AgenceController:
                 "success": False,
                 "error": f"Erreur création agence: {str(e)}"
             }
-            
         finally:
             if conn:
                 try:
