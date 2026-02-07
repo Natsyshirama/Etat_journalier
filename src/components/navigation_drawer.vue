@@ -99,7 +99,7 @@ const list_menu =[
   },
   { 
     icon: 'mdi-shield-account',  // ou mdi-shield-crown
-    title: 'Administration', 
+    title: 'Utilisateurs', 
     to: '/app/session', 
     access: 'admin', 
     badge: () => notificationStore.demandesValidation 

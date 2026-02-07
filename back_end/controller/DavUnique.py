@@ -170,8 +170,8 @@ class DavUnique:
             if conn:
                 try:
                     conn.close()
-                except Exception as close_err:
-                    print(f"[ERREUR] Fermeture connexion (create_index) : {close_err}")
+                except Exception:
+                    pass
           
           
           
@@ -505,6 +505,5 @@ class DavUnique:
                         conn.close()
                     except Exception as close_err:
                         print(f"[ERREUR] Fermeture connexion (updateStatus) : {close_err}")
-                
-    
-                
+
+
