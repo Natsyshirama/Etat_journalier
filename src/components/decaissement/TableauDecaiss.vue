@@ -35,7 +35,7 @@
           <span class="montant-cell">{{ item.frais_de_dossier }}</span>
         </template>
         <template v-slot:item.date_decaissement="{ item }">
-          <span class="date-cell">{{ formatDateToUS(item.date_decaissement) }}</span>
+          <span class="date-cell">{{ formatDateToFrench(item.date_decaissement) }}</span>
         </template>
         <template v-slot:footer>
           <v-pagination
@@ -60,7 +60,7 @@
 import { ref, watch, computed, onMounted, inject } from "vue"
 import axios from "axios"
 import { formatUSD } from "@/composables/format_money.js"
-import { formatDateToUS} from "@/composables/format_date.js"
+import { formatDateToFrench} from "@/composables/format_date.js"
 const props = defineProps({
   tableName: {
     type: String,

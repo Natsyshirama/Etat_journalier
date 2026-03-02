@@ -195,6 +195,8 @@
       </div>
     </template>
     <template v-if="(infoDav.length || infoDat.length || infoEpr.length)">
+
+
   <div class="column-group">
     <div class="group-title mb-2" style="background:#424242; color:white;">
       Info (Date & Agence)
@@ -214,6 +216,8 @@
     </div>
   </div>
 </template>
+
+
  <template v-if="visibleTables.includes('encours_depot') && resultsEncoursDepot.length">
         <div class="column-group">
           <div class="group-title group-title-encours mb-2">EN COURS DEPOT</div>
@@ -290,11 +294,8 @@
               
               :headers="headersInfo.filter(h => visibleColumns.info.includes(h.key))"
 
-              :items="(infoDav.length ? infoDav : infoDat.length ? infoDat : infoEpr).map(item => {
-                const filtered = {}
-                visibleColumns.info.forEach(col => filtered[col] = item[col])
-                return filtered
-              })"
+              :items="formattedInfoItems"
+
 
               density="comfortable"
               hide-default-footer
@@ -306,6 +307,9 @@
               <template #top>
                 <h3 class="text-h6 font-weight-bold mb-2 table-title">Date & Agence</h3>
               </template>
+               <template v-slot:item.date="{ item }">
+      <span class="date-cell">{{ (item.date) }}</span>
+    </template>
             </v-data-table>
           </v-col>
         <!-- DAV -->
@@ -334,10 +338,10 @@
           :key="header.key"
         >
           <div>
-            {{ item[header.key] !== undefined && item[header.key] !== null ? formatNumber(item[header.key]) : '' }}
+            {{ item[header.key] !== undefined && item[header.key] !== null ? formatUSD(item[header.key]) : '' }}
             <div v-if="index > 0 && item.ecart && item.ecart['ecart_' + header.key] !== 0">
               <small :style="{ color: item.ecart['ecart_' + header.key] > 0 ? '#43a047' : '#e53935' }">
-                ({{ item.ecart['ecart_' + header.key] > 0 ? '+' : '' }}{{ formatNumber(item.ecart['ecart_' + header.key]) }})
+                ({{ item.ecart['ecart_' + header.key] > 0 ? '+' : '' }}{{ formatUSD(item.ecart['ecart_' + header.key]) }})
               </small>
             </div>
           </div>
@@ -372,10 +376,10 @@
           :key="header.key"
         >
           <div>
-            {{ item[header.key] !== undefined && item[header.key] !== null ? formatNumber(item[header.key] ): '' }}
+            {{ item[header.key] !== undefined && item[header.key] !== null ? formatUSD(item[header.key]) : '' }}
             <div v-if="index > 0 && item.ecart && item.ecart['ecart_' + header.key] !== 0">
               <small :style="{ color: item.ecart['ecart_' + header.key] > 0 ? '#43a047' : '#e53935' }">
-                ({{ item.ecart['ecart_' + header.key] > 0 ? '+' : '' }}{{ formatNumber(item.ecart['ecart_' + header.key]) }})
+                ({{ item.ecart['ecart_' + header.key] > 0 ? '+' : '' }}{{ formatUSD(item.ecart['ecart_' + header.key]) }})
               </small>
             </div>
           </div>
@@ -410,10 +414,10 @@
           :key="header.key"
         >
           <div>
-            {{ item[header.key] !== undefined && item[header.key] !== null ? formatNumber(item[header.key] ): '' }}
+            {{ item[header.key] !== undefined && item[header.key] !== null ? formatUSD(item[header.key]) : '' }}
             <div v-if="index > 0 && item.ecart && item.ecart['ecart_' + header.key] !== 0">
               <small :style="{ color: item.ecart['ecart_' + header.key] > 0 ? '#43a047' : '#e53935' }">
-                ({{ item.ecart['ecart_' + header.key] > 0 ? '+' : '' }}{{ formatNumber(item.ecart['ecart_' + header.key]) }})
+                ({{ item.ecart['ecart_' + header.key] > 0 ? '+' : '' }}{{ formatUSD(item.ecart['ecart_' + header.key]) }})
               </small>
             </div>
           </div>
@@ -446,10 +450,10 @@
               :key="header.key"
             >
               <div>
-                {{ item[header.key] !== undefined && item[header.key] !== null ? formatNumber(item[header.key]) : '' }}
+                {{ item[header.key] !== undefined && item[header.key] !== null ? formatUSD(item[header.key]) : '' }}
                 <div v-if="index > 0 && item.ecart && item.ecart['ecart_' + header.key] !== 0 && !isAllAgence">
                   <small :style="{ color: item.ecart['ecart_' + header.key] > 0 ? '#43a047' : '#e53935' }">
-                    ({{ item.ecart['ecart_' + header.key] > 0 ? '+' : '' }}{{ formatNumber(item.ecart['ecart_' + header.key]) }})
+                    ({{ item.ecart['ecart_' + header.key] > 0 ? '+' : '' }}{{ formatUSD(item.ecart['ecart_' + header.key]) }})
                   </small>
                 </div>
               </div>
@@ -468,8 +472,18 @@
 import { ref, inject, computed ,watch} from "vue"
 import axios from "axios"
 import { useRouter } from 'vue-router'
+import { formatUSD } from "../../composables/format_money"
+import { formatDateToFrench, formatDateToFrench } from "../../composables/format_date" // ← AJOUTER CET IMPORT
+
 const router = useRouter()
 
+const formattedInfoItems = computed(() => {
+  const items = getInfoItems()
+  return items.map(item => ({
+    ...item,
+    date: item.date ? formatDateToFrench(item.date) : ''
+  }))
+})
 
 const goToAnalyseEncours = () => {
   router.push('/app/depotAnalyse')
