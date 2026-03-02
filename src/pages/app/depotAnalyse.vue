@@ -58,29 +58,33 @@
         </v-col>
 
         <v-col cols="12" sm="2">
-          <v-text-field
-            v-model="dateDebut"
-            label="Date début"
-            placeholder="YYYYMMDD"
-            variant="outlined"
-            rounded="lg"
-            clearable
-            density="comfortable"
-            hide-details
-          />
+          <v-date-input
+              v-model="dateDebutModel"
+              label="Date début"
+              variant="outlined"
+              density="compact"
+              prepend-icon=""
+              prepend-inner-icon="mdi-calendar"
+              clearable
+              :min="minDate"
+              :max="maxDate"
+              @update:model-value="onDateDebutChange"
+            />
         </v-col>
 
         <v-col cols="12" sm="2">
-          <v-text-field
-            v-model="dateFin"
-            label="Date fin"
-            placeholder="YYYYMMDD"
-            variant="outlined"
-            rounded="lg"
-            clearable
-            density="comfortable"     
-            hide-details
-          />
+          <v-date-input
+              v-model="dateFinModel"
+              label="Date fin"
+              variant="outlined"
+              density="compact"
+              prepend-icon=""
+              prepend-inner-icon="mdi-calendar"
+              clearable
+              :min="dateDebutModel || minDate"
+              :max="maxDate"
+              @update:model-value="onDateFinChange"
+            />
           <v-checkbox
             v-model="compare"
             density="compact"
@@ -558,6 +562,7 @@ import {
   LinearScale
 } from "chart.js"
 import { useRouter } from 'vue-router'
+import { formatDateToFrench,dateToYYYYMMDD,yyyymmddToDate } from "../../composables/format_date"
 
 ChartJS.register(Title, Tooltip, Legend, BarElement, CategoryScale, LinearScale)
 
@@ -586,6 +591,24 @@ const showGraphe = ref(false)
 const viewByZone = ref(false)
 const zonesData = ref([])
 const zonesList = ref([])
+
+
+const dateDebutModel = ref(null)
+const dateFinModel = ref(null)
+
+const maxDate = computed(() => {
+  return new Date() // Aujourd'hui
+})
+
+
+const onDateDebutChange = (newDate) => {
+  dateDebut.value = dateToYYYYMMDD(newDate)
+}
+
+const onDateFinChange = (newDate) => {
+  dateFin.value = dateToYYYYMMDD(newDate)
+}
+
 
 // Composables
 const { 
@@ -1238,6 +1261,10 @@ const restaurerDataCacher = () => {
 
     dateDebut.value = parsed.dateDebut || ""
     dateFin.value = parsed.dateFin || ""
+
+    dateDebutModel.value = yyyymmddToDate(parsed.dateDebut) || null
+    dateFinModel.value = yyyymmddToDate(parsed.dateFin) || null
+    
     selectedMonths.value = parsed.selectedMonths || []
     datesList.value = parsed.datesList || []
     availableMonths.value = parsed.availableMonths || (datesList.value.length ? getMoisDispo(datesList.value) : [])

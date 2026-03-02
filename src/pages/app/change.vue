@@ -2,46 +2,56 @@
   <v-container class="change-container" fluid>
     <v-row class="mb-4">
       <v-col cols="12" md="3">
-        <v-text-field
-          v-model="dateDebut"
-          label="Date début (YYYYMMDD)"
-          outlined
-          dense
-           hide-details
+        <v-date-input
+          v-model="dateDebutModel"
+          label="Date début"
+          variant="outlined"
+          density="compact"
+          prepend-icon=""
+          prepend-inner-icon="mdi-calendar"
+          clearable
+          :min="minDate"
+          :max="maxDate"
+          @update:model-value="onDateDebutChange"
         />
         <v-checkbox
-            v-model="mode_unique"
-            label="date unique"
-            class="mt-0"
-            hide-details
-          />
-      </v-col>
-
-      <v-col cols="12" md="3" v-if= !mode_unique>
-        <v-text-field
-          v-model="dateFin"
-          label="Date fin (YYYYMMDD)"
-          outlined
-          dense
+          v-model="mode_unique"
+          label="Date unique"
+          class="mt-0"
+          hide-details
         />
       </v-col>
 
+      <v-col cols="12" md="3" v-if="!mode_unique">
+        <v-date-input
+          v-model="dateFinModel"
+          label="Date fin"
+          variant="outlined"
+          density="compact"
+          prepend-icon=""
+          prepend-inner-icon="mdi-calendar"
+          clearable
+          :min="dateDebutModel || minDate"
+          :max="maxDate"
+          @update:model-value="onDateFinChange"
+        />
+      </v-col>
+
+      <!-- Reste du template inchangé -->
       <v-col cols="12" md="auto" class="d-flex align-right">
         <v-btn
           color="primary"
           size="large"
           rounded="lg"
-
           @click="fetchChangeData"
           :loading="loading"
           class="px-6"
         >
           Charger
         </v-btn>
-
-        
       </v-col>
     </v-row>
+
 
     <v-alert
       v-if="message"
@@ -114,6 +124,8 @@ import * as XLSX from "xlsx"
 import { watch } from "vue"
 import TableauChange from "@/components/change/TableauChange.vue"
 import { formatUSD } from "@/composables/format_money.js"
+import { dateToYYYYMMDD, yyyymmddToDate } from "@/composables/format_date.js" 
+
 
 const mode_unique = ref(false)
 const dateDebut = ref("")
@@ -135,6 +147,34 @@ const showSnackbar = ref(false)
 const snackbarMessage = ref('')
 const snackbarColor = ref('success')
 const snackbarIcon = ref('mdi-check-circle')
+
+const dateDebutModel = ref(null)
+const dateFinModel = ref(null)
+
+
+// Dates min et max (optionnel)
+
+
+const maxDate = computed(() => {
+  return new Date() // Aujourd'hui
+})
+
+
+const onDateDebutChange = (newDate) => {
+  dateDebut.value = dateToYYYYMMDD(newDate)
+}
+
+const onDateFinChange = (newDate) => {
+  dateFin.value = dateToYYYYMMDD(newDate)
+}
+
+// Reset dateFin quand mode_unique change
+watch(mode_unique, (newVal) => {
+  if (newVal) {
+    dateFinModel.value = null
+    dateFin.value = ''
+  }
+})
 
 const showNotification = (message, type = 'success') => {
   snackbarMessage.value = message
@@ -357,10 +397,15 @@ onMounted(() => {
     const parsed = JSON.parse(saved)
     dateDebut.value = parsed.dateDebut || ""
     dateFin.value = parsed.dateFin || ""
+
+     // Mettre à jour les modèles Date
+    dateDebutModel.value = yyyymmddToDate(dateDebut.value)
+    dateFinModel.value = yyyymmddToDate(dateFin.value)
+
     status.value = parsed.status || null
     message.value = parsed.message || ""
     syntheseRows.value = parsed.synthese || []
-    etatRows.value = parsed.etat || []
+    etatRows.value = parsed.etat || []  
     allocationRows.value = parsed.allocation || []
     if (parsed.synthese?.length) {
       syntheseColumns.value = Object.keys(parsed.synthese[0])

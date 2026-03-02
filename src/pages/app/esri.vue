@@ -3,12 +3,17 @@
     
     <v-row class="mb-4">
       <v-col cols="12" md="3">
-        <v-text-field
-          v-model="dateDebut"
-          label="Date début (YYYYMMDD)"
-          outlined
-          dense
-          hide-details
+        <v-date-input
+          v-model="dateDebutModel"
+          label="Date début"
+          variant="outlined"
+          density="compact"
+          prepend-icon=""
+          prepend-inner-icon="mdi-calendar"
+          clearable
+          :min="minDate"
+          :max="maxDate"
+          @update:model-value="onDateDebutChange"
         />
         <v-checkbox
             v-model="mode_unique"
@@ -19,13 +24,17 @@
       </v-col>
 
       <v-col cols="12" md="3" v-if="!mode_unique">
-        <v-text-field
-          v-model="dateFin"
-          label="Date fin (YYYYMMDD)"
-          outlined
-          dense
-          hide-details
-
+        <v-date-input
+          v-model="dateFinModel"
+          label="Date fin"
+          variant="outlined"
+          density="compact"
+          prepend-icon=""
+          prepend-inner-icon="mdi-calendar"
+          clearable
+          :min="dateDebutModel || minDate"
+          :max="maxDate"
+          @update:model-value="onDateFinChange"
         />
         <v-checkbox
           v-model="compareMode"
@@ -185,6 +194,7 @@ import axios from "axios"
 import * as XLSX from "xlsx"
 import TablesEsri from "@/components/esri/TableauEsri.vue"
 import { usePopupStore } from '@/stores'
+import { dateToYYYYMMDD,yyyymmddToDate } from "../../composables/format_date"
 
 const dateDebut = ref("")
 const dateFin = ref("")
@@ -200,6 +210,22 @@ const bilan = ref([])
 
 const popupStore = usePopupStore()
 
+const dateDebutModel = ref(null)
+const dateFinModel = ref(null)
+
+
+const maxDate = computed(() => {
+  return new Date() // Aujourd'hui
+})
+
+
+const onDateDebutChange = (newDate) => {
+  dateDebut.value = dateToYYYYMMDD(newDate)
+}
+
+const onDateFinChange = (newDate) => {
+  dateFin.value = dateToYYYYMMDD(newDate)
+}
 
 const isAllowed = computed(() => {
   const privilege = popupStore.user_access?.access || localStorage.getItem('privillege') || ''
@@ -411,6 +437,10 @@ onMounted(() => {
     const parsed = JSON.parse(saved)
     dateDebut.value = parsed.dateDebut || ""
     dateFin.value = parsed.dateFin || ""
+
+      // Mettre à jour les modèles Date
+    dateDebutModel.value = yyyymmddToDate(dateDebut.value)
+    dateFinModel.value = yyyymmddToDate(dateFin.value)
     
   }
 

@@ -2,9 +2,14 @@ import 'vuetify/styles'
 import { createVuetify } from 'vuetify'
 import * as components from 'vuetify/components'
 import * as directives from 'vuetify/directives'  
+import { VDateInput } from 'vuetify/labs/VDateInput'  // ← Import du composant Labs
+import 'vuetify/styles'
 
 export default createVuetify({
-  components,
+  components: {
+    ...components,
+    VDateInput,  // ← Ajout du composant Labs à la configuration
+  },
   defaultTheme: 'dark',
   themes: {
     light: {

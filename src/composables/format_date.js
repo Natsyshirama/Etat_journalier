@@ -120,6 +120,8 @@ export function useDateFormat() {
     }))
   }
 
+  
+
   return {
     formatDateToFrench,
     formatDateToUS,
@@ -148,4 +150,32 @@ export const formatDateToUS = (dateStr, separator = '/') => {
   const month = cleanDate.substring(4, 6)
   const day = cleanDate.substring(6, 8)
   return `${month}${separator}${day}${separator}${year}`
+}
+
+// composables/format_date.js
+
+/**
+ * Convertit une date Date en chaîne YYYYMMDD
+ * @param {Date|null} date - L'objet Date à convertir
+ * @returns {string} - La date au format YYYYMMDD ou chaîne vide
+ */
+export const dateToYYYYMMDD = (date) => {
+  if (!date) return ''
+  const year = date.getFullYear()
+  const month = String(date.getMonth() + 1).padStart(2, '0')
+  const day = String(date.getDate()).padStart(2, '0')
+  return `${year}${month}${day}`
+}
+
+/**
+ * Convertit une chaîne YYYYMMDD en objet Date
+ * @param {string} str - La chaîne au format YYYYMMDD
+ * @returns {Date|null} - L'objet Date ou null si invalide
+ */
+export const yyyymmddToDate = (str) => {
+  if (!str || typeof str !== 'string' || str.length !== 8) return null
+  const year = parseInt(str.substring(0, 4))
+  const month = parseInt(str.substring(4, 6)) - 1
+  const day = parseInt(str.substring(6, 8))
+  return new Date(year, month, day)
 }

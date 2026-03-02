@@ -64,28 +64,32 @@
 
         <template v-if="!isAllAgence">
           <v-col cols="12" sm="2">
-            <v-text-field
-              v-model="dateDebut"
+           <v-date-input
+              v-model="dateDebutModel"
               label="Date début"
-              placeholder="YYYYMMDD"
               variant="outlined"
-              rounded="lg"
+              density="compact"
+              prepend-icon=""
+              prepend-inner-icon="mdi-calendar"
               clearable
-              density="comfortable"
+              :min="minDate"
+              :max="maxDate"
+              @update:model-value="onDateDebutChange"
             />
           </v-col>
 
           <v-col cols="12" sm="2">
-            <v-text-field
-              v-model="dateFin"
+            <v-date-input
+              v-model="dateFinModel"
               label="Date fin"
-              placeholder="YYYYMMDD"
               variant="outlined"
-              rounded="lg"
+              density="compact"
+              prepend-icon=""
+              prepend-inner-icon="mdi-calendar"
               clearable
-              density="comfortable"
-              hide-details
-
+              :min="dateDebutModel || minDate"
+              :max="maxDate"
+              @update:model-value="onDateFinChange"
             />
             <v-checkbox
               v-model="compare"
@@ -473,7 +477,7 @@ import { ref, inject, computed ,watch} from "vue"
 import axios from "axios"
 import { useRouter } from 'vue-router'
 import { formatUSD } from "../../composables/format_money"
-import { formatDateToFrench } from "../../composables/format_date" // ← AJOUTER CET IMPORT
+import { formatDateToFrench,dateToYYYYMMDD,yyyymmddToDate } from "../../composables/format_date" // ← AJOUTER CET IMPORT
 
 const router = useRouter()
 
@@ -572,6 +576,27 @@ const isAllAgence = computed(() => agence.value === 'all')
 const hasResults = computed(() => 
   resultsDav.value.length > 0 || resultsDat.value.length > 0 || resultsEpr.value.length > 0
 )
+const dateDebutModel = ref(null)
+const dateFinModel = ref(null)
+
+
+
+
+const maxDate = computed(() => {
+  return new Date() // Aujourd'hui
+})
+
+
+const onDateDebutChange = (newDate) => {
+  dateDebut.value = dateToYYYYMMDD(newDate)
+}
+
+const onDateFinChange = (newDate) => {
+  dateFin.value = dateToYYYYMMDD(newDate)
+}
+
+// Reset dateFin quand mode_unique change
+
 
 
 const generateHeaders = (data) => {
