@@ -23,6 +23,12 @@
         fixed-header
         height="700px"
       >
+       <template v-slot:item.montant_capital="{ item }">
+          <span class="montant-cell">{{ (item.montant_capital) }}</span>
+        </template>
+         <template v-slot:item.montant_pay_total="{ item }">
+          <span class="montant-cell">{{ (item.montant_pay_total)}}</span>
+        </template>
         <template v-slot:footer>
           <v-pagination
             v-model="page"
@@ -45,6 +51,12 @@
 <script setup>
 import { ref, watch, computed,inject } from "vue"
 import axios from "axios"
+import { formatUSD } from "@/composables/format_money.js"
+
+const formatMontant = (value) => {
+  if (!value && value !== 0) return ''
+  return formatUSD(parseFloat(value), 2)
+}
 
 const props = defineProps({
   tableName: {
@@ -65,8 +77,8 @@ const pageCount = computed(() =>
   Math.ceil(items.value.length / itemsPerPage.value)
 )
 
-const fetchTableData = async (tableName,agence) => {
-  if (!tableName ) {
+const fetchTableData = async (tableName, agence) => {
+  if (!tableName) {
     items.value = []
     headers.value = []
     return
@@ -75,21 +87,29 @@ const fetchTableData = async (tableName,agence) => {
     const res = await axios.get(`${api}/api/dat/${tableName}`, {
       headers: { Authorization: `Bearer ${localStorage.getItem('access_token')}` },
       params: {
-        
-    agence: props.agence || undefined
-  }
+        agence: props.agence || undefined
+      }
     })
-    items.value = res.data.data || []
+    
+    // Transformer les données pour formater les montants
+    const rawData = res.data.data || []
+    items.value = rawData.map(item => ({
+      ...item,
+      montant_capital: formatMontant(item.montant_capital),
+      montant_pay_total: formatMontant(item.montant_pay_total)
+    }))
+    
     headers.value = (res.data.columns || []).map(col => ({
       title: col,
-      key: col
+      key: col,
+      // Optionnel: aligner à droite les colonnes de montants
+      align: ['montant_capital', 'montant_pay_total'].includes(col) ? 'end' : 'start'
     }))
     page.value = 1
   } catch (err) {
     console.error("Erreur lors du chargement de la table:", err)
   }
 }
-
 watch(() => props.tableName, fetchTableData, { immediate: true })
 </script>
 
@@ -143,5 +163,17 @@ watch(() => props.tableName, fetchTableData, { immediate: true })
 .fixed-header-table ::v-deep(tr:hover td) {
   background-color: #6a6969;
   cursor: pointer;
+}
+/* Ajout d'une classe pour aligner les montants à droite */
+.montant-cell {
+  display: block;
+  text-align: right;
+  font-family: 'Roboto Mono', monospace; /* Police à chasse fixe pour meilleure lisibilité */
+}
+
+/* Optionnel: Style pour les en-têtes de colonnes montants */
+::v-deep(th[aria-label*="montant"]) {
+  text-align: right !important;
+  padding-right: 24px !important;
 }
 </style>

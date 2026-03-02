@@ -289,9 +289,9 @@ def listeDta():
 def get_dat_table(request: Request,table_name: str, agence: str = None):
    
     try:
-        current_user = user.get_current_user(request)
-        if current_user.get("privillege") not in ["user","admin", "superadmin"]:
-            raise HTTPException(status_code=403, detail="Accès refusé : privilège insuffisant")
+        # current_user = user.get_current_user(request)
+        # if current_user.get("privillege") not in ["user","admin", "superadmin"]:
+        #     raise HTTPException(status_code=403, detail="Accès refusé : privilège insuffisant")
 
         data = dat_report.getDat(table_name, agence)
         return {"table": table_name, **data}

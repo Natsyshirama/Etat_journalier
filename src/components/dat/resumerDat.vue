@@ -48,7 +48,7 @@
             <v-icon class="mr-2">mdi-cash-multiple</v-icon>
             <div>
               <div class="text-caption text-green">Total Capital</div>
-              <div class="text-h6 font-weight-bold">{{ Number(resume.total_montant_capital).toLocaleString('fr-FR', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) }}</div>
+              <div class="text-h6 font-weight-bold">{{ formatUSD(resume.total_montant_capital, 2) }}</div>
             </div>
           </div>
         </v-card>
@@ -60,7 +60,7 @@
             <v-icon class="mr-2">mdi-bank-transfer</v-icon>
             <div>
               <div class="text-caption text-teal">Total Paiement</div>
-              <div class="text-h6 font-weight-bold">{{ Number(resume.total_montant_pay_total).toLocaleString('fr-FR', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) }}</div>
+              <div class="text-h6 font-weight-bold">{{ formatUSD(resume.total_montant_pay_total, 2) }}</div>
             </div>
           </div>
         </v-card>
@@ -72,6 +72,8 @@
 <script setup>
 import { ref, watch, inject } from "vue"
 import axios from "axios"
+import { formatUSD } from "@/composables/format_money.js"
+
 
 const api = inject("api")
 
@@ -95,6 +97,14 @@ const fetchResume = async (tableName) => {
   } catch (err) {
     console.error("Erreur lors du chargement du résumé:", err)
   }
+}
+
+const formatMontant = (value) => {
+  if (!value && value !== 0) return ''
+  return new Intl.NumberFormat('fr-FR', {
+    minimumFractionDigits: 0,
+    maximumFractionDigits: 0
+  }).format(value)
 }
 
 watch(() => props.tableName, fetchResume, { immediate: true })
