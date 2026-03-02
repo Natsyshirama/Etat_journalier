@@ -229,14 +229,14 @@
                               @click="goToDetail(column.key, agence.code)"
                               style="cursor: pointer;"
                             >
-                              {{ formatNumber(getCellValue(agence, column)) }}
+                              {{ formatUSD(getCellValue(agence, column)) }}
                             </div>
                             <div 
                               v-if="getCellEcart(agence, column) !== 0" 
                               class="ecart-indicator"
                               :class="getEcartClass(getCellEcart(agence, column))"
                             >
-                              {{ formatEcart(getCellEcart(agence, column)) }}
+                              {{ formatUSD(getCellEcart(agence, column)) }}
                             </div>
                           </div>
                         </td>
@@ -263,14 +263,14 @@
                               class="montant-value"
                               
                             >
-                              {{ formatNumber(getZoneCellValue(zone, column)) }}
+                              {{ formatUSD(getZoneCellValue(zone, column)) }}
                             </div>
                             <div 
                               v-if="getZoneCellEcart(zone, column) !== 0" 
                               class="ecart-indicator"
                               :class="getEcartClass(getZoneCellEcart(zone, column))"
                             >
-                              {{ formatEcart(getZoneCellEcart(zone, column)) }}
+                              {{ formatUSD(getZoneCellEcart(zone, column)) }}
                             </div>
                           </div>
                         </td>
@@ -300,14 +300,14 @@
                       >
                         <div class="montant-container">
                           <div class="montant-value total-montant">
-                            {{ formatNumber(getTotalValue(column, viewByZone)) }}
+                            {{ formatUSD(getTotalValue(column, viewByZone)) }}
                           </div>
                           <div 
                             v-if="getTotalEcart(column, viewByZone) !== 0" 
                             class="ecart-indicator total-ecart"
                             :class="getEcartClass(getTotalEcart(column, viewByZone))"
                           >
-                            {{ formatEcart(getTotalEcart(column, viewByZone)) }}
+                            {{ formatUSD(getTotalEcart(column, viewByZone)) }}
                           </div>
                         </div>
                       </td>
@@ -400,8 +400,8 @@
                         const idx = context.dataIndex
                         const ecart = graphEcarts[idx] || 0
                         return [
-                          ` Montant total: ${formatNumber(montant)}`,
-                          ` Écart: ${formatEcart(ecart)}`
+                          ` Montant total: ${formatUSD(montant)}`,
+                          ` Écart: ${formatUSD(ecart)}`
                         ]
                       },
                       labelColor: (context) => {
@@ -463,7 +463,7 @@
                         } else if (value >= 1000) {
                           return (value / 1000).toFixed(0) + 'k'
                         }
-                        return formatNumber(value)
+                        return formatUSD(value)
                       },
                       font: {
                         size: 12,
@@ -510,7 +510,7 @@
                 <div class="stat-item">
                   <div class="text-caption text-medium-emphasis">Écart moyen</div>
                   <div class="text-body-2 font-weight-medium" :style="{ color: averageEcart >= 0 ? '#4caf50' : '#f44336' }">
-                    {{ formatEcart(averageEcart) }}
+                    {{ formatUSD(averageEcart) }}
                   </div>
                 </div>
               </div>
@@ -564,6 +564,7 @@ ChartJS.register(Title, Tooltip, Legend, BarElement, CategoryScale, LinearScale)
 const router = useRouter()
 const api = inject("api")
 import { useAgences } from '@/composables/useAgences'
+import { formatUSD } from "../../composables/format_money"
 
 // ========== REFS ==========
 const selectedAgences = ref([])
