@@ -103,27 +103,27 @@
             
             <template v-if="activeTab === 0" v-slot:item.total_ria="{ item }">
               <div class="amount-container">
-                <div>{{ formatCurrency(item.total_ria) }}</div>
+                <div>{{ formatUSD(item.total_ria) }}</div>
                 <div :class="getEcartClass(item.ecart_ria)" class="ecart-value">
-                  {{ formatEcart(item.ecart_ria) }}
+                  {{ formatUSD(item.ecart_ria) }}
                 </div>
               </div>
             </template>
             
             <template v-if="activeTab === 0" v-slot:item.total_global="{ item }">
               <div class="amount-container">
-                <div>{{ formatCurrency(item.total_global) }}</div>
+                <div>{{ formatUSD(item.total_global) }}</div>
                 <div :class="getEcartClass(item.ecart_global)" class="ecart-value">
-                  {{ formatEcart(item.ecart_global) }}
+                  {{ formatUSD(item.ecart_global) }}
                 </div>
               </div>
             </template>
             
             <template v-if="activeTab === 0" v-slot:item.total="{ item }">
               <div class="amount-container">
-                <div>{{ formatCurrency(item.total) }}</div>
+                <div>{{ formatUSD(item.total) }}</div>
                 <div :class="getEcartClass(item.ecart_total)" class="ecart-value">
-                  {{ formatEcart(item.ecart_total) }}
+                  {{ formatUSD(item.ecart_total) }}
                 </div>
               </div>
             </template>
@@ -145,27 +145,27 @@
             
             <template v-if="activeTab === 1" v-slot:item.total_ria="{ item }">
               <div class="amount-container">
-                <div>{{ formatCurrency(item.total_ria) }}</div>
+                <div>{{ formatUSD(item.total_ria) }}</div>
                 <div :class="getEcartClass(item.ecart_ria)" class="ecart-value">
-                  {{ formatEcart(item.ecart_ria) }}
+                  {{ formatUSD(item.ecart_ria) }}
                 </div>
               </div>
             </template>
             
             <template v-if="activeTab === 1" v-slot:item.total_global="{ item }">
               <div class="amount-container">
-                <div>{{ formatCurrency(item.total_global) }}</div>
+                <div>{{ formatUSD(item.total_global) }}</div>
                 <div :class="getEcartClass(item.ecart_global)" class="ecart-value">
-                  {{ formatEcart(item.ecart_global) }}
+                  {{ formatUSD(item.ecart_global) }}
                 </div>
               </div>
             </template>
             
             <template v-if="activeTab === 1" v-slot:item.total="{ item }">
               <div class="amount-container">
-                <div>{{ formatCurrency(item.total) }}</div>
+                <div>{{ formatUSD(item.total) }}</div>
                 <div :class="getEcartClass(item.ecart_total)" class="ecart-value">
-                  {{ formatEcart(item.ecart_total) }}
+                  {{ formatUSD(item.ecart_total) }}
                 </div>
               </div>
             </template>
@@ -214,10 +214,10 @@
               </div>
               <div v-else class="d-flex justify-space-between">
                 <div>
-                  <strong>Total :</strong> {{ formatCurrency(chartData.total) }}
+                  <strong>Total :</strong> {{ formatUSD(chartData.total) }}
                 </div>
                 <div v-if="chartData.ecart !== 0" :class="getEcartClass(chartData.ecart)">
-                  <strong>Écart :</strong> {{ formatEcart(chartData.ecart) }}
+                  <strong>Écart :</strong> {{ formatUSD(chartData.ecart) }}
                 </div>
               </div>
             </v-card-text>
@@ -238,7 +238,7 @@
 <script setup>
 import { ref, computed, watch, onMounted, onUnmounted, nextTick } from "vue"
 import { Chart, registerables } from 'chart.js'
-
+import { formatUSD } from "@/composables/format_money.js"
 Chart.register(...registerables)
 
 const props = defineProps({
@@ -271,7 +271,6 @@ const props = defineProps({
     default: false
   }
 })
-import { formatUSD } from "@/composables/format_money.js"
 
 const search = ref("")
 const page = ref(1)

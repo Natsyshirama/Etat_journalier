@@ -23,6 +23,10 @@
         fixed-header
         height="500px"
       >
+      <template v-for="col in moneyColumns" :key="col" v-slot:[`item.${col}`]="{ item }">
+          <span class="money-cell">{{ formatUSD(item[col]) }}</span>
+        </template>
+
         <template v-slot:footer>
           <v-pagination
             v-model="page"
@@ -44,6 +48,7 @@
 
 <script setup>
 import { ref, computed, watch } from "vue"
+import { formatUSD } from "@/composables/format_money.js"
 
 const props = defineProps({
   columns: {
@@ -53,6 +58,11 @@ const props = defineProps({
   rows: {
     type: Array,
     required: true
+  },
+  // Optionnel: spécifier manuellement les colonnes de montant
+  moneyColumnsProp: {
+    type: Array,
+    default: () => []
   }
 })
 
@@ -60,11 +70,60 @@ const search = ref("")
 const page = ref(1)
 const itemsPerPage = ref(20)
 
+// Détection automatique des colonnes qui contiennent des montants
+const moneyColumns = computed(() => {
+  if (props.moneyColumnsProp.length > 0) {
+    return props.moneyColumnsProp
+  }
+  
+  // Mots-clés pour identifier les colonnes de montant
+  const moneyKeywords = [
+    'MONTANT', 'montant', 'MONTANT_', 'montant_',
+    'EUR_', 'USD_', 'Total_', 'total_',
+    'CAPITAL', 'capital', 'PAY', 'pay',
+    'PRIX', 'prix', 'COUT', 'cout',
+    'MGA', 'Ar', 'ARIARY'
+  ]
+  
+  return props.columns.filter(col => 
+    moneyKeywords.some(keyword => col.includes(keyword))
+  )
+})
+
+// Formater une valeur monétaire
+const formatMoneyValue = (value) => {
+  if (value === null || value === undefined || value === '') return ''
+  
+  // Si c'est déjà une chaîne formatée, la retourner
+  if (typeof value === 'string' && (value.includes(',') || value.includes('.'))) {
+    return value
+  }
+  
+  // Convertir en nombre et formater
+  const num = parseFloat(value)
+  if (isNaN(num)) return value
+  
+  return formatUSD(num, 2)
+}
+
+// Créer une version formatée des lignes pour l'affichage
+const formattedRows = computed(() => {
+  return props.rows.map(row => {
+    const newRow = { ...row }
+    moneyColumns.value.forEach(col => {
+      if (row[col] !== undefined) {
+        newRow[col] = formatMoneyValue(row[col])
+      }
+    })
+    return newRow
+  })
+})
+
 const headers = computed(() =>
   props.columns.map(col => ({
     title: col,
-    key: col
-  }))
+    key: col,
+     }))
 )
 
 const pageCount = computed(() =>
@@ -126,6 +185,13 @@ watch(
 
 .fixed-header-table ::v-deep(tr:hover td) {
   cursor: pointer;
+}
+/* Style pour les cellules de montant */
+.money-cell {
+  display: block;
+  text-align: right;
+  font-family: 'Roboto Mono', monospace;
+  font-weight: 500;
 }
 
 </style>

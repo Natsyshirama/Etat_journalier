@@ -78,6 +78,8 @@
         <TableauChange
           :columns="syntheseColumns"
           :rows="syntheseRows"
+          :money-columns-prop="['EUR_Montant', 'USD_Montant', 'Total_MGA', 'EUR_Montant_CV_MGA', 'USD_Montant_CV_MGA']"
+
           title="Tableau de Synthèse"
         />
       </v-window-item>
@@ -86,6 +88,8 @@
         <TableauChange
           :columns="etatColumns"
           :rows="etatRows"
+                  :money-columns-prop="['MONTANT_OPERATION_DEVISE', 'MONTANT_CV_MGA','COURS']"
+
           title="Tableau d'État"
         />
       </v-window-item>
@@ -94,6 +98,8 @@
         <TableauChange
           :columns="allocationColumns"
           :rows="allocationRows"
+                  :money-columns-prop="['MONTANT_OPERATION_DEVISE', 'MONTANT_CV_MGA','COURS']"
+
           title="Tableau d'Allocation"
         />
       </v-window-item>
@@ -107,6 +113,7 @@ import axios from "axios"
 import * as XLSX from "xlsx"
 import { watch } from "vue"
 import TableauChange from "@/components/change/TableauChange.vue"
+import { formatUSD } from "@/composables/format_money.js"
 
 const mode_unique = ref(false)
 const dateDebut = ref("")
