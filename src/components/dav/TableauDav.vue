@@ -31,7 +31,9 @@
         <template v-slot:item.solde="{ item }">
           <span class="montant-cell">{{ item.solde }}</span>
         </template>
-
+        <template v-slot:item.Date_effet="{ item }">
+          <span class="date-cell">{{ formatDateToUS(item.Date_effet) }}</span>
+        </template>
         <template v-slot:footer>
           <v-pagination
             v-model="page"
@@ -55,6 +57,7 @@
 import { ref, watch, computed, onMounted, inject } from "vue"
 import axios from "axios"
 import { formatUSD } from "@/composables/format_money.js"
+import { formatDateToUS} from "@/composables/format_date.js"
 
 const formatMontant = (value) => {
   if (!value && value !== 0) return ''
@@ -175,6 +178,12 @@ watch(() => props.tableName, fetchTableData)
   font-family: 'Roboto Mono', monospace; 
 }
 
+.date-cell {
+  display: block;
+  text-align: center;
+  font-family: 'Roboto Mono', monospace;
+  font-size: 13px;
+}
 ::v-deep(th[aria-label*="montant"]) {
   text-align: right !important;
   padding-right: 24px !important;

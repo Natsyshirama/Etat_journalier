@@ -29,6 +29,12 @@
          <template v-slot:item.montant_pay_total="{ item }">
           <span class="montant-cell">{{ (item.montant_pay_total)}}</span>
         </template>
+        <template v-slot:item.Date_effet="{ item }">
+          <span class="date-cell">{{ formatDateToUS(item.Date_effet) }}</span>
+        </template>
+        <template v-slot:item.date_echeance="{ item }">
+          <span class="date-cell">{{ formatDateToUS(item.date_echeance) }}</span>
+        </template>
         <template v-slot:footer>
           <v-pagination
             v-model="page"
@@ -52,6 +58,7 @@
 import { ref, watch, computed,inject } from "vue"
 import axios from "axios"
 import { formatUSD } from "@/composables/format_money.js"
+import { formatDateToUS} from "@/composables/format_date.js"
 
 const formatMontant = (value) => {
   if (!value && value !== 0) return ''
@@ -170,6 +177,12 @@ watch(() => props.tableName, fetchTableData, { immediate: true })
   font-family: 'Roboto Mono', monospace; 
 }
 
+.date-cell {
+  display: block;
+  text-align: center;
+  font-family: 'Roboto Mono', monospace;
+  font-size: 13px;
+}
 ::v-deep(th[aria-label*="montant"]) {
   text-align: right !important;
   padding-right: 24px !important;

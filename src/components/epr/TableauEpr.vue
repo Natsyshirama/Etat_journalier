@@ -32,6 +32,9 @@
         <template v-slot:item.solde="{ item }">
           <span class="montant-cell">{{ item.solde }}</span>
         </template>
+        <template v-slot:item.Date_effet="{ item }">
+          <span class="date-cell">{{ formatDateToUS(item.Date_effet) }}</span>
+        </template>
 
         <template v-slot:footer>
           <v-pagination
@@ -56,6 +59,8 @@
 import { ref, watch, computed, inject } from "vue"
 import axios from "axios"
 import { formatUSD } from "@/composables/format_money.js"
+import { formatDateToUS} from "@/composables/format_date.js"
+
 const props = defineProps({
   tableName: {
     type: String,

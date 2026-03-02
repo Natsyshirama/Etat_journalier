@@ -38,7 +38,10 @@
         fixed-header
         height="900px"
       >
-        <template v-slot:footer>
+          <template v-slot:item.Montant="{ item }">
+            <span class="montant-cell">{{ formatUSD(item.Montant) }}</span>
+          </template>
+            <template v-slot:footer>
           <v-pagination
             v-model="page"
             :length="pageCount"
@@ -268,6 +271,7 @@ const props = defineProps({
     default: false
   }
 })
+import { formatUSD } from "@/composables/format_money.js"
 
 const search = ref("")
 const page = ref(1)
@@ -868,5 +872,10 @@ watch(showChart, (newValue) => {
 /* Styles pour le bouton graphique principal */
 .v-btn--icon.v-size--small .v-icon {
   font-size: 16px;
+}
+.montant-cell {
+  display: block;
+  text-align: right;
+  font-family: 'Roboto Mono', monospace; 
 }
 </style>
