@@ -21,6 +21,17 @@
         dense
         fixed-header
         height="700px">
+        
+        <template v-slot:item.Debit="{ item }">
+          <span class="montant-cell">{{ item.Debit }}</span>
+        </template>
+        <template v-slot:item.Credit="{ item }">
+          <span class="montant-cell">{{ item.Credit }}</span>
+        </template>
+        <template v-slot:item.solde="{ item }">
+          <span class="montant-cell">{{ item.solde }}</span>
+        </template>
+
         <template v-slot:footer>
           <v-pagination
             v-model="page"
@@ -43,6 +54,12 @@
 <script setup>
 import { ref, watch, computed, onMounted, inject } from "vue"
 import axios from "axios"
+import { formatUSD } from "@/composables/format_money.js"
+
+const formatMontant = (value) => {
+  if (!value && value !== 0) return ''
+  return formatUSD(parseFloat(value), 2)
+}
 
 const props = defineProps({
   tableName: { type: String, required: true },
@@ -80,9 +97,17 @@ const fetchTableData = async (tableName) => {
   }
     })
     items.value = res.data.data || []
+    items.value = items.value.map(item => ({
+      ...item,
+      Debit: formatUSD(item.Debit),
+      Credit: formatUSD(item.Credit),
+      solde : formatUSD(item.solde)
+    }))
     headers.value = (res.data.columns || []).map(col => ({
       title: col,
-      key: col
+      key: col,
+            align: ['Debit', 'Credit', 'solde'].includes(col) ? 'end' : 'start'
+
     }))
     page.value = 1
   } catch (err) {
@@ -143,5 +168,15 @@ watch(() => props.tableName, fetchTableData)
 }
 .table-scroll::-webkit-scrollbar {
   display: none; 
+}
+.montant-cell {
+  display: block;
+  text-align: right;
+  font-family: 'Roboto Mono', monospace; 
+}
+
+::v-deep(th[aria-label*="montant"]) {
+  text-align: right !important;
+  padding-right: 24px !important;
 }
 </style>

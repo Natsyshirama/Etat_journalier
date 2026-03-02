@@ -38,7 +38,7 @@
             <v-icon class="mr-2">mdi-arrow-down-bold-circle</v-icon>
             <div>
               <div class="text-caption text-red">Total Débit EPR</div>
-              <div class="text-h6 font-weight-bold">{{Number(resume.total_debit_epr).toLocaleString('fr-FR', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) }}</div>
+              <div class="text-h6 font-weight-bold">{{ formatUSD(resume.total_debit_epr) }}</div>
             </div>
           </div>
         </v-card>
@@ -50,7 +50,7 @@
             <v-icon class="mr-2">mdi-arrow-up-bold-circle</v-icon>
             <div>
               <div class="text-caption text-green">Total Crédit EPR</div>
-              <div class="text-h6 font-weight-bold">{{Number( resume.total_credit_epr).toLocaleString('fr-FR', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) }}</div>
+              <div class="text-h6 font-weight-bold">{{ formatUSD(resume.total_credit_epr) }}</div>
             </div>
           </div>
         </v-card>
@@ -62,6 +62,7 @@
 <script setup>
 import { ref, watch, inject } from "vue"
 import axios from "axios"
+import { formatUSD } from "@/composables/format_money.js"
 
 const props = defineProps({
   tableName: {

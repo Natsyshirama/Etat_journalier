@@ -95,8 +95,8 @@ const fetchTableData = async (tableName, agence) => {
     const rawData = res.data.data || []
     items.value = rawData.map(item => ({
       ...item,
-      montant_capital: formatMontant(item.montant_capital),
-      montant_pay_total: formatMontant(item.montant_pay_total)
+      montant_capital: formatUSD(item.montant_capital),
+      montant_pay_total: formatUSD(item.montant_pay_total)
     }))
     
     headers.value = (res.data.columns || []).map(col => ({
@@ -164,14 +164,12 @@ watch(() => props.tableName, fetchTableData, { immediate: true })
   background-color: #6a6969;
   cursor: pointer;
 }
-/* Ajout d'une classe pour aligner les montants à droite */
 .montant-cell {
   display: block;
   text-align: right;
-  font-family: 'Roboto Mono', monospace; /* Police à chasse fixe pour meilleure lisibilité */
+  font-family: 'Roboto Mono', monospace; 
 }
 
-/* Optionnel: Style pour les en-têtes de colonnes montants */
 ::v-deep(th[aria-label*="montant"]) {
   text-align: right !important;
   padding-right: 24px !important;
