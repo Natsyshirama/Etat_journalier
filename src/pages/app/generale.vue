@@ -473,7 +473,7 @@ import { ref, inject, computed ,watch} from "vue"
 import axios from "axios"
 import { useRouter } from 'vue-router'
 import { formatUSD } from "../../composables/format_money"
-import { formatDateToFrench, formatDateToFrench } from "../../composables/format_date" // ← AJOUTER CET IMPORT
+import { formatDateToFrench } from "../../composables/format_date" // ← AJOUTER CET IMPORT
 
 const router = useRouter()
 
