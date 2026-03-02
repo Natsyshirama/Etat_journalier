@@ -8,13 +8,12 @@
   <span>Résumé du Decaissement</span>
   <v-chip
     v-if="props.tableName"
-    color="yellow"
     class="ml-4"
     size="grand"
     label
     style="font-size:1.2rem;font-weight:500;"
   >
-    {{ props.tableName }}
+    {{ formatDateToFrench(props.tableName) }}
   </v-chip>
 </h3>
     <v-row dense>
@@ -62,7 +61,7 @@
 import { ref, watch, inject } from "vue"
 import axios from "axios"
 import { formatUSD } from "@/composables/format_money.js"
-
+import { formatDateToFrench } from "@/composables/format_date.js"
 const props = defineProps({
   tableName: {
     type: String,
