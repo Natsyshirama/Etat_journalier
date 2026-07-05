@@ -42,7 +42,7 @@ class ChangeMandy:
                     ) INTO result
                     FROM teller_mcbc_his_full
                     WHERE transaction_code IN (23, 26)
-                    AND (
+                    AND ( 
                         (p_unique_mode AND value_date_1 = p_date_debut)
                         OR
                         (NOT p_unique_mode AND value_date_1 BETWEEN p_date_debut AND v_date_fin)

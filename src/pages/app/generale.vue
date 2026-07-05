@@ -107,14 +107,17 @@
 
         <template v-else>
           <v-col cols="12" sm="2">
-            <v-text-field
-              v-model="singleDate"
-              label="Date unique"
-              placeholder="YYYYMMDD"
+            <v-date-input
+              v-model="singleDateModel"
+              label="Date Unique"
               variant="outlined"
-              rounded="lg"
+              density="compact"
+              prepend-icon=""
+              prepend-inner-icon="mdi-calendar"
               clearable
-              density="comfortable"
+              :min="minDate"
+              :max="maxDate"
+              @update:model-value="onSingleDateChange"
             />
           </v-col>
         </template>
@@ -578,7 +581,7 @@ const hasResults = computed(() =>
 )
 const dateDebutModel = ref(null)
 const dateFinModel = ref(null)
-
+const singleDateModel = ref(null)
 
 
 
@@ -589,6 +592,10 @@ const maxDate = computed(() => {
 
 const onDateDebutChange = (newDate) => {
   dateDebut.value = dateToYYYYMMDD(newDate)
+}
+
+const onSingleDateChange = (newDate) => {
+  singleDate.value = dateToYYYYMMDD(newDate)
 }
 
 const onDateFinChange = (newDate) => {
