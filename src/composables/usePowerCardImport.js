@@ -99,35 +99,46 @@ export function usePowerCardImport() {
     }
   }
 
-  const fetchStats = async (date = null) => {
-    try {
-      const url = date 
-        ? `${api.value}/api/powercard/stats?import_date=${date}`
-        : `${api.value}/api/powercard/stats`
+const fetchStats = async (date = null) => {
+  try {
+    const url = date 
+      ? `${api.value}/api/powercard/stats?import_date=${date}`
+      : `${api.value}/api/powercard/stats`
 
-      const response = await fetch(url, {
-        headers: {
-          'Authorization': `Bearer ${localStorage.getItem('access_token')}`
-        }
-      })
-
-      const data = await response.json()
-
-      if (response.ok) {
-        return data.data
-      } else {
-        throw new Error(data.detail || 'Erreur lors de la récupération des stats')
+    const response = await fetch(url, {
+      headers: {
+        'Authorization': `Bearer ${localStorage.getItem('access_token')}`
       }
-    } catch (error) {
-      console.error('Erreur fetchStats:', error)
-      return null
+    })
+
+    const data = await response.json()
+
+    if (response.ok) {
+      return data.data?.data ?? data.data
+    } else {
+      throw new Error(data.detail || 'Erreur lors de la récupération des stats')
     }
+  } catch (error) {
+    console.error('Erreur fetchStats:', error)
+    return null
   }
+}
+
+  const normalizeDate = (date) => {
+  if (!date) return date
+  const parts = date.split('/')
+  if (parts.length === 3) {
+    return `${parts[2]}-${parts[1].padStart(2, '0')}-${parts[0].padStart(2, '0')}`
+  }
+  return date
+}
 
   const fetchTransactions = async (date, limit = 100, offset = 0) => {
     try {
+      const normalizedDate = normalizeDate(date)
+
       const response = await fetch(
-        `${api.value}/api/powercard/transactions?import_date=${date}&limit=${limit}&offset=${offset}`,
+        `${api.value}/api/powercard/transactions?import_date=${normalizedDate}&limit=${limit}&offset=${offset}`,
         {
           headers: {
             'Authorization': `Bearer ${localStorage.getItem('access_token')}`
@@ -138,7 +149,7 @@ export function usePowerCardImport() {
       const data = await response.json()
 
       if (response.ok) {
-        return data.data
+        return data.data?.data ?? data.data
       } else {
         throw new Error(data.detail || 'Erreur lors de la récupération des transactions')
       }

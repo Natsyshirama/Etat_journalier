@@ -1,9 +1,11 @@
 from fastapi import APIRouter, HTTPException, UploadFile, File, Query
 from typing import Optional
 from controller.PowerCardController import PowerCardController
+from controller.importPowerCardController import ImportPowerCardController
 
 router = APIRouter()
 power_card_controller = PowerCardController()
+import_power_card_controller = ImportPowerCardController()
 
 @router.post("/powercard/import")
 async def import_power_card(
@@ -33,7 +35,7 @@ async def import_power_card(
                 detail="Format de date invalide. Utilisez YYYY-MM-DD"
             )
         
-        result = power_card_controller.process_file(file, import_date)
+        result = import_power_card_controller.process_file(file, import_date)
         
         return {
             "status": "success" if result["success"] else "error",
@@ -48,17 +50,16 @@ async def import_power_card(
 
 @router.get("/powercard/stats")
 async def get_power_card_stats(import_date: Optional[str] = Query(None, description="Date au format YYYY-MM-DD")):
-    """
-    Récupérer les statistiques des transactions Power Card
-    """
     try:
         stats = power_card_controller.get_power_card_stats(import_date)
-        
+
+        if not stats.get("success", False):
+            raise HTTPException(status_code=500, detail=stats.get("error", "Erreur lors de la récupération des stats"))
+
         return {
             "status": "success",
-            "data": stats
+            "data": stats["data"]
         }
-        
     except HTTPException as he:
         raise he
     except Exception as e:
@@ -83,8 +84,8 @@ async def get_transactions(
         
         return {
             "status": "success",
-            "data": transactions,
-            "count": len(transactions)
+            "data": transactions["data"],
+            "count": transactions["count"]
         }
         
     except HTTPException as he:

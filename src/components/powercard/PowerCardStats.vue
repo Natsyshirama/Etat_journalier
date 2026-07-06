@@ -73,6 +73,14 @@
                 </v-card-text>
               </v-card>
             </v-col>
+            <v-col cols="12" sm="6" md="3">
+              <v-card class="stat-card orange">
+                <v-card-text>
+                  <p class="stat-label">Total WITHDRAW</p>
+                  <p class="stat-value">{{ formatAmount(singleStats.withdrawal_total_amount) }}</p>
+                </v-card-text>
+              </v-card>
+            </v-col>
           </v-row>
 
           <!-- All Dates Stats Table -->
@@ -215,6 +223,10 @@ onMounted(() => {
 
 .stat-card.purple {
   border-left-color: #9c27b0;
+}
+
+.stat-card.orange {
+  border-left-color: #f57c00;
 }
 
 .stat-label {

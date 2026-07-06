@@ -32,6 +32,30 @@
             </v-col>
           </v-row>
 
+          <!-- Processing Code and Action Filters -->
+          <v-row class="mb-4">
+            <v-col cols="12" sm="6" md="3">
+              <v-select
+                v-model="selectedProcessingCode"
+                :items="processingCodeOptions"
+                label="Processing Code"
+                dense
+                outlined
+                clearable
+              />
+            </v-col>
+            <v-col cols="12" sm="6" md="3">
+              <v-select
+                v-model="selectedAction"
+                :items="actionOptions"
+                label="Action"
+                dense
+                outlined
+                clearable
+              />
+            </v-col>
+          </v-row>
+
           <!-- Loading State -->
           <v-row v-if="transactionsLoading">
             <v-col cols="12">
@@ -44,7 +68,7 @@
             <v-col cols="12">
               <v-data-table
                 :headers="headers"
-                :items="transactions"
+                :items="filteredTransactions"
                 :loading="transactionsLoading"
                 :items-per-page="50"
                 class="elevation-1"
@@ -124,7 +148,7 @@
 </template>
 
 <script setup>
-import { ref, inject, onMounted } from 'vue'
+import { ref, inject, onMounted,computed } from 'vue'
 import { usePowerCardImport } from '../../composables/usePowerCardImport'
 
 const api = inject('api')
@@ -133,6 +157,11 @@ const {
   fetchTransactions
 } = usePowerCardImport()
 
+const selectedProcessingCode = ref('')
+const selectedAction = ref('')
+const processingCodeOptions = ref(['WITHDRAWAL', 'Authentication Request', 'Balance Inquiry', 'Short statement request'])
+const actionOptions = ref(['Approved', 'Canceled', 'Reversal accepted','Rejected','No sufficient funds',])
+
 const selectedDate = ref('')
 const transactionsLoading = ref(false)
 const transactions = ref([])
@@ -140,15 +169,19 @@ const transactions = ref([])
 const headers = [
   { title: 'Reference', key: 'reference', width: 120 },
   { title: 'PAN', key: 'pan', width: 150 },
-  { title: 'Date/Heure', key: 'local_time', width: 180 },
-  { title: 'Montant', key: 'transaction_amount', width: 120 },
+  { title: 'Processing Code', key: 'processing_code', width: 150 },
   { title: 'Action', key: 'action', width: 120 },
-  { title: 'Terminal', key: 'terminal_no', width: 80 }
+  { title: 'Date/Heure', key: 'local_time', width: 180 },
+  { title: 'Montant', key: 'transaction_amount', width: 140 },
+  { title: 'Terminal', key: 'terminal_no', width: 100 },
+  { title: 'Import Date', key: 'import_date', width: 120 }
 ]
+
+
 
 const formatAmount = (amount) => {
   if (!amount) return '0 MGA'
-  return `${amount} MGA`
+  return `${amount}`
 }
 
 const formatDateTime = (dateTime) => {
@@ -179,6 +212,18 @@ const loadTransactions = async () => {
   }
 }
 
+const filteredTransactions = computed(() => {
+  return transactions.value.filter(item => {
+    if (selectedProcessingCode.value && item.processing_code !== selectedProcessingCode.value) {
+      return false
+    }
+    if (selectedAction.value && item.action !== selectedAction.value) {
+      return false
+    }
+    return true
+  })
+})
+
 onMounted(() => {
   setApiUrl(api)
 })
@@ -193,3 +238,4 @@ onMounted(() => {
   background-color: #f5f5f5;
 }
 </style>
+
