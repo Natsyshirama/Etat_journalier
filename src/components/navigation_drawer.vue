@@ -68,21 +68,9 @@ const list_menu =[
   //   access: 'all' 
   // },
   { 
-    icon: 'mdi-account-cash',  // ou mdi-bank-outline
-    title: 'Comptes', 
-    to: '/app/dav', 
-    access: 'all' 
-  },
-  { 
-    icon: 'mdi-earth',  // ou mdi-globe-model
-    title: 'Esri', 
-    to: '/app/esri', 
-    access: 'all' 
-  },
-  { 
-    icon: 'mdi-database-search', 
-    title: 'Vue Compte', 
-    to: '/app/generale', 
+    icon: 'mdi-database-import',  // ou mdi-swap-horizontal
+    title: 'Power Card', 
+    to: '/app/powercard', 
     access: 'admin' 
   },
   { 
@@ -90,12 +78,6 @@ const list_menu =[
     title: 'Agences', 
     to: '/app/Agence', 
     access: 'admin' 
-  },
-  { 
-    icon: 'mdi-bank-transfer',  // ou mdi-swap-horizontal-bold
-    title: 'Change', 
-    to: '/app/change', 
-    access: 'all' 
   },
   { 
     icon: 'mdi-shield-account',  // ou mdi-shield-crown

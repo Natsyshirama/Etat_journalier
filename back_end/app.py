@@ -1,7 +1,8 @@
 from fastapi import FastAPI
-from controller.Credits import Credits
+from controller.AgenceController import AgenceController
 from api.apiCompte import api_router2   
 from api.api import api_router
+from api.apiPowerCard import api_router_powercard
 from fastapi.middleware.cors import CORSMiddleware
 
 app = FastAPI()
@@ -20,12 +21,14 @@ app.add_middleware(
 )
 
  
-# Initialiser la classe Credits
-credits = Credits()
+# Initialiser la classe agence_controller
+agence_controller = AgenceController()
+
 
 # Enregistrer les routes de l'API
 app.include_router(api_router, prefix="/api")
 
 app.include_router(api_router2, prefix="/api")
 
-# Pour lancer : uvicorn app:app --reload --port 8081
+app.include_router(api_router_powercard, prefix="/api")
+
