@@ -93,9 +93,8 @@ class TransactionController:
         if not re.fullmatch(r"\d{8}", saisie_yyyymmdd):
             return {"success": False, "error": "date saisie invalide, format attendu YYYYMMDD", "data": []}
 
-        # convert YYYYMMDD -> yymmdd prefix
-        yymmdd = saisie_yyyymmdd[2:8]  # e.g. "20260705" -> "260705"
-        prefix_like = f"{yymmdd}%"
+        processing_date = datetime.strptime(saisie_yyyymmdd, "%Y%m%d").strftime("%Y-%m-%d")
+        
 
         conn = None
         try:
@@ -112,11 +111,11 @@ class TransactionController:
                     import_date,
                     created_at
                 FROM transact_t24
-                WHERE saisie_le LIKE :prefix
+                WHERE processing_date = :processing_date
                 ORDER BY saisie_le ASC
             """)
             conn = self.db.connect()
-            result = conn.execute(query, {"prefix": prefix_like})
+            result = conn.execute(query, {"processing_date": processing_date})
             rows = [dict(r) for r in result.mappings().all()]
 
             # parse saisie_le to datetimes, collect processing_date values
@@ -246,15 +245,10 @@ class TransactionController:
             t24_by_pan = {}
             t24_by_rrn = {}
             for row in t24_rows:
-                pan_key = self._normalize_pan(row.get('pan'))
                 rrn_key = self._normalize_reference(row.get('rrn'))
-                amount_key = self._normalize_amount(row.get('credit_amount'))
-                key = (pan_key, rrn_key, amount_key)
-                t24_index.setdefault(key, []).append(row)
-                if pan_key:
-                    t24_by_pan.setdefault(pan_key, []).append(row)
-                if rrn_key:
+                if rrn_key is not None:
                     t24_by_rrn.setdefault(rrn_key, []).append(row)
+                
 
             diff_rows = []
             for pc in pc_rows:
@@ -263,21 +257,25 @@ class TransactionController:
                 rrn_key = self._normalize_reference(pc.get('reference'))
                 amount_key = self._normalize_amount(pc.get('transaction_amount'))
 
-                matches = []
-                if pan_key is not None and rrn_key is not None:
-                    matches = t24_index.get((pan_key, rrn_key, amount_key), [])
-                if not matches and pan_key is not None:
-                    matches = t24_by_pan.get(pan_key, [])
-                if not matches and rrn_key is not None:
-                    matches = t24_by_rrn.get(rrn_key, [])
-
+                # 1) Matching prioritaire par RRN
+                matches = t24_by_rrn.get(rrn_key, []) if rrn_key is not None else []
                 has_match = len(matches) > 0
+
+                # 2) Verification de coherence du PAN sur les matches trouves
+                pan_matches = [m for m in matches if self._normalize_pan(m.get('pan')) == pan_key]
+                pan_coherent = len(pan_matches) > 0 if has_match else None
 
                 if action == 'approved' and not has_match:
                     diff_rows.append({
                         'type': 'approved_missing_in_t24',
                         'powercard': pc,
                         't24_matches': []
+                    })
+                elif action == 'approved' and has_match and not pan_coherent:
+                    diff_rows.append({
+                        'type': 'pan_incoherent',
+                        'powercard': pc,
+                        't24_matches': matches
                     })
                 elif action != 'approved' and has_match:
                     diff_rows.append({
@@ -349,12 +347,14 @@ class TransactionController:
                     pd = f"{pd[0:4]}-{pd[4:6]}-{pd[6:8]}"
                 counts[pd] = counts.get(pd, 0) + 1
 
-            if counts:
-                # choisir la date la plus fréquente (mode)
-                processing_date = max(counts.items(), key=lambda x: x[1])[0]
-            else:
-                # fallback : convertir saisie_yyyymmdd en YYYY-MM-DD
-                processing_date = datetime.strptime(saisie_yyyymmdd, "%Y%m%d").strftime("%Y-%m-%d")
+            if not counts:
+                return {
+                    "success": False,
+                    "error": "Aucune processing_date trouvée dans les transactions T24 pour la date saisie",
+                    "data": [],
+                }
+            processing_date = max(counts.items(), key=lambda x: x[1])[0]
+        
         except Exception as e:
             processing_date = datetime.strptime(saisie_yyyymmdd, "%Y%m%d").strftime("%Y-%m-%d")
 
