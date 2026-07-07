@@ -143,8 +143,7 @@ transaction_controller = TransactionController()
 @router.get("/t24/transactions")
 async def get_t24_transactions(
     import_date: str = Query(..., description="Date d'import au format YYYY-MM-DD"),
-    limit: int = Query(100, ge=1, le=1000),
-    offset: int = Query(0, ge=0)
+    
 ):
     """
     Récupérer les transactions T24 pour une date donnée
@@ -159,7 +158,7 @@ async def get_t24_transactions(
                 detail="Format de date invalide. Utilisez YYYY-MM-DD"
             )
 
-        result = transaction_controller.get_transactions_by_date(import_date, limit, offset)
+        result = transaction_controller.get_transactions_by_date(import_date)
 
         if not result["success"]:
             raise HTTPException(status_code=500, detail=result.get("error", "Erreur interne"))
@@ -169,6 +168,79 @@ async def get_t24_transactions(
             "data": result
         }
 
+    except HTTPException as he:
+        raise he
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+    
+@router.get("/t24/by_saisie")
+async def get_t24_by_saisie(
+    saisie: str = Query(..., description="Date saisie au format YYYYMMDD (ex: 20260705)")
+):
+    """
+    Récupérer les transactions T24 par préfixe `saisie_le` (format stocké: yymmddhhmm).
+    Retourne les transactions, start_datetime, end_datetime et processing_dates.
+    """
+    try:
+        # validation basique du format YYYYMMDD
+        from datetime import datetime
+        try:
+            datetime.strptime(saisie, "%Y%m%d")
+        except ValueError:
+            raise HTTPException(status_code=400, detail="Format invalide. Utilisez YYYYMMDD")
+
+        result = transaction_controller.get_transact_by_saisie(saisie)
+
+        if not result.get("success", False):
+            raise HTTPException(status_code=500, detail=result.get("error", "Erreur interne"))
+
+        return {
+            "status": "success",
+            "data": result
+        }
+
+    except HTTPException as he:
+        raise he
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+@router.post("/t24/insert_processing_date")
+async def insert_t24_processing_date(
+    saisie: str = Query(..., description="Date saisie au format YYYYMMDD")
+):
+    try:
+        from datetime import datetime
+        try:
+            datetime.strptime(saisie, "%Y%m%d")
+        except ValueError:
+            raise HTTPException(status_code=400, detail="Format invalide. Utilisez YYYYMMDD")
+
+        result = transaction_controller.insert_processing_date_to_power(saisie)
+        if not result.get("success", False):
+            raise HTTPException(status_code=500, detail=result.get("error", "Erreur interne"))
+
+        return {"status": "success", "data": result}
+    except HTTPException as he:
+        raise he
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+@router.get("/t24/diff")
+async def get_t24_diff(
+    processing_date: str = Query(..., description="Date de traitement au format YYYY-MM-DD")
+):
+    try:
+        from datetime import datetime
+        try:
+            datetime.strptime(processing_date, "%Y-%m-%d")
+        except ValueError:
+            raise HTTPException(status_code=400, detail="Format invalide. Utilisez YYYY-MM-DD")
+
+        result = transaction_controller.get_diff(processing_date)
+        if not result.get("success", False):
+            raise HTTPException(status_code=500, detail=result.get("error", "Erreur interne"))
+
+        return {"status": "success", "data": result}
     except HTTPException as he:
         raise he
     except Exception as e:

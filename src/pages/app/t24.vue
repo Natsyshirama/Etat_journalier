@@ -9,6 +9,10 @@
         <v-icon start>mdi-table</v-icon>
         Transactions
       </v-tab>
+      <v-tab value="diff">
+        <v-icon start>mdi-shape-outline</v-icon>
+        Différences
+      </v-tab>
     </v-tabs>
 
     <v-window v-model="activeTab">
@@ -18,6 +22,9 @@
       <v-window-item value="transactions">
         <T24TransactCard />
       </v-window-item>
+      <v-window-item value="diff">
+        <T24DiffCard />
+      </v-window-item>
     </v-window>
   </div>
 </template>
@@ -26,6 +33,7 @@
 import { ref } from 'vue'
 import T24Upload from '../../components/t24/t24Upload.vue'
 import T24TransactCard from '../../components/t24/t24TransactCard.vue'
+import T24DiffCard from '../../components/t24/t24DiffCard.vue'
 
 const activeTab = ref('import')
 </script>
