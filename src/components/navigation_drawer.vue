@@ -67,6 +67,12 @@ const list_menu =[
   //   to: '/app/credits', 
   //   access: 'all' 
   // },
+   { 
+     icon: 'mdi-database-import',  // ou mdi-office-building-outline
+    title: 't24', 
+    to: '/app/t24', 
+    access: 'admin'
+  },
   { 
     icon: 'mdi-database-import',  // ou mdi-swap-horizontal
     title: 'Power Card', 

@@ -117,7 +117,7 @@ class ImportPowerCardController:
             ]
 
             for col in df.columns:
-                df[col] = df[col].astype(str).apply(self._clean_cell)
+                df[col] = df[col].apply(self._clean_cell)
 
             print(f"[DEBUG] Colonnes trouvées: {list(df.columns)}")
             if not df.empty:
@@ -156,67 +156,124 @@ class ImportPowerCardController:
 
         for idx, row in df.iterrows():
             try:
-                external_stan = row.get('external_stan')
-                reference = row.get('reference')
-                source = row.get('source')
-                destination = row.get('destination')
-                message = row.get('message')
-                processing_code = row.get('processing_code')
-                action = row.get('action')
-                pan = row.get('pan')
-                local_time = self.convert_datetime(row.get('local_time'))
-                internal_time = self.convert_datetime(row.get('internal_time'))
-                transaction_amount = row.get('transaction_amount')
-                terminal_no = row.get('terminal_no')
-                acceptor_point = row.get('acceptor_point')
-                authorization_reference = row.get('authorization_reference')
-                current_table_indicator = row.get('current_table_indicator')
-                source_account_number = row.get('source_account_number')
 
-                if idx == 0:
-                    print(f"[DEBUG] Première ligne: external_stan={external_stan}, reference={reference}, processing_code={processing_code}")
+                params = {
+                    "external_stan": row.get("external_stan"),
+                    "reference": row.get("reference"),
+                    "source": row.get("source"),
+                    "destination": row.get("destination"),
+                    "message": row.get("message"),
+                    "processing_code": row.get("processing_code"),
+                    "action": row.get("action"),
+                    "pan": row.get("pan"),
+                    "local_time": self.convert_datetime(row.get("local_time")),
+                    "internal_time": self.convert_datetime(row.get("internal_time")),
+                    "transaction_amount": row.get("transaction_amount"),
+                    "terminal_no": row.get("terminal_no"),
+                    "acceptor_point": row.get("acceptor_point"),
+                    "authorization_reference": row.get("authorization_reference"),
+                    "current_table_indicator": row.get("current_table_indicator"),
+                    "source_account_number": row.get("source_account_number"),
+                    "import_date": import_date
+                }
+
+                # ======================================================
+                # Nettoyage COMPLET des valeurs avant insertion
+                # ======================================================
+
+                for key, value in params.items():
+
+                    if value is None:
+                        params[key] = None
+                        continue
+
+                    # Cas numpy.nan
+                    try:
+                        if pd.isna(value):
+                            params[key] = None
+                            continue
+                    except Exception:
+                        pass
+
+                    # Cas float nan
+                    if isinstance(value, float):
+                        if math.isnan(value):
+                            params[key] = None
+                            continue
+
+                    # Cas chaîne
+                    if isinstance(value, str):
+
+                        value = value.strip()
+
+                        if value == "":
+                            params[key] = None
+                            continue
+
+                        if value.lower() in ("nan", "none", "null"):
+                            params[key] = None
+                            continue
+
+                        params[key] = value
 
                 insert_sql = text("""
                     INSERT INTO transact_power_card (
-                        external_stan, reference, source, destination, message,
-                        processing_code, action, pan, local_time, internal_time,
-                        transaction_amount, terminal_no, acceptor_point,
-                        authorization_reference, current_table_indicator,
-                        source_account_number, import_date
-                    ) VALUES (
-                        :external_stan, :reference, :source, :destination, :message,
-                        :processing_code, :action, :pan, :local_time, :internal_time,
-                        :transaction_amount, :terminal_no, :acceptor_point,
-                        :authorization_reference, :current_table_indicator,
-                        :source_account_number, :import_date
+                        external_stan,
+                        reference,
+                        source,
+                        destination,
+                        message,
+                        processing_code,
+                        action,
+                        pan,
+                        local_time,
+                        internal_time,
+                        transaction_amount,
+                        terminal_no,
+                        acceptor_point,
+                        authorization_reference,
+                        current_table_indicator,
+                        source_account_number,
+                        import_date
+                    )
+                    VALUES (
+                        :external_stan,
+                        :reference,
+                        :source,
+                        :destination,
+                        :message,
+                        :processing_code,
+                        :action,
+                        :pan,
+                        :local_time,
+                        :internal_time,
+                        :transaction_amount,
+                        :terminal_no,
+                        :acceptor_point,
+                        :authorization_reference,
+                        :current_table_indicator,
+                        :source_account_number,
+                        :import_date
                     )
                 """)
 
-                conn.execute(insert_sql, {
-                    "external_stan": external_stan,
-                    "reference": reference,
-                    "source": source,
-                    "destination": destination,
-                    "message": message,
-                    "processing_code": processing_code,
-                    "action": action,
-                    "pan": pan,
-                    "local_time": local_time,
-                    "internal_time": internal_time,
-                    "transaction_amount": transaction_amount,
-                    "terminal_no": terminal_no,
-                    "acceptor_point": acceptor_point,
-                    "authorization_reference": authorization_reference,
-                    "current_table_indicator": current_table_indicator,
-                    "source_account_number": source_account_number,
-                    "import_date": import_date
-                })
+                conn.execute(insert_sql, params)
+
                 rows_inserted += 1
 
             except Exception as e:
-                error_msg = f"Ligne {idx + 2}: {str(e)}"
-                errors.append(error_msg)
-                print(f"[ERREUR] {error_msg}")
+
+                errors.append(f"Ligne {idx+2}: {e}")
+
+                print(f"\n==============================")
+                print(f"ERREUR Ligne {idx+2}")
+                print("==============================")
+
+                for k, v in params.items():
+                    print(f"{k} = {repr(v)}")
+
+                print(e)
+                print("==============================\n")
 
         return rows_inserted, errors
 

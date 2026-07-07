@@ -2,10 +2,12 @@ from fastapi import APIRouter, HTTPException, UploadFile, File, Query
 from typing import Optional
 from controller.PowerCardController import PowerCardController
 from controller.importPowerCardController import ImportPowerCardController
-
+from controller.importTransactT24Controller import ImportTransactT24Controller
 router = APIRouter()
 power_card_controller = PowerCardController()
 import_power_card_controller = ImportPowerCardController()
+import_t24 = ImportTransactT24Controller()
+
 
 @router.post("/powercard/import")
 async def import_power_card(
@@ -36,6 +38,47 @@ async def import_power_card(
             )
         
         result = import_power_card_controller.process_file(file, import_date)
+        
+        return {
+            "status": "success" if result["success"] else "error",
+            "data": result
+        }
+        
+    except HTTPException as he:
+        raise he
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@router.post("/t24/import")
+async def import_transaction_t24(
+    file: UploadFile = File(...),
+    import_date: str = Query(..., description="Date d'import au format YYYY-MM-DD")
+):
+    """
+    Importer un fichier T24
+    
+    Format du fichier: t24_YYYYMMDD.csv
+    Paramètre import_date: YYYY-MM-DD
+    """
+    try:
+        if not file.filename:
+            raise HTTPException(status_code=400, detail="Aucun fichier fourni")
+        
+        if not file.filename.lower().endswith('.csv'):
+            raise HTTPException(status_code=400, detail="Le fichier doit être au format CSV")
+        
+        # Valider le format de la date
+        from datetime import datetime
+        try:
+            datetime.strptime(import_date, '%Y-%m-%d')
+        except ValueError:
+            raise HTTPException(
+                status_code=400, 
+                detail="Format de date invalide. Utilisez YYYY-MM-DD"
+            )
+        
+        result = import_t24.process_file(file, import_date)
         
         return {
             "status": "success" if result["success"] else "error",
@@ -93,5 +136,42 @@ async def get_transactions(
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
+
+from controller.transactionController import TransactionController
+transaction_controller = TransactionController()
+
+@router.get("/t24/transactions")
+async def get_t24_transactions(
+    import_date: str = Query(..., description="Date d'import au format YYYY-MM-DD"),
+    limit: int = Query(100, ge=1, le=1000),
+    offset: int = Query(0, ge=0)
+):
+    """
+    Récupérer les transactions T24 pour une date donnée
+    """
+    try:
+        from datetime import datetime
+        try:
+            datetime.strptime(import_date, '%Y-%m-%d')
+        except ValueError:
+            raise HTTPException(
+                status_code=400,
+                detail="Format de date invalide. Utilisez YYYY-MM-DD"
+            )
+
+        result = transaction_controller.get_transactions_by_date(import_date, limit, offset)
+
+        if not result["success"]:
+            raise HTTPException(status_code=500, detail=result.get("error", "Erreur interne"))
+
+        return {
+            "status": "success",
+            "data": result
+        }
+
+    except HTTPException as he:
+        raise he
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
 
 api_router_powercard = router

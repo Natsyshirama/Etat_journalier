@@ -1,6 +1,6 @@
 import { ref } from 'vue'
 
-export function usePowerCardImport() {
+export function useT24CardImport() {
   const api = ref('')
   const loading = ref(false)
   const file = ref(null)
@@ -23,11 +23,11 @@ export function usePowerCardImport() {
         return false
       }
 
-      // Vérifier le format du nom: powercard_YYYYMMDD.csv
-      const pattern = /^powercard_\d{8}\.csv$/i
+      // Vérifier le format du nom: t24_YYYYMMDD.csv
+      const pattern = /^t24_\d{8}\.csv$/i
       if (!pattern.test(selectedFile.name)) {
         messageType.value = 'error'
-        message.value = 'Format de nom invalide. Utilisez: powercard_YYYYMMDD.csv'
+        message.value = 'Format de nom invalide. Utilisez: t24_YYYYMMDD.csv'
         return false
       }
 
@@ -60,7 +60,7 @@ export function usePowerCardImport() {
       formData.append('file', file.value)
 
       const response = await fetch(
-        `${api.value}/api/powercard/import?import_date=${importDate.value}`,
+        `${api.value}/api/t24/import?import_date=${importDate.value}`,
         {
           method: 'POST',
           body: formData,
@@ -68,7 +68,7 @@ export function usePowerCardImport() {
             'Authorization': `Bearer ${localStorage.getItem('access_token')}`
           }
         }
-        )
+      )
 
       uploadProgress.value = 100
 
@@ -99,65 +99,6 @@ export function usePowerCardImport() {
     }
   }
 
-const fetchStats = async (date = null) => {
-  try {
-    const url = date 
-      ? `${api.value}/api/powercard/stats?import_date=${date}`
-      : `${api.value}/api/powercard/stats`
-
-    const response = await fetch(url, {
-      headers: {
-        'Authorization': `Bearer ${localStorage.getItem('access_token')}`
-      }
-    })
-
-    const data = await response.json()
-
-    if (response.ok) {
-      return data.data?.data ?? data.data
-    } else {
-      throw new Error(data.detail || 'Erreur lors de la récupération des stats')
-    }
-  } catch (error) {
-    console.error('Erreur fetchStats:', error)
-    return null
-  }
-}
-
-  const normalizeDate = (date) => {
-  if (!date) return date
-  const parts = date.split('/')
-  if (parts.length === 3) {
-    return `${parts[2]}-${parts[1].padStart(2, '0')}-${parts[0].padStart(2, '0')}`
-  }
-  return date
-}
-
-  const fetchTransactions = async (date, limit = 100, offset = 0) => {
-    try {
-      const normalizedDate = normalizeDate(date)
-
-      const response = await fetch(
-        `${api.value}/api/powercard/transactions?import_date=${normalizedDate}&limit=${limit}&offset=${offset}`,
-        {
-          headers: {
-            'Authorization': `Bearer ${localStorage.getItem('access_token')}`
-          }
-        }
-      )
-
-      const data = await response.json()
-
-      if (response.ok) {
-        return data.data?.data ?? data.data
-      } else {
-        throw new Error(data.detail || 'Erreur lors de la récupération des transactions')
-      }
-    } catch (error) {
-      console.error('Erreur fetchTransactions:', error)
-      return []
-    }
-  }
 
   const clearMessage = () => {
     message.value = ''
@@ -176,8 +117,6 @@ const fetchStats = async (date = null) => {
     setImportDate,
     setApiUrl,
     uploadFile,
-    fetchStats,
-    fetchTransactions,
     clearMessage
   }
 }

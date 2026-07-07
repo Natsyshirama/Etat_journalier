@@ -99,6 +99,7 @@ class importController:
         except Exception as e:
             raise ValueError(f"Erreur lecture CSV {file.filename} : {e}")
     
+    
     def clean_dataframe(self, df: pd.DataFrame):
         """Nettoyer les colonnes et données du DataFrame"""
         if df.empty:
@@ -136,7 +137,7 @@ class importController:
         for row in df.to_dict(orient="records"):
             try:
                 clean_row = {
-                    k: (None if v is None or str(v).lower() in ["nan", "null", ""] else v)
+                    k: (None if pd.isna(v) else v)
                     for k, v in row.items()
                 }
                 
