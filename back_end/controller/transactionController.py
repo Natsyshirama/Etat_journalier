@@ -356,8 +356,11 @@ class TransactionController:
             processing_date = max(counts.items(), key=lambda x: x[1])[0]
         
         except Exception as e:
-            processing_date = datetime.strptime(saisie_yyyymmdd, "%Y%m%d").strftime("%Y-%m-%d")
-
+            return {
+                "success": False,
+                "error": f"Erreur lors de la détermination de processing_date : {e}",
+                "data": [],
+            }
         conn = None
         try:
             conn = self.db.connect()

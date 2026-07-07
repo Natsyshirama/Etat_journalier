@@ -68,8 +68,8 @@ const list_menu =[
   //   access: 'all' 
   // },
    { 
-     icon: 'mdi-database-import',  // ou mdi-office-building-outline
-    title: 't24', 
+     icon: 'mdi-database',  // ou mdi-office-building-outline
+    title: 'GAB Transactions', 
     to: '/app/t24', 
     access: 'admin'
   },
@@ -79,12 +79,7 @@ const list_menu =[
     to: '/app/powercard', 
     access: 'admin' 
   },
-  { 
-    icon: 'mdi-bank',  // ou mdi-office-building-outline
-    title: 'Agences', 
-    to: '/app/Agence', 
-    access: 'admin' 
-  },
+  
   { 
     icon: 'mdi-shield-account',  // ou mdi-shield-crown
     title: 'Utilisateurs', 
@@ -92,12 +87,6 @@ const list_menu =[
     access: 'admin', 
     badge: () => notificationStore.demandesValidation 
     
-  },
-  { 
-    icon: 'mdi-folder-multiple-outline',  // ou mdi-file-cabinet
-    title: 'Fichiers', 
-    to: '/app/file_manager', 
-    access: 'admin' 
   },
 ]
 

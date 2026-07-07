@@ -1,6 +1,7 @@
 import pandas as pd
 import re
 import io
+import math
 from fastapi import UploadFile
 from sqlalchemy import text
 from db.db import DB
