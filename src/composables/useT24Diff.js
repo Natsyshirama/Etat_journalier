@@ -9,6 +9,14 @@ export function useT24Diff() {
   const diffs = ref([])
   const count = ref(0)
 
+  const showReferenceDialog = ref(false)
+  const referenceDetail = ref('')
+  const referenceData = ref(null)
+  const referenceSource = ref('')
+
+  const startDateTime = ref(null)
+const endDateTime = ref(null)
+
   const setApiUrl = (apiUrl) => {
     api.value = apiUrl
   }
@@ -16,6 +24,8 @@ export function useT24Diff() {
   const clearMessage = () => {
     message.value = ''
     messageType.value = ''
+    startDateTime.value = null
+    endDateTime.value = null
   }
 
   const fetchDiffs = async () => {
@@ -40,6 +50,9 @@ export function useT24Diff() {
       const data = await response.json()
 
       if (response.ok && data.status === 'success') {
+        const payload = data.data ?? data
+        startDateTime.value = payload.start_datetime ?? null
+        endDateTime.value = payload.end_datetime ?? null
         diffs.value = (data.data.data || []).map((item) => ({
           ...item,
           t24_matches_count: item.t24_matches?.length || 0,
@@ -62,6 +75,69 @@ export function useT24Diff() {
       loading.value = false
     }
   }
+  
+const openT24Reference = async (reference) => {
+  if (!reference) return
+  loading.value = true
+  try {
+    const response = await fetch(
+      `${api.value}/api/t24/transactions/by_reference?reference=${encodeURIComponent(reference)}`,
+      {
+        headers: {
+          Authorization: `Bearer ${localStorage.getItem('access_token')}`
+        }
+      }
+    )
+    const data = await response.json()
+
+    if (response.ok && data.status === 'success') {
+      referenceDetail.value = reference
+      referenceData.value = Array.isArray(data.data) ? data.data[0] ?? null : data.data
+      referenceSource.value = 'T24'
+      showReferenceDialog.value = true
+    } else {
+      messageType.value = 'error'
+      message.value = `Erreur: ${data.detail || data.data?.error || 'Impossible de charger le détail'}`
+    }
+  } catch (err) {
+    messageType.value = 'error'
+    message.value = `Erreur: ${err.message}`
+  } finally {
+    loading.value = false
+  }
+}
+
+
+  const openPowerCardReference = async (reference) => {
+    if (!reference) return
+    loading.value = true
+    try {
+      const response = await fetch(
+        `${api.value}/api/powercard/transactions/by_reference?reference=${encodeURIComponent(reference)}`,
+        {
+          headers: {
+            Authorization: `Bearer ${localStorage.getItem('access_token')}`
+          }
+        }
+      )
+      const data = await response.json()
+
+      if (response.ok && data.status === 'success') {
+        referenceDetail.value = reference
+        referenceData.value = Array.isArray(data.data) ? data.data[0] ?? null : data.data
+        referenceSource.value = 'PowerCard'
+        showReferenceDialog.value = true
+      } else {
+        messageType.value = 'error'
+        message.value = `Erreur: ${data.detail || data.data?.error || 'Impossible de charger le détail'}`
+      }
+    } catch (err) {
+      messageType.value = 'error'
+      message.value = `Erreur: ${err.message}`
+    } finally {
+      loading.value = false
+    }
+  }
 
   return {
     api,
@@ -71,8 +147,16 @@ export function useT24Diff() {
     messageType,
     diffs,
     count,
+    showReferenceDialog,
+    referenceDetail,
+    referenceData,
+    referenceSource,
     setApiUrl,
     fetchDiffs,
-    clearMessage
+    clearMessage,
+    openT24Reference,
+    openPowerCardReference,
+    startDateTime,
+    endDateTime
   }
 }

@@ -5,7 +5,64 @@ class PowerCardController:
     def __init__(self):
         self.db = DB()
 
-    def get_transactions_by_date(self, import_date: str, limit: int = 100, offset: int = 0):
+    def get_transact_by_reference(self, reference: str):
+        if not reference or not str(reference).strip():
+            return {"success": False, "error": "Reference vide", "data": []}
+
+        ref = str(reference).strip()
+
+        conn = None
+        try:
+            query = text("""
+                SELECT
+                    id,
+                    external_stan,
+                    reference,
+                    source,
+                    destination,
+                    message,
+                    processing_code,
+                    action,
+                    pan,
+                    DATE_FORMAT(local_time, '%Y-%m-%d %H:%i:%s') AS local_time,
+                    DATE_FORMAT(internal_time, '%Y-%m-%d %H:%i:%s') AS internal_time,
+                    transaction_amount,
+                    terminal_no,
+                    acceptor_point,
+                    authorization_reference,
+                    current_table_indicator,
+                    source_account_number,
+                    DATE_FORMAT(import_date, '%Y-%m-%d') AS import_date,
+                    DATE_FORMAT(created_at, '%Y-%m-%d %H:%i:%s') AS created_at
+                FROM transact_power_card
+                WHERE reference = :reference
+                ORDER BY local_time DESC
+            """)
+
+            conn = self.db.connect()
+            result = conn.execute(query, {"reference": ref})
+
+            rows = [dict(zip(result.keys(), row)) for row in result.fetchall()]
+
+            return {
+                "success": True,
+                "data": rows,
+                "count": len(rows)
+            }
+
+        except Exception as e:
+            print(f"[ERREUR] Impossible de récupérer la transaction Power Card par référence : {e}")
+            return {
+                "success": False,
+                "error": str(e),
+                "data": []
+            }
+        finally:
+            if conn:
+                conn.close()
+
+
+    def get_transactions_by_date(self, local_time: str, limit: int = 100, offset: int = 0):
         """
         Récupérer les transactions Power Card pour une date donnée
         """
@@ -33,7 +90,7 @@ class PowerCardController:
                     DATE_FORMAT(import_date, '%Y-%m-%d') AS import_date,
                     DATE_FORMAT(created_at, '%Y-%m-%d %H:%i:%s') AS created_at
                 FROM transact_power_card
-                WHERE import_date = :import_date
+                WHERE local_time LIKE :local_time
                 ORDER BY local_time DESC
                 LIMIT :limit
                 OFFSET :offset
@@ -41,7 +98,7 @@ class PowerCardController:
 
             conn = self.db.connect()
             result = conn.execute(query, {
-                "import_date": import_date,
+                "local_time": f"{local_time}%",
                 "limit": limit,
                 "offset": offset
             })

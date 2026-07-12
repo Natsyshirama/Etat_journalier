@@ -6,6 +6,51 @@ import re
 class TransactionController:
     def __init__(self):
         self.db = DB()
+    
+    def get_transactions_by_reference(self, reference: str):
+        if not reference or not str(reference).strip():
+            return {"success": False, "error": "Reference vide", "data": []}
+
+        ref = str(reference).strip()
+
+        conn = None
+        try:
+            query = text("""
+                SELECT
+                    id,
+                    account_number,
+                    credit_amount,
+                    DATE_FORMAT(processing_date, '%Y-%m-%d') AS processing_date,
+                    pan,
+                    rrn,
+                    compte_db_cions,
+                    saisie_le,
+                    DATE_FORMAT(import_date, '%Y-%m-%d') AS import_date,
+                    DATE_FORMAT(created_at, '%Y-%m-%d %H:%i:%s') AS created_at
+                FROM transact_t24
+                WHERE rrn = :reference
+                ORDER BY processing_date DESC
+            """)
+            conn = self.db.connect()
+            result = conn.execute(query, {"reference": ref})
+            rows = [dict(zip(result.keys(), row)) for row in result.fetchall()]
+
+            return {
+                "success": True,
+                "data": rows,
+                "count": len(rows)
+            }
+
+        except Exception as e:
+            print(f"[ERREUR] Impossible de récupérer les transactions T24 par référence : {e}")
+            return {
+                "success": False,
+                "error": str(e),
+                "data": []
+            }
+        finally:
+            if conn:
+                conn.close()
 
     def get_transactions_by_date(self, import_date: str ):
         conn = None
@@ -23,24 +68,31 @@ class TransactionController:
                     DATE_FORMAT(import_date, '%Y-%m-%d') AS import_date,
                     DATE_FORMAT(created_at, '%Y-%m-%d %H:%i:%s') AS created_at
                 FROM transact_t24
-                WHERE import_date = :import_date
+                WHERE processing_date = :import_date
                 ORDER BY processing_date DESC
-                
             """)
 
             conn = self.db.connect()
-            result = conn.execute(query, {
-                "import_date": import_date
-                
-            })
+            result = conn.execute(query, {"import_date": import_date})
 
             columns = result.keys()
             data = [dict(zip(columns, row)) for row in result.fetchall()]
 
+            parsed_datetimes = []
+            for row in data:
+                dt = self._parse_saisie_le(row.get("saisie_le"))
+                if dt:
+                    parsed_datetimes.append(dt)
+
+            start_dt = min(parsed_datetimes).strftime("%Y-%m-%d %H:%M:%S") if parsed_datetimes else None
+            end_dt = max(parsed_datetimes).strftime("%Y-%m-%d %H:%M:%S") if parsed_datetimes else None
+
             return {
                 "success": True,
                 "data": data,
-                "count": len(data)
+                "count": len(data),
+                "start_datetime": start_dt,
+                "end_datetime": end_dt
             }
 
         except Exception as e:
@@ -240,9 +292,16 @@ class TransactionController:
 
             pc_rows = [dict(r) for r in conn.execute(query_pc, {"processing_date": processing_date}).mappings().all()]
             t24_rows = [dict(r) for r in conn.execute(query_t24, {"processing_date": processing_date}).mappings().all()]
-
-            t24_index = {}
-            t24_by_pan = {}
+            parsed_datetimes = []
+            
+            for row in t24_rows:
+                dt = self._parse_saisie_le(row.get("saisie_le"))
+                if dt:
+                    parsed_datetimes.append(dt)
+                    
+            start_dt = min(parsed_datetimes).strftime("%Y-%m-%d %H:%M:%S") if parsed_datetimes else None
+            end_dt = max(parsed_datetimes).strftime("%Y-%m-%d %H:%M:%S") if parsed_datetimes else None
+            
             t24_by_rrn = {}
             for row in t24_rows:
                 rrn_key = self._normalize_reference(row.get('rrn'))
@@ -289,7 +348,9 @@ class TransactionController:
                 'count': len(diff_rows),
                 'data': diff_rows,
                 'powercard_count': len(pc_rows),
-                't24_count': len(t24_rows)
+                't24_count': len(t24_rows),
+                'start_datetime': start_dt,
+                'end_datetime': end_dt
             }
 
         except Exception as e:

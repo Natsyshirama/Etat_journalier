@@ -8,6 +8,8 @@ export function useTransactions() {
   const messageType = ref('')
   const transactions = ref([])
   const count = ref(0)
+  const startDateTime = ref(null)
+  const endDateTime = ref(null)
 
   const setApiUrl = (apiUrl) => {
     api.value = apiUrl
@@ -48,7 +50,9 @@ export function useTransactions() {
 
       if (response.ok && data.status === 'success') {
         transactions.value = data.data.data ?? data.data
-        count.value = data.data.count ?? transactions.value.length
+        count.value = data.data.count ?? data.count ?? transactions.value.length
+        startDateTime.value = data.data.start_datetime ?? data.start_datetime ?? null
+        endDateTime.value = data.data.end_datetime ?? data.end_datetime ?? null
         messageType.value = 'success'
         message.value = `✅ ${count.value} transactions chargées`
         return true
@@ -70,6 +74,8 @@ export function useTransactions() {
   const clearMessage = () => {
     message.value = ''
     messageType.value = ''
+    startDateTime.value = null
+    endDateTime.value = null
   }
 
   return {
@@ -80,6 +86,8 @@ export function useTransactions() {
     messageType,
     transactions,
     count,
+    startDateTime,
+    endDateTime,
     setApiUrl,
     fetchTransactions,
     clearMessage

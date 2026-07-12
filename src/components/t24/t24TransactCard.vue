@@ -34,6 +34,21 @@
           </v-col>
         </v-row>
 
+        <v-row v-if="startDateTime || endDateTime" class="mb-4">
+          <v-col cols="12" sm="6">
+            <v-card class="pa-3">
+              <div class="text-subtitle-2">Début saisie_le</div>
+              <div>{{ startDateTime ?? 'Aucune date disponible' }}</div>
+            </v-card>
+          </v-col>
+          <v-col cols="12" sm="6">
+            <v-card class="pa-3">
+              <div class="text-subtitle-2">Fin saisie_le</div>
+              <div>{{ endDateTime ?? 'Aucune date disponible' }}</div>
+            </v-card>
+          </v-col>
+        </v-row>
+
         <v-row v-if="transactions.length">
           <v-col cols="12">
             <v-data-table
@@ -71,6 +86,8 @@ const {
   messageType,
   transactions,
   count,
+  startDateTime,
+  endDateTime,
   setApiUrl,
   fetchTransactions,
   clearMessage

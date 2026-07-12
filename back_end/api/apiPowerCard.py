@@ -90,6 +90,29 @@ async def import_transaction_t24(
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
+@router.get("/powercard/transactions/by_reference")
+async def get_powercard_transactions_by_reference(
+    reference: str = Query(..., description="Référence de transaction Power Card")
+):
+    """
+    Récupérer les transactions Power Card par référence.
+    """
+    try:
+        result = power_card_controller.get_transact_by_reference(reference)
+
+        if not result.get("success", False):
+            raise HTTPException(status_code=500, detail=result.get("error", "Erreur interne"))
+
+        return {
+            "status": "success",
+            "data": result["data"],
+            "count": result.get("count", 0)
+        }
+
+    except HTTPException as he:
+        raise he
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
 
 @router.get("/powercard/stats")
 async def get_power_card_stats(import_date: Optional[str] = Query(None, description="Date au format YYYY-MM-DD")):
@@ -165,7 +188,35 @@ async def get_t24_transactions(
 
         return {
             "status": "success",
-            "data": result
+            "data": result["data"],
+            "count": result.get("count", 0),
+            "start_datetime": result.get("start_datetime"),
+            "end_datetime": result.get("end_datetime")
+                }
+        
+
+    except HTTPException as he:
+        raise he
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+@router.get("/t24/transactions/by_reference")
+async def get_t24_transactions_by_reference(
+    reference: str = Query(..., description="Référence T24 à rechercher (RRN)")
+):
+    """
+    Récupérer les transactions T24 par référence.
+    """
+    try:
+        result = transaction_controller.get_transactions_by_reference(reference)
+
+        if not result.get("success", False):
+            raise HTTPException(status_code=500, detail=result.get("error", "Erreur interne"))
+
+        return {
+            "status": "success",
+            "data": result["data"],
+            "count": result.get("count", 0)
         }
 
     except HTTPException as he:
@@ -173,6 +224,7 @@ async def get_t24_transactions(
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
     
+
 @router.get("/t24/by_saisie")
 async def get_t24_by_saisie(
     saisie: str = Query(..., description="Date saisie au format YYYYMMDD (ex: 20260705)")

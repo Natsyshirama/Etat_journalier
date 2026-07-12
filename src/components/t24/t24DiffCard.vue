@@ -22,6 +22,21 @@
             </v-col>
           </v-row>
 
+          <v-row v-if="startDateTime || endDateTime" class="mb-4">
+            <v-col cols="12" sm="6">
+              <v-card class="pa-3">
+                <div class="text-subtitle-2">Début saisie_le</div>
+                <div>{{ startDateTime ?? 'Aucune date disponible' }}</div>
+              </v-card>
+            </v-col>
+            <v-col cols="12" sm="6">
+              <v-card class="pa-3">
+                <div class="text-subtitle-2">Fin saisie_le</div>
+                <div>{{ endDateTime ?? 'Aucune date disponible' }}</div>
+              </v-card>
+            </v-col>
+          </v-row>
+
           <v-row v-if="message">
             <v-col cols="12">
               <v-alert :type="messageType" dense>
@@ -39,7 +54,7 @@
                 class="elevation-1"
               >
                 <template #item.powercard="{ item }">
-                  <div>
+                  <div @click="openPowerCardReference(item.powercard.reference)" class="reference-link">
                     <div><strong>PAN:</strong> {{ item.powercard.pan }}</div>
                     <div><strong>Réf.:</strong> {{ item.powercard.reference }}</div>
                     <div><strong>Action:</strong> {{ item.powercard.action }}</div>
@@ -51,7 +66,12 @@
                     <div><strong>{{ item.t24_matches_count }} match(s)</strong></div>
                     <div v-if="item.t24_matches.length">
                       <ul class="match-list">
-                        <li v-for="(match, index) in item.t24_matches" :key="index">
+                        <li
+                          v-for="(match, index) in item.t24_matches"
+                          :key="index"
+                          class="reference-link"
+                          @click="openT24Reference(match.rrn)"
+                        >
                           {{ match.pan }} / {{ match.rrn }} / {{ match.credit_amount }} / {{ match.saisie_le }}
                         </li>
                       </ul>
@@ -70,6 +90,32 @@
         </v-container>
       </v-card-text>
     </v-card>
+    <v-dialog v-model="showReferenceDialog" max-width="800px">
+  <v-card>
+    <v-card-title>Détail {{ referenceSource }} - {{ referenceDetail }}</v-card-title>
+    <v-card-text>
+      <v-simple-table v-if="referenceData">
+        <thead>
+          <tr>
+            <th>Champ</th>
+            <th>Valeur</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr v-for="field in referenceSource === 'T24' ? referenceFieldsT24 : referenceFields" :key="field">
+            <td>{{ field }}</td>
+            <td>{{ referenceData[field] }}</td>
+          </tr>
+        </tbody>
+      </v-simple-table>
+      <div v-else>Aucun détail disponible</div>
+    </v-card-text>
+    <v-card-actions>
+      <v-spacer />
+      <v-btn text @click="showReferenceDialog = false">Fermer</v-btn>
+    </v-card-actions>
+  </v-card>
+</v-dialog>
   </div>
 </template>
 
@@ -78,6 +124,39 @@ import { onMounted, inject } from 'vue'
 import { useT24Diff } from '../../composables/useT24Diff'
 
 const api = inject('api')
+const referenceFieldsT24 = [
+  'id',
+  'account_number',
+  'credit_amount',
+  'processing_date',
+  'pan',
+  'rrn',
+  'compte_db_cions',
+  'saisie_le',
+  'import_date',
+  'created_at'
+]
+const referenceFields = [
+  'id',
+  'external_stan',
+  'reference',
+  'source',
+  'destination',
+  'message',
+  'processing_code',
+  'action',
+  'pan',
+  'local_time',
+  'internal_time',
+  'transaction_amount',
+  'terminal_no',
+  'acceptor_point',
+  'authorization_reference',
+  'current_table_indicator',
+  'source_account_number',
+  'import_date',
+  'created_at'
+]
 const {
   processingDate,
   loading,
@@ -85,11 +164,18 @@ const {
   messageType,
   diffs,
   count,
+  showReferenceDialog,
+  referenceDetail,
+  referenceData,
   setApiUrl,
   fetchDiffs,
-  clearMessage
+  clearMessage,
+  openPowerCardReference,
+  openT24Reference,
+  referenceSource,
+  startDateTime,
+  endDateTime
 } = useT24Diff()
-
 const headers = [
   { title: 'Type', key: 'type' },
   { title: 'PowerCard', key: 'powercard' },
