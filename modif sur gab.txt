@@ -1,0 +1,50 @@
+tableau de board 
+changer le conception 
+afficher les total transaction par date ou durre periode
+
+power card
+
+pour eviter le duplication :
+	 afficher les date heure de derrnier local date
+	lors de importion afficher une notif  si une ligne est anterieur a celle de precedent , attente de validation de continuation
+	
+sur importation on peut effectuer une importation durant une periode
+
+sur le fonctionnaliter insert processing date to POWER CARD:
+
+modifier sur le logique : permettre de effectuer sur une periode
+	si on il y date debut et date fin
+	cree une fonctionnalite insert_processing_date_to_power_many(date debut et date fin)
+	
+qui vas utiliser les fonction suivant
+	creation une fonction get-transact-by-date(date debut et date fin)
+		getListeProcessing date(date debut et date fin)
+		selection sur t24 . processing date 
+		retuner les liste processing date avec leur start date time et end date time de chaque 
+
+	update de power card utilisant les retour de fonction get-transact-by-date(date debut et date fin)
+
+	si au cas ou il y a des ligne pas encore effectuer apres le premier update il seras mis automatiquement par le date apres
+	retourner liste de processinge date effectuer avec le nombre de ligne chaque et date start time et end time chaqun
+
+creation une table historiqueTransformation
+	inserer lesliste processign date et leur start date et end date avec status isTransform
+
+fenetre pour inserer le fonctionnaliter insert processing- date- to-power-many
+	une autre fenetre
+
+t24
+modif sur get difference 
+	selectionner si une seule date ou plusieure
+	si plusieur cree une fonctionne get_diff_many(date debut et date fin)
+	getListeProcessing date(date debut et date fin)
+		selection sur t24.processingDate
+		retouner liste processing date avec chacun leur strat date et end date 
+	verifier si il y a des processing date qui existe dans le t24 mais pas encore dans le pwerCard
+	on vas le diriger vers le insert_processing_date_to_power
+	cree une fonctin qui vas prendre les difss entre le premier processing_date et dernier processinge date sur t24 et power card
+
+ajouter une colonne processing date su chaque ligne trouver
+	
+	 
+
