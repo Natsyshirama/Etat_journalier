@@ -1,12 +1,14 @@
 tableau de board 
 changer le conception 
-afficher les total transaction par date ou durre periode
+afficher les liste date qui sont inclut dans ces statistique
+afficher les nombre et total transaction approuved, canceled et les autre sur une vue global 
+permetre filtrer par date et par periode 
 
 power card
 
 pour eviter le duplication :
 	 afficher les date heure de derrnier local date
-	lors de importion afficher une notif  si une ligne est anterieur a celle de precedent , attente de validation de continuation
+	lors de importion afficher une notif  si une ligne est anterieur a celle de precedent , attente de validation de continuation ou annuler le importation
 	
 sur importation on peut effectuer une importation durant une periode
 
@@ -45,6 +47,8 @@ modif sur get difference
 	cree une fonctin qui vas prendre les difss entre le premier processing_date et dernier processinge date sur t24 et power card
 
 ajouter une colonne processing date su chaque ligne trouver
+modif si type == approved_missing_in_t24
+on modifier les colonne a afficher
 	
 	 
 
