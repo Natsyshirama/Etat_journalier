@@ -120,6 +120,21 @@ class TransactionManyController:
                 if not start_dt or not end_dt:
                     continue
 
+                count_sql = text("""
+                    SELECT COUNT(*) AS cnt
+                    FROM transact_power_card
+                    WHERE local_time BETWEEN :start_dt AND :end_dt
+                """)
+                count_row = conn.execute(count_sql, {
+                    "start_dt": start_dt,
+                    "end_dt": end_dt
+                }).fetchone()
+                total_in_range = int(count_row[0]) if count_row and count_row[0] is not None else 0
+
+                warning = None
+                if total_in_range == 0:
+                    warning = f"Aucune transaction PowerCard trouvée entre {start_dt} et {end_dt}"
+
                 exact_sql = text("""
                     UPDATE transact_power_card
                     SET processing_date = :processing_date
@@ -153,6 +168,8 @@ class TransactionManyController:
                     "processing_date": processing_date,
                     "start_datetime": start_dt,
                     "end_datetime": end_dt,
+                    "rows_in_range": total_in_range,
+                    "warning": warning,
                     "exact_updated_rows": exact_count,
                     "auto_updated_rows": auto_count,
                     "total_updated_rows": exact_count + auto_count
