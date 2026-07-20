@@ -40,43 +40,20 @@
           </v-row>
 
           <!-- Single Date Stats -->
-          <v-row v-else-if="selectedDate && singleStats">
+          <v-row v-else-if="singleStats">
+            
             <v-col cols="12" sm="6" md="3">
               <v-card class="stat-card blue">
                 <v-card-text>
-                  <p class="stat-label">Total Transactions</p>
-                  <p class="stat-value">{{ singleStats.total_transactions }}</p>
-                </v-card-text>
-              </v-card>
-            </v-col>
-            <v-col cols="12" sm="6" md="3">
-              <v-card class="stat-card green">
-                <v-card-text>
-                  <p class="stat-label">Approuvées</p>
-                  <p class="stat-value">{{ singleStats.approved_count }}</p>
-                </v-card-text>
-              </v-card>
-            </v-col>
-            <v-col cols="12" sm="6" md="3">
-              <v-card class="stat-card red">
-                <v-card-text>
-                  <p class="stat-label">Rejetées</p>
-                  <p class="stat-value">{{ singleStats.rejected_count }}</p>
-                </v-card-text>
-              </v-card>
-            </v-col>
-            <v-col cols="12" sm="6" md="3">
-              <v-card class="stat-card purple">
-                <v-card-text>
-                  <p class="stat-label">Montant Total</p>
-                  <p class="stat-value">{{ formatAmount(singleStats.total_amount) }}</p>
+                  <p class="stat-label">Total transactions WITHDRAWAL</p>
+                  <p class="stat-value">{{ singleStats.withdrawal_total_transactions }}</p>
                 </v-card-text>
               </v-card>
             </v-col>
             <v-col cols="12" sm="6" md="3">
               <v-card class="stat-card orange">
                 <v-card-text>
-                  <p class="stat-label">Total WITHDRAW</p>
+                  <p class="stat-label">Montant total WITHDRAWAL</p>
                   <p class="stat-value">{{ formatAmount(singleStats.withdrawal_total_amount) }}</p>
                 </v-card-text>
               </v-card>
@@ -134,6 +111,25 @@
               />
             </v-col>
           </v-row>
+
+          <!-- Single Date Actions -->
+          <v-row v-if="singleStats && singleStats.actions?.length">
+            <v-col
+              v-for="action in singleStats.actions"
+              :key="action.action"
+              cols="12"
+              sm="6"
+              md="4"
+            >
+              <v-card class="stat-card grey darken-1">
+                <v-card-text>
+                  <p class="stat-label">{{ action.action }}</p>
+                  <p class="stat-value">{{ action.count }}</p>
+                  <p class="stat-small">Montant : {{ formatAmount(action.amount) }}</p>
+                </v-card-text>
+              </v-card>
+            </v-col>
+          </v-row>
         </v-container>
       </v-card-text>
     </v-card>
@@ -153,7 +149,6 @@ const {
 const selectedDate = ref('')
 const statsLoading = ref(false)
 const singleStats = ref(null)
-const allStats = ref([])
 
 const headers = [
   { title: 'Date', key: 'import_date' },
@@ -172,18 +167,13 @@ const formatAmount = (amount) => {
 
 const loadStats = async () => {
   statsLoading.value = true
+
   try {
     const stats = await fetchStats(selectedDate.value || null)
-
-    if (selectedDate.value) {
-      singleStats.value = stats
-      allStats.value = []
-    } else {
-      allStats.value = Array.isArray(stats) ? stats : []
-      singleStats.value = null
-    }
+    singleStats.value = stats
   } catch (error) {
     console.error('Erreur chargement stats:', error)
+    singleStats.value = null
   } finally {
     statsLoading.value = false
   }
@@ -223,6 +213,14 @@ onMounted(() => {
 
 .stat-card.purple {
   border-left-color: #9c27b0;
+}
+
+.stat-card.orange {
+  border-left-color: #f57c00;
+}
+
+.stat-card.blue {
+  border-left-color: #2196f3;
 }
 
 .stat-card.orange {

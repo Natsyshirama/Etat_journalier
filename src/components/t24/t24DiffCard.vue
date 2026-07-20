@@ -22,6 +22,55 @@
             </v-col>
           </v-row>
 
+          <v-row>
+            <v-col cols="12" sm="4">
+              <v-select
+                v-model="mode"
+                :items="modeItems"
+                label="Mode de traitement"
+                :disabled="loading"
+                outlined
+                dense
+              />
+            </v-col>
+          </v-row>
+
+          <v-row v-if="mode === 'single'">
+            <v-col cols="12" sm="4">
+              <v-text-field
+                v-model="processingDate"
+                type="date"
+                label="Date de traitement"
+                :disabled="loading"
+                outlined
+                dense
+              />
+            </v-col>
+          </v-row>
+
+          <v-row v-else>
+            <v-col cols="12" sm="4">
+              <v-text-field
+                v-model="startDate"
+                type="date"
+                label="Date début"
+                :disabled="loading"
+                outlined
+                dense
+              />
+            </v-col>
+            <v-col cols="12" sm="4">
+              <v-text-field
+                v-model="endDate"
+                type="date"
+                label="Date fin"
+                :disabled="loading"
+                outlined
+                dense
+              />
+            </v-col>
+          </v-row>
+
           <v-row v-if="startDateTime || endDateTime" class="mb-4">
             <v-col cols="12" sm="6">
               <v-card class="pa-3">
@@ -78,6 +127,9 @@
                     </div>
                   </div>
                 </template>
+                <template #item.processing_date="{ item }">
+                  {{ item.processing_date || '-' }}
+                </template>
               </v-data-table>
             </v-col>
           </v-row>
@@ -123,7 +175,7 @@
 import { onMounted, inject } from 'vue'
 import { useT24Diff } from '../../composables/useT24Diff'
 
-const api = inject('api')
+const apiUrl = inject('api')
 const referenceFieldsT24 = [
   'id',
   'account_number',
@@ -136,6 +188,12 @@ const referenceFieldsT24 = [
   'import_date',
   'created_at'
 ]
+
+const modeItems = [
+  { title: 'Date unique', value: 'single' },
+  { title: 'Période', value: 'range' }
+]
+
 const referenceFields = [
   'id',
   'external_stan',
@@ -158,8 +216,12 @@ const referenceFields = [
   'created_at'
 ]
 const {
-  processingDate,
+  api,
   loading,
+  processingDate,
+  startDate,
+  endDate,
+  mode,
   message,
   messageType,
   diffs,
@@ -174,9 +236,11 @@ const {
   openT24Reference,
   referenceSource,
   startDateTime,
-  endDateTime
+  endDateTime,
+  
 } = useT24Diff()
 const headers = [
+  { title: 'Processing Date', key: 'processing_date' },
   { title: 'Type', key: 'type' },
   { title: 'PowerCard', key: 'powercard' },
   { title: 'Matches T24', key: 't24_matches' }
@@ -188,7 +252,7 @@ const handleFetch = async () => {
 }
 
 onMounted(() => {
-  setApiUrl(api)
+  setApiUrl(apiUrl)
 })
 </script>
 

@@ -4,6 +4,9 @@ export function useT24Diff() {
   const api = ref('')
   const loading = ref(false)
   const processingDate = ref('')
+  const startDate = ref('')
+  const endDate = ref('')
+  const mode = ref('single')
   const message = ref('')
   const messageType = ref('')
   const diffs = ref([])
@@ -31,35 +34,80 @@ const endDateTime = ref(null)
   const fetchDiffs = async () => {
     clearMessage()
 
-    if (!processingDate.value) {
-      messageType.value = 'error'
-      message.value = 'Veuillez sélectionner une date de traitement'
-      return false
+    if (mode.value === 'single') {
+      if (!processingDate.value) {
+        messageType.value = 'error'
+        message.value = 'Veuillez sélectionner une date de traitement'
+        return false
+      }
+    } else {
+      if (!startDate.value || !endDate.value) {
+        messageType.value = 'error'
+        message.value = 'Veuillez sélectionner une date de début et une date de fin'
+        return false
+      }
     }
 
     loading.value = true
     try {
-      const response = await fetch(
-        `${api.value}/api/t24/diff?processing_date=${processingDate.value}`,
-        {
-          headers: {
-            Authorization: `Bearer ${localStorage.getItem('access_token')}`
-          }
+      let url = ''
+      if (mode.value === 'single') {
+        url = `${api.value}/api/t24/diff?processing_date=${processingDate.value}`
+      } else {
+        const start = startDate.value.replace(/-/g, '')
+        const end = endDate.value.replace(/-/g, '')
+        url = `${api.value}/api/t24/diff_many?start_date=${start}&end_date=${end}`
+      }
+
+      const response = await fetch(url, {
+        headers: {
+          Authorization: `Bearer ${localStorage.getItem('access_token')}`
         }
-      )
+      })
       const data = await response.json()
 
       if (response.ok && data.status === 'success') {
         const payload = data.data ?? data
-        startDateTime.value = payload.start_datetime ?? null
-        endDateTime.value = payload.end_datetime ?? null
-        diffs.value = (data.data.data || []).map((item) => ({
-          ...item,
-          t24_matches_count: item.t24_matches?.length || 0,
-        }))
-        count.value = data.data.count || diffs.value.length
+
+        if (mode.value === 'single') {
+          startDateTime.value = payload.start_datetime ?? null
+          endDateTime.value = payload.end_datetime ?? null
+          diffs.value = (payload.data || []).map((item) => ({
+            ...item,
+            t24_matches_count: item.t24_matches?.length || 0,
+            processing_date: item.processing_date || processingDate.value
+          }))
+          count.value = payload.count || diffs.value.length
+          messageType.value = 'success'
+          message.value = `✅ ${count.value} différence(s) trouvée(s)`
+          return true
+        }
+
+        const periods = payload.periods || []
+        if (periods.length === 0) {
+          diffs.value = []
+          count.value = 0
+          messageType.value = 'success'
+          message.value = '✅ Aucune période T24 trouvée pour cet intervalle'
+          return true
+        }
+
+        diffs.value = periods.flatMap((period) => {
+          const diffItems = period.diff?.data || []
+          return diffItems.map((item) => ({
+            ...item,
+            processing_date: period.processing_date,
+            period_start_datetime: period.t24_period?.start_datetime,
+            period_end_datetime: period.t24_period?.end_datetime,
+            t24_matches_count: item.t24_matches?.length || 0
+          }))
+        })
+
+        count.value = diffs.value.length
+        startDateTime.value = null
+        endDateTime.value = null
         messageType.value = 'success'
-        message.value = `✅ ${count.value} différence(s) trouvée(s)`
+        message.value = `✅ ${count.value} différence(s) trouvée(s) dans ${periods.length} période(s)`
         return true
       }
 
@@ -143,6 +191,9 @@ const openT24Reference = async (reference) => {
     api,
     loading,
     processingDate,
+    startDate,
+    endDate,
+    mode,
     message,
     messageType,
     diffs,

@@ -157,189 +157,84 @@ class PowerCardController:
             if conn:
                 conn.close()
 
-
-    #####################################################################
-    # STATISTIQUE D'UNE DATE
-    #####################################################################
-
-    def _get_stats_for_date(self, conn, import_date):
-
+    def _get_stats_for_date(self, conn, local_date):
         global_query = text(f"""
             SELECT
-                COUNT(*) AS total_transactions,
-                SUM({self._AMOUNT_EXPR}) AS total_amount,
-
-                SUM(
-                    CASE
-                        WHEN processing_code='WITHDRAWAL'
-                        THEN 1
-                        ELSE 0
-                    END
-                ) AS withdrawal_count,
-
-                SUM(
-                    CASE
-                        WHEN processing_code='WITHDRAWAL'
-                        THEN {self._AMOUNT_EXPR}
-                        ELSE 0
-                    END
-                ) AS withdrawal_total_amount
-
+                COUNT(*) AS withdrawal_total_transactions,
+                SUM({self._AMOUNT_EXPR}) AS withdrawal_total_amount
             FROM transact_power_card
-            WHERE import_date=:import_date
+            WHERE processing_code='WITHDRAWAL'
+            AND DATE(local_time) LIKE :local_date
         """)
 
-        stats = dict(
-            conn.execute(
-                global_query,
-                {"import_date": import_date}
-            ).mappings().first()
-        )
-        ##########################################################
-        # Toutes les actions
-        ##########################################################
+        stats = dict(conn.execute(global_query, {"local_date": local_date}).mappings().first() or {})
 
         action_query = text(f"""
             SELECT
-
                 action,
-
-                COUNT(*) AS total_transactions,
-
-                SUM({self._AMOUNT_EXPR}) AS total_amount
-
+                COUNT(*) AS count,
+                SUM({self._AMOUNT_EXPR}) AS amount
             FROM transact_power_card
-
-            WHERE import_date=:import_date
-
+            WHERE processing_code='WITHDRAWAL'
+            AND DATE(local_time) LIKE :local_date
+            AND action IN (
+                'Approved',
+                'non approuved',
+                'Canceled',
+                'Exceeds withdrawal limit',
+                'Issuer not available',
+                'No sufficient funds',
+                'Rejected',
+                'Reversal accepted'
+            )
             GROUP BY action
-
-            ORDER BY total_transactions DESC
+            ORDER BY count DESC
         """)
 
-        stats["actions"] = [
-            dict(r)
-            for r in conn.execute(
-                action_query,
-                {"import_date": import_date}
-            ).mappings().all()
-        ]
-        ##########################################################
-        # WITHDRAWAL par action
-        ##########################################################
-
-        withdrawal_query = text(f"""
-            SELECT
-
-                action,
-
-                COUNT(*) AS total_transactions,
-
-                SUM({self._AMOUNT_EXPR}) AS total_amount
-
-            FROM transact_power_card
-
-            WHERE import_date=:import_date
-
-            AND processing_code='WITHDRAWAL'
-
-            GROUP BY action
-
-            ORDER BY total_transactions DESC
-        """)
-
-        stats["withdrawal_by_action"] = [
-            dict(r)
-            for r in conn.execute(
-                withdrawal_query,
-                {"import_date": import_date}
-            ).mappings().all()
-        ]
+        stats["actions"] = [dict(r) for r in conn.execute(action_query, {"local_date": local_date}).mappings().all()]
 
         return {
             "success": True,
             "data": stats
         }
 
-    #####################################################################
-    # TOUTES LES DATES
-    #####################################################################
-
     def _get_stats_all_dates(self, conn):
-
-        query = text(f"""
+        
+        global_query = text(f"""
             SELECT
-
-                DATE_FORMAT(import_date,'%Y-%m-%d') AS import_date,
-
-                COUNT(*) AS total_transactions,
-
-                SUM({self._AMOUNT_EXPR}) AS total_amount,
-
-                SUM(
-                    CASE
-                        WHEN processing_code='WITHDRAWAL'
-                        THEN {self._AMOUNT_EXPR}
-                        ELSE 0
-                    END
-                ) AS withdrawal_total_amount,
-
-                SUM(
-                    CASE
-                        WHEN processing_code='WITHDRAWAL'
-                        THEN 1
-                        ELSE 0
-                    END
-                ) AS withdrawal_count
-
+                COUNT(*) AS withdrawal_total_transactions,
+                SUM({self._AMOUNT_EXPR}) AS withdrawal_total_amount
             FROM transact_power_card
-
-            GROUP BY import_date
-
-            ORDER BY import_date DESC
+            WHERE processing_code='WITHDRAWAL'
         """)
 
-        dates = []
+        stats = dict(conn.execute(global_query).mappings().first() or {})
 
-        rows = conn.execute(query).mappings().all()
+        action_query = text(f"""
+            SELECT
+                action,
+                COUNT(*) AS count,
+                SUM({self._AMOUNT_EXPR}) AS amount
+            FROM transact_power_card
+            WHERE processing_code='WITHDRAWAL'
+                AND action IN (
+                'Approved',
+                'non approuved',
+                'Canceled',
+                'Exceeds withdrawal limit',
+                'Issuer not available',
+                'No sufficient funds',
+                'Rejected',
+                'Reversal accepted'
+                )
+            GROUP BY action
+            ORDER BY count DESC
+        """)
 
-        for row in rows:
-
-            date = dict(row)
-
-            ##################################################
-            # Répartition des actions pour cette date
-            ##################################################
-
-            action_query = text(f"""
-                SELECT
-
-                    action,
-
-                    COUNT(*) AS total_transactions,
-
-                    SUM({self._AMOUNT_EXPR}) AS total_amount
-
-                FROM transact_power_card
-
-                WHERE import_date=:import_date
-
-                GROUP BY action
-
-                ORDER BY total_transactions DESC
-            """)
-
-            actions = conn.execute(
-                action_query,
-                {"import_date": date["import_date"]}
-            ).mappings().all()
-
-            date["actions"] = [dict(a) for a in actions]
-
-            dates.append(date)
+        stats["actions"] = [dict(r) for r in conn.execute(action_query).mappings().all()]
 
         return {
             "success": True,
-            "data": dates
+            "data": stats
         }
  
