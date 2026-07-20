@@ -192,27 +192,20 @@ class TransactionManyController:
     def get_liste_processing_date(self, start_yyyymmdd: str, end_yyyymmdd: str):
         # wrapper réutilisant la fonction existante
         return self.get_transact_by_saisie_many(start_yyyymmdd, end_yyyymmdd)
+    
     def get_diff_many(self, start_yyyymmdd: str, end_yyyymmdd: str):
-        """
-        Pour chaque processing_date entre start et end:
-        - appelle TransactionController.get_diff(processing_date)
-        - ajoute le champ 'processing_date' au résultat retourné
-        Retour:
-        {
-            "success": True,
-            "periods": [
-                {
-                "processing_date": "YYYY-MM-DD",
-                "result": { ... same shape as get_diff(...) ... }
-                }, ...
-            ]
-        }
-        """
+        
         liste = self.get_liste_processing_date(start_yyyymmdd, end_yyyymmdd)
         if not liste.get("success", False):
             return {"success": False, "error": liste.get("error", "Erreur obtention périodes"), "periods": []}
 
         periods = liste.get("data", [])
+        if not periods:
+            return {
+                "success": True,
+                "periods": [],
+                "message": "Aucune période T24 trouvée pour cet intervalle"
+            }
         tc = TransactionController()
         out = []
 
