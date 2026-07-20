@@ -7,8 +7,11 @@ permetre filtrer par date et par periode
 power card
 
 pour eviter le duplication :
-	 afficher les date heure de derrnier local date
-	lors de importion afficher une notif  si une ligne est anterieur a celle de precedent , attente de validation de continuation ou annuler le importation
+	1-afficher les date heure de derrnier local date *
+	2-lors de importion afficher une notif  qui affiche les liste si une ligne est avant le dernier local_time ,
+	attente de validation de insertion si c est different le reference si c est le meme reference avec meme processing code 
+	et action et transaction montant on affiche remplacer  ou annuler le importation *
+
 	
 sur importation on peut effectuer une importation durant une periode
 
@@ -19,15 +22,15 @@ modifier sur le logique : permettre de effectuer sur une periode
 	cree une fonctionnalite insert_processing_date_to_power_many(date debut et date fin)
 	
 qui vas utiliser les fonction suivant
-	creation une fonction get-transact-by-date(date debut et date fin)
+	creation une fonction get-transact-by-date(date debut et date fin)*
 		getListeProcessing date(date debut et date fin)
 		selection sur t24 . processing date 
 		retuner les liste processing date avec leur start date time et end date time de chaque 
 
 	update de power card utilisant les retour de fonction get-transact-by-date(date debut et date fin)
 
-	si au cas ou il y a des ligne pas encore effectuer apres le premier update il seras mis automatiquement par le date apres
-	retourner liste de processinge date effectuer avec le nombre de ligne chaque et date start time et end time chaqun
+	si au cas ou il y a des ligne pas encore effectuer apres le premier update il seras mis automatiquement par le date apres*
+	retourner liste de processinge date effectuer avec le nombre de ligne chaque et date start time et end time chaqun*
 
 creation une table historiqueTransformation
 	inserer lesliste processign date et leur start date et end date avec status isTransform

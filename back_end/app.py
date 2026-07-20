@@ -4,6 +4,7 @@ from api.apiCompte import api_router2
 from api.api import api_router
 from api.apiPowerCard import api_router_powercard
 from fastapi.middleware.cors import CORSMiddleware
+from api.apiTransactionMany import router as api_router_many
 
 app = FastAPI()
 
@@ -32,3 +33,4 @@ app.include_router(api_router2, prefix="/api")
 
 app.include_router(api_router_powercard, prefix="/api")
 
+app.include_router(api_router_many, prefix="/api")

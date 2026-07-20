@@ -8,6 +8,23 @@ power_card_controller = PowerCardController()
 import_power_card_controller = ImportPowerCardController()
 import_t24 = ImportTransactT24Controller()
 
+@router.get("/powercard/last_local_time")
+async def get_powercard_last_local_time():
+    try:
+        result = import_power_card_controller.get_last_local_time()
+
+        if not result.get("success", False):
+            raise HTTPException(status_code=500, detail=result.get("error", "Erreur interne"))
+
+        return {
+            "status": "success",
+            "last_local_time": result["data"]
+        }
+
+    except HTTPException as he:
+        raise he
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
 
 @router.post("/powercard/import")
 async def import_power_card(

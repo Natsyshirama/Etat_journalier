@@ -9,11 +9,32 @@ export function usePowerCardImport() {
   const message = ref('')
   const messageType = ref('') // 'success', 'error', 'info'
   const importStats = ref(null)
+  const lastLocalTime = ref(null)
 
   const setApiUrl = (apiUrl) => {
     api.value = apiUrl
   }
 
+  
+// nouvelle fonction à ajouter dans le composable
+const fetchLastLocalTime = async () => {
+  try {
+    const response = await fetch(`${api.value}/api/powercard/last_local_time`, {
+      headers: {
+        'Authorization': `Bearer ${localStorage.getItem('access_token')}`
+      }
+    })
+    const data = await response.json()
+    if (response.ok && data.status === 'success') {
+      lastLocalTime.value = data.last_local_time
+    } else {
+      lastLocalTime.value = null
+    }
+  } catch (err) {
+    console.error('fetchLastLocalTime error', err)
+    lastLocalTime.value = null
+  }
+}
   const selectFile = (selectedFile) => {
     if (selectedFile) {
       // Vérifier que c'est un CSV
@@ -178,6 +199,8 @@ const fetchStats = async (date = null) => {
     uploadFile,
     fetchStats,
     fetchTransactions,
+    fetchLastLocalTime,   // <-- ajouter
+    lastLocalTime,    
     clearMessage
   }
 }

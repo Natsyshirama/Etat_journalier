@@ -14,6 +14,15 @@
     <!-- Formulaire d'import -->
     <v-card class="mb-4">
       <v-card-title>Import Power Card</v-card-title>
+      <v-card class="mb-4">
+      <v-card-text class="d-flex align-center justify-space-between">
+        <div>
+          <strong>Dernier local_time :</strong>
+          <span>{{ lastLocalTime || 'Aucune transaction' }}</span>
+        </div>
+        <v-btn small @click="fetchLastLocalTime" :disabled="loading">Rafraîchir</v-btn>
+      </v-card-text>
+    </v-card>
       <v-card-text>
         <v-container>
           <!-- Date Selection -->
@@ -156,6 +165,10 @@ const {
   setImportDate,
   setApiUrl,
   uploadFile,
+  fetchStats,
+  fetchTransactions,
+  fetchLastLocalTime,
+  lastLocalTime,
   clearMessage
 } = usePowerCardImport()
 
@@ -196,6 +209,7 @@ const resetForm = () => {
 
 onMounted(() => {
   setApiUrl(api)
+  fetchLastLocalTime()
 })
 </script>
 

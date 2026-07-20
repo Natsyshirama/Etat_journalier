@@ -52,6 +52,35 @@ class ImportPowerCardController:
         finally:
             if conn:
                 conn.close()
+    
+    def get_last_local_time(self):
+            conn = None
+            try:
+                query = text("""
+                    SELECT
+                        DATE_FORMAT(MAX(local_time), '%Y-%m-%d %H:%i:%s') AS local_time
+                    FROM transact_power_card
+                """)
+
+                conn = self.db.connect()
+                result = conn.execute(query).mappings().first()
+
+                return {
+                    "success": True,
+                    "data": result["local_time"] if result else None
+                }
+
+            except Exception as e:
+                print(f"[ERREUR] Impossible de récupérer le dernier local_time Power Card : {e}")
+                return {
+                    "success": False,
+                    "error": str(e),
+                    "data": None
+                }
+
+            finally:
+                if conn:
+                    conn.close()
 
     def _normalize_powercard_csv(self, content: str) -> str:
         """Normaliser le contenu d'un fichier CSV PowerCard"""

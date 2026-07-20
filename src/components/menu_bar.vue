@@ -227,15 +227,7 @@ const formatDateString = (rawDate) => {
   return `${rawDate.slice(0, 4)}-${rawDate.slice(4, 6)}-${rawDate.slice(6, 8)}`
 }
 
-onMounted(() => {
-  (async () => {
-    const data = await fetchData(`${api}/api/history_insert`)
-    allHistoryDates.value = data
-    historyDates.value = data 
-    availableYears.value = extractAvailableYears(data)
-  })();
-  get_last_import_file()
-})
+
 
 // 📦 Donnee a exporter
 const listes_encours_credits = ref([])

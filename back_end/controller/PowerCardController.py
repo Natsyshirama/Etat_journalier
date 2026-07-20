@@ -5,6 +5,8 @@ class PowerCardController:
     def __init__(self):
         self.db = DB()
 
+        
+
     def get_transact_by_reference(self, reference: str):
         if not reference or not str(reference).strip():
             return {"success": False, "error": "Reference vide", "data": []}
