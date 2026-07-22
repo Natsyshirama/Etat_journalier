@@ -52,34 +52,58 @@ class TransactionController:
             if conn:
                 conn.close()
 
-    def get_transactions_by_date(self, import_date: str ):
+    def get_transactions_by_date(self, start_date: str, end_date: str = None):
+        if not re.fullmatch(r"\d{4}-\d{2}-\d{2}", start_date):
+            return {"success": False, "error": "Format de date invalide, utilisez YYYY-MM-DD", "data": []}
+
+        if end_date and not re.fullmatch(r"\d{4}-\d{2}-\d{2}", end_date):
+            return {"success": False, "error": "Format de date fin invalide, utilisez YYYY-MM-DD", "data": []}
+
         conn = None
         try:
-            query = text("""
-                SELECT
-                    id,
-                    account_number,
-                    credit_amount,
-                    DATE_FORMAT(processing_date, '%Y-%m-%d') AS processing_date,
-                    pan,
-                    rrn,
-                    compte_db_cions,
-                    saisie_le,
-                    DATE_FORMAT(import_date, '%Y-%m-%d') AS import_date,
-                    DATE_FORMAT(created_at, '%Y-%m-%d %H:%i:%s') AS created_at
-                FROM transact_t24
-                WHERE processing_date = :import_date
-                ORDER BY processing_date DESC
-            """)
+            if end_date:
+                query = text("""
+                    SELECT
+                        id,
+                        account_number,
+                        credit_amount,
+                        DATE_FORMAT(processing_date, '%Y-%m-%d') AS processing_date,
+                        pan,
+                        rrn,
+                        compte_db_cions,
+                        saisie_le,
+                        DATE_FORMAT(import_date, '%Y-%m-%d') AS import_date,
+                        DATE_FORMAT(created_at, '%Y-%m-%d %H:%i:%s') AS created_at
+                    FROM transact_t24
+                    WHERE processing_date BETWEEN :start_date AND :end_date
+                    ORDER BY processing_date ASC, saisie_le ASC
+                """)
+                params = {"start_date": start_date, "end_date": end_date}
+            else:
+                query = text("""
+                    SELECT
+                        id,
+                        account_number,
+                        credit_amount,
+                        DATE_FORMAT(processing_date, '%Y-%m-%d') AS processing_date,
+                        pan,
+                        rrn,
+                        compte_db_cions,
+                        saisie_le,
+                        DATE_FORMAT(import_date, '%Y-%m-%d') AS import_date,
+                        DATE_FORMAT(created_at, '%Y-%m-%d %H:%i:%s') AS created_at
+                    FROM transact_t24
+                    WHERE processing_date = :start_date
+                    ORDER BY saisie_le ASC
+                """)
+                params = {"start_date": start_date}
 
             conn = self.db.connect()
-            result = conn.execute(query, {"import_date": import_date})
-
-            columns = result.keys()
-            data = [dict(zip(columns, row)) for row in result.fetchall()]
+            result = conn.execute(query, params)
+            rows = [dict(r) for r in result.mappings().all()]
 
             parsed_datetimes = []
-            for row in data:
+            for row in rows:
                 dt = self._parse_saisie_le(row.get("saisie_le"))
                 if dt:
                     parsed_datetimes.append(dt)
@@ -89,25 +113,18 @@ class TransactionController:
 
             return {
                 "success": True,
-                "data": data,
-                "count": len(data),
+                "data": rows,
+                "count": len(rows),
                 "start_datetime": start_dt,
                 "end_datetime": end_dt
             }
 
         except Exception as e:
             print(f"[ERREUR] Impossible de récupérer les transactions T24 : {e}")
-            return {
-                "success": False,
-                "error": str(e),
-                "data": []
-            }
+            return {"success": False, "error": str(e), "data": []}
         finally:
             if conn:
-                try:
-                    conn.close()
-                except Exception as close_err:
-                    print(f"[ERREUR] Fermeture connexion: {close_err}")
+                conn.close()
 
     def _parse_saisie_le(self, s):
         """Parse saisie_le format yymmddhhmm (ex: 2607050833 -> 2026-07-05 08:33)."""
@@ -456,6 +473,48 @@ class TransactionController:
                 conn.rollback()
             print(f"[ERREUR] insert_processing_date_to_power: {e}")
             return {"success": False, "error": str(e), "data": []}
+        finally:
+            if conn:
+                conn.close()
+
+    def get_last_saisie_le(self):
+        conn = None
+        try:
+            query = text("""
+                SELECT saisie_le
+                FROM transact_t24
+                WHERE saisie_le IS NOT NULL
+                  AND saisie_le != ''
+                  AND saisie_le REGEXP '^[0-9]{10}$'
+                ORDER BY saisie_le DESC
+                LIMIT 1
+            """)
+            conn = self.db.connect()
+            row = conn.execute(query).fetchone()
+
+            if not row or not row[0]:
+                return {"success": False, "error": "Aucune saisie_le valide trouvée", "data": None}
+
+            saisie_le = str(row[0]).strip()
+            dt = self._parse_saisie_le(saisie_le)
+
+            if dt is None:
+                return {
+                    "success": False,
+                    "error": f"Format de saisie_le invalide : {saisie_le}",
+                    "data": {"saisie_le": saisie_le}
+                }
+
+            return {
+                "success": True,
+                "data": {
+                    "saisie_le": saisie_le,
+                    "formatted": dt.strftime("%Y/%m/%d %H:%M")
+                }
+            }
+        except Exception as e:
+            print(f"[ERREUR] get_last_saisie_le: {e}")
+            return {"success": False, "error": str(e), "data": None}
         finally:
             if conn:
                 conn.close()

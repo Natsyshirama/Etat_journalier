@@ -5,7 +5,28 @@
         <v-icon>mdi-table</v-icon>
         Transactions Power Card
       </v-card-title>
+      <v-row class="mb-4">
+          <v-col cols="12">
+            <v-alert
+              v-if="lastLocalTime"
+              dense
+              border="left"
+              
+            >
+              Dernier `local_time` PowerCard : {{ lastLocalTime }}
+            </v-alert>
 
+            <v-alert
+              v-else
+              type="warning"
+              dense
+              border="left"
+              
+            >
+              Aucun `local_time` PowerCard disponible pour le moment
+            </v-alert>
+          </v-col>
+        </v-row>
       <v-card-text>
         <v-container>
           <!-- Filters -->
@@ -18,6 +39,15 @@
                 outlined
                 dense
                 :required="true"
+              />
+            </v-col>
+            <v-col cols="12" sm="6">
+              <v-text-field
+                v-model="selectedEndDate"
+                type="date"
+                label="Date fin (optionnelle)"
+                outlined
+                dense
               />
             </v-col>
             <v-col cols="12" sm="6">
@@ -55,6 +85,8 @@
               />
             </v-col>
           </v-row>
+
+          
 
           <!-- Loading State -->
           <v-row v-if="transactionsLoading">
@@ -136,7 +168,9 @@
             <v-col cols="12">
               <v-empty-state
                 headline="Aucune transaction"
-                :description="`Aucune transaction trouvée pour le ${selectedDate}`"
+                :description="selectedEndDate
+                  ? `Aucune transaction trouvée entre ${selectedDate} et ${selectedEndDate}`
+                  : `Aucune transaction trouvée pour le ${selectedDate}`"
                 icon="mdi-database-off"
               />
             </v-col>
@@ -154,7 +188,9 @@ import { usePowerCardImport } from '../../composables/usePowerCardImport'
 const api = inject('api')
 const {
   setApiUrl,
-  fetchTransactions
+  fetchTransactions,
+  fetchLastLocalTime,
+  lastLocalTime
 } = usePowerCardImport()
 
 const selectedProcessingCode = ref('')
@@ -163,6 +199,7 @@ const processingCodeOptions = ref(['WITHDRAWAL', 'Authentication Request', 'Bala
 const actionOptions = ref(['Approved', 'Canceled', 'Reversal accepted','Rejected','No sufficient funds',])
 
 const selectedDate = ref('')
+const selectedEndDate = ref('')
 const transactionsLoading = ref(false)
 const transactions = ref([])
 
@@ -196,13 +233,18 @@ const formatDateTime = (dateTime) => {
 
 const loadTransactions = async () => {
   if (!selectedDate.value) {
-    alert('Veuillez sélectionner une date')
+    alert('Veuillez sélectionner une date de début')
     return
   }
 
   transactionsLoading.value = true
   try {
-    const data = await fetchTransactions(selectedDate.value, 1000, 0)
+    const data = await fetchTransactions(
+      selectedDate.value,
+      selectedEndDate.value || null,
+      1000,
+      0
+    )
     transactions.value = Array.isArray(data) ? data : []
   } catch (error) {
     console.error('Erreur chargement transactions:', error)
@@ -226,6 +268,7 @@ const filteredTransactions = computed(() => {
 
 onMounted(() => {
   setApiUrl(api)
+  fetchLastLocalTime()
 })
 </script>
 

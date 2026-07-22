@@ -3,13 +3,16 @@ import { ref } from 'vue'
 export function useTransactions() {
   const api = ref('')
   const loading = ref(false)
-  const importDate = ref('')
+  const startDate = ref('')
+  const endDate = ref('')
   const message = ref('')
   const messageType = ref('')
   const transactions = ref([])
   const count = ref(0)
   const startDateTime = ref(null)
   const endDateTime = ref(null)
+  const lastSaisieLe = ref(null)
+
 
   const setApiUrl = (apiUrl) => {
     api.value = apiUrl
@@ -25,9 +28,9 @@ export function useTransactions() {
   }
 
   const fetchTransactions = async (limit = 100, offset = 0) => {
-    if (!importDate.value) {
+    if (!startDate.value) {
       messageType.value = 'error'
-      message.value = 'Veuillez sélectionner une date'
+      message.value = 'Veuillez sélectionner une date de début'
       return false
     }
 
@@ -36,15 +39,21 @@ export function useTransactions() {
     messageType.value = ''
 
     try {
-      const normalizedDate = normalizeDate(importDate.value)
-      const response = await fetch(
-        `${api.value}/api/t24/transactions?import_date=${normalizedDate}&limit=${limit}&offset=${offset}`,
-        {
-          headers: {
-            'Authorization': `Bearer ${localStorage.getItem('access_token')}`
-          }
+      const normalizedStart = normalizeDate(startDate.value)
+      let url = `${api.value}/api/t24/transactions?start_date=${normalizedStart}`
+
+      if (endDate.value) {
+        const normalizedEnd = normalizeDate(endDate.value)
+        url += `&end_date=${normalizedEnd}`
+      }
+
+      url += `&limit=${limit}&offset=${offset}`
+
+      const response = await fetch(url, {
+        headers: {
+          'Authorization': `Bearer ${localStorage.getItem('access_token')}`
         }
-      )
+      })
 
       const data = await response.json()
 
@@ -71,6 +80,32 @@ export function useTransactions() {
     }
   }
 
+
+
+  // get last saisie le
+const fetchLastSaisieLe = async () => {
+  try {
+    const response = await fetch(`${api.value}/api/t24/last_saisie_le`, {
+      headers: {
+        'Authorization': `Bearer ${localStorage.getItem('access_token')}`
+      }
+    })
+    const data = await response.json()
+
+    if (response.ok && data.status === 'success') {
+      lastSaisieLe.value = data.data?.formatted ?? null
+      return lastSaisieLe.value
+    }
+
+    lastSaisieLe.value = null
+    return null
+  } catch (error) {
+    console.error('Erreur fetchLastSaisieLe:', error)
+    lastSaisieLe.value = null
+    return null
+  }
+}
+
   const clearMessage = () => {
     message.value = ''
     messageType.value = ''
@@ -81,7 +116,8 @@ export function useTransactions() {
   return {
     api,
     loading,
-    importDate,
+    startDate,
+    endDate,
     message,
     messageType,
     transactions,
@@ -90,6 +126,8 @@ export function useTransactions() {
     endDateTime,
     setApiUrl,
     fetchTransactions,
+    fetchLastSaisieLe,
+    lastSaisieLe,
     clearMessage
   }
 }

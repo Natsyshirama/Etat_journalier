@@ -1,14 +1,44 @@
 <template>
   <v-card class="mb-4">
     <v-card-title>Transactions T24 par date</v-card-title>
+    <v-row class="mb-4">
+        <v-col cols="12">
+          <v-alert
+            v-if="lastSaisieLe"
+          >
+            Dernier transaction enregistrer T24 : {{ lastSaisieLe }}
+          </v-alert>
+
+          <v-alert
+            v-else
+            type="warning"
+            dense
+            border="left"
+            colored-border
+          >
+            Aucun dernier saisie_le disponible
+          </v-alert>
+        </v-col>
+    </v-row>
     <v-card-text>
       <v-container>
         <v-row>
           <v-col cols="12" sm="4">
             <v-text-field
-              v-model="importDate"
+              v-model="startDate"
               type="date"
-              label="Date"
+              label="Date début"
+              :disabled="loading"
+              outlined
+              dense
+            />
+          </v-col>
+
+          <v-col cols="12" sm="4">
+            <v-text-field
+              v-model="endDate"
+              type="date"
+              label="Date fin (optionnelle)"
               :disabled="loading"
               outlined
               dense
@@ -80,7 +110,8 @@ import { useTransactions } from '../../composables/useTransactions'
 
 const api = inject('api')
 const {
-  importDate,
+  startDate,
+  endDate,
   loading,
   message,
   messageType,
@@ -88,6 +119,8 @@ const {
   count,
   startDateTime,
   endDateTime,
+  lastSaisieLe,
+  fetchLastSaisieLe,
   setApiUrl,
   fetchTransactions,
   clearMessage
@@ -111,6 +144,7 @@ const handleFetch = async () => {
 
 onMounted(() => {
   setApiUrl(api)
+  fetchLastSaisieLe()
 })
 </script>
 

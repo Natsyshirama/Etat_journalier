@@ -154,26 +154,35 @@ const fetchStats = async (date = null) => {
   return date
 }
 
-  const fetchTransactions = async (date, limit = 100, offset = 0) => {
+  const fetchTransactions = async (startDate, endDate = null, limit = 100, offset = 0) => {
     try {
-      const normalizedDate = normalizeDate(date)
+      if (!startDate) {
+        throw new Error('Date de début requise')
+      }
 
-      const response = await fetch(
-        `${api.value}/api/powercard/transactions?import_date=${normalizedDate}&limit=${limit}&offset=${offset}`,
-        {
-          headers: {
-            'Authorization': `Bearer ${localStorage.getItem('access_token')}`
-          }
+      const normalizedStart = normalizeDate(startDate)
+      let url = `${api.value}/api/powercard/transactions?start_date=${normalizedStart}`
+
+      if (endDate) {
+        const normalizedEnd = normalizeDate(endDate)
+        url += `&end_date=${normalizedEnd}`
+      }
+
+      url += `&limit=${limit}&offset=${offset}`
+
+      const response = await fetch(url, {
+        headers: {
+          'Authorization': `Bearer ${localStorage.getItem('access_token')}`
         }
-      )
+      })
 
       const data = await response.json()
 
-      if (response.ok) {
+      if (response.ok && data.status === 'success') {
         return data.data?.data ?? data.data
-      } else {
-        throw new Error(data.detail || 'Erreur lors de la récupération des transactions')
       }
+
+      throw new Error(data.detail || data.data?.error || 'Erreur lors de la récupération des transactions')
     } catch (error) {
       console.error('Erreur fetchTransactions:', error)
       return []

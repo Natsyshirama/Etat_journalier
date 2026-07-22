@@ -65,7 +65,24 @@ async def import_power_card(
         raise he
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
+    
 
+@router.get("/t24/last_saisie_le")
+async def get_t24_last_saisie_le():
+    try:
+        result = transaction_controller.get_last_saisie_le()
+        if not result.get("success", False):
+            raise HTTPException(status_code=500, detail=result.get("error", "Erreur interne"))
+
+        return {
+            "status": "success",
+            "data": result["data"]
+        }
+
+    except HTTPException as he:
+        raise he
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
 
 @router.post("/t24/import")
 async def import_transaction_t24(
@@ -151,7 +168,8 @@ async def get_power_card_stats(import_date: Optional[str] = Query(None, descript
 
 @router.get("/powercard/transactions")
 async def get_transactions(
-    import_date: str = Query(..., description="Date au format YYYY-MM-DD"),
+    start_date: str = Query(..., description="Date de début au format YYYY-MM-DD"),
+    end_date: Optional[str] = Query(None, description="Date de fin au format YYYY-MM-DD"),
     limit: int = Query(100, ge=1, le=1000),
     offset: int = Query(0, ge=0)
 ):
@@ -159,16 +177,31 @@ async def get_transactions(
     Récupérer les transactions Power Card pour une date donnée
     """
     try:
-        transactions = power_card_controller.get_transactions_by_date(
-            import_date, 
-            limit=limit, 
+        from datetime import datetime
+        try:
+            datetime.strptime(start_date, "%Y-%m-%d")
+            if end_date:
+                datetime.strptime(end_date, "%Y-%m-%d")
+        except ValueError:
+            raise HTTPException(
+                status_code=400,
+                detail="Format de date invalide. Utilisez YYYY-MM-DD"
+            )
+
+        result = power_card_controller.get_transactions_by_date(
+            start_date,
+            end_date=end_date,
+            limit=limit,
             offset=offset
         )
-        
+
+        if not result.get("success", False):
+            raise HTTPException(status_code=500, detail=result.get("error", "Erreur interne"))
+
         return {
             "status": "success",
-            "data": transactions["data"],
-            "count": transactions["count"]
+            "data": result["data"],
+            "count": result["count"]
         }
         
     except HTTPException as he:
@@ -182,23 +215,22 @@ transaction_controller = TransactionController()
 
 @router.get("/t24/transactions")
 async def get_t24_transactions(
-    import_date: str = Query(..., description="Date d'import au format YYYY-MM-DD"),
-    
+    start_date: str = Query(..., description="Date de début au format YYYY-MM-DD"),
+    end_date: Optional[str] = Query(None, description="Date de fin au format YYYY-MM-DD")
 ):
-    """
-    Récupérer les transactions T24 pour une date donnée
-    """
     try:
         from datetime import datetime
         try:
-            datetime.strptime(import_date, '%Y-%m-%d')
+            datetime.strptime(start_date, "%Y-%m-%d")
+            if end_date:
+                datetime.strptime(end_date, "%Y-%m-%d")
         except ValueError:
             raise HTTPException(
                 status_code=400,
                 detail="Format de date invalide. Utilisez YYYY-MM-DD"
             )
 
-        result = transaction_controller.get_transactions_by_date(import_date)
+        result = transaction_controller.get_transactions_by_date(start_date, end_date=end_date)
 
         if not result["success"]:
             raise HTTPException(status_code=500, detail=result.get("error", "Erreur interne"))

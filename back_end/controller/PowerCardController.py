@@ -1,4 +1,5 @@
-﻿from sqlalchemy import text
+﻿import re
+from sqlalchemy import text
 from db.db import DB
 
 class PowerCardController:
@@ -64,63 +65,84 @@ class PowerCardController:
                 conn.close()
 
 
-    def get_transactions_by_date(self, local_time: str, limit: int = 100, offset: int = 0):
-        """
-        Récupérer les transactions Power Card pour une date donnée
-        """
+    def get_transactions_by_date(self, start_date: str, end_date: str = None, limit: int = 100, offset: int = 0):
+        if not re.fullmatch(r"\d{4}-\d{2}-\d{2}", start_date):
+            return {"success": False, "error": "Format date début invalide, utilisez YYYY-MM-DD", "data": []}
+
+        if end_date and not re.fullmatch(r"\d{4}-\d{2}-\d{2}", end_date):
+            return {"success": False, "error": "Format date fin invalide, utilisez YYYY-MM-DD", "data": []}
+
         conn = None
         try:
-            query = text("""
-                SELECT
-                    id,
-                    external_stan,
-                    reference,
-                    source,
-                    destination,
-                    message,
-                    processing_code,
-                    action,
-                    pan,
-                    DATE_FORMAT(local_time, '%Y-%m-%d %H:%i:%s') AS local_time,
-                    DATE_FORMAT(internal_time, '%Y-%m-%d %H:%i:%s') AS internal_time,
-                    transaction_amount,
-                    terminal_no,
-                    acceptor_point,
-                    authorization_reference,
-                    current_table_indicator,
-                    source_account_number,
-                    DATE_FORMAT(import_date, '%Y-%m-%d') AS import_date,
-                    DATE_FORMAT(created_at, '%Y-%m-%d %H:%i:%s') AS created_at
-                FROM transact_power_card
-                WHERE local_time LIKE :local_time
-                ORDER BY local_time DESC
-                LIMIT :limit
-                OFFSET :offset
-            """)
+            if end_date:
+                query = text("""
+                    SELECT
+                        id,
+                        external_stan,
+                        reference,
+                        source,
+                        destination,
+                        message,
+                        processing_code,
+                        action,
+                        pan,
+                        DATE_FORMAT(local_time, '%Y-%m-%d %H:%i:%s') AS local_time,
+                        DATE_FORMAT(internal_time, '%Y-%m-%d %H:%i:%s') AS internal_time,
+                        transaction_amount,
+                        terminal_no,
+                        acceptor_point,
+                        authorization_reference,
+                        current_table_indicator,
+                        source_account_number,
+                        DATE_FORMAT(import_date, '%Y-%m-%d') AS import_date,
+                        DATE_FORMAT(created_at, '%Y-%m-%d %H:%i:%s') AS created_at
+                    FROM transact_power_card
+                    WHERE DATE(local_time) BETWEEN :start_date AND :end_date
+                    ORDER BY local_time DESC
+                    LIMIT :limit
+                    OFFSET :offset
+                """)
+                params = {"start_date": start_date, "end_date": end_date, "limit": limit, "offset": offset}
+            else:
+                query = text("""
+                    SELECT
+                        id,
+                        external_stan,
+                        reference,
+                        source,
+                        destination,
+                        message,
+                        processing_code,
+                        action,
+                        pan,
+                        DATE_FORMAT(local_time, '%Y-%m-%d %H:%i:%s') AS local_time,
+                        DATE_FORMAT(internal_time, '%Y-%m-%d %H:%i:%s') AS internal_time,
+                        transaction_amount,
+                        terminal_no,
+                        acceptor_point,
+                        authorization_reference,
+                        current_table_indicator,
+                        source_account_number,
+                        DATE_FORMAT(import_date, '%Y-%m-%d') AS import_date,
+                        DATE_FORMAT(created_at, '%Y-%m-%d %H:%i:%s') AS created_at
+                    FROM transact_power_card
+                    WHERE DATE(local_time) = :start_date
+                    ORDER BY local_time DESC
+                    LIMIT :limit
+                    OFFSET :offset
+                """)
+                params = {"start_date": start_date, "limit": limit, "offset": offset}
 
             conn = self.db.connect()
-            result = conn.execute(query, {
-                "local_time": f"{local_time}%",
-                "limit": limit,
-                "offset": offset
-            })
-
+            result = conn.execute(query, params)
             columns = result.keys()
             data = [dict(zip(columns, row)) for row in result.fetchall()]
 
-            return {
-                "success": True,
-                "data": data,
-                "count": len(data)
-            }
+            return {"success": True, "data": data, "count": len(data)}
 
         except Exception as e:
             print(f"[ERREUR] Impossible de récupérer les transactions Power Card : {e}")
-            return {
-                "success": False,
-                "error": str(e),
-                "data": []
-            }
+            return {"success": False, "error": str(e), "data": []}
 
         finally:
             if conn:
@@ -128,7 +150,6 @@ class PowerCardController:
                     conn.close()
                 except Exception as close_err:
                     print(f"[ERREUR] Fermeture connexion: {close_err}")
-
     
     _AMOUNT_EXPR = """
         CAST(
@@ -237,4 +258,3 @@ class PowerCardController:
             "success": True,
             "data": stats
         }
- 
