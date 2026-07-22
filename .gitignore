@@ -4,3 +4,4 @@ node_modules - Copie
 
 __pycache__/
 *.pyc
+db.py
