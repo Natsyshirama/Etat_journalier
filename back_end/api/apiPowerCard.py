@@ -187,6 +187,7 @@ async def get_transactions(
                 status_code=400,
                 detail="Format de date invalide. Utilisez YYYY-MM-DD"
             )
+        
 
         result = power_card_controller.get_transactions_by_date(
             start_date,

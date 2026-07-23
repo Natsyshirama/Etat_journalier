@@ -122,6 +122,25 @@ const fetchLastLocalTime = async () => {
 
 const fetchStats = async (date = null) => {
   try {
+    // Vérifier si la date saisie est dans le futur
+    if (date) {
+      const normalizedDate = normalizeDate(date)
+
+      const today = new Date()
+      today.setHours(0, 0, 0, 0)
+
+      const selectedDate = new Date(normalizedDate)
+
+      if (selectedDate > today) {
+        messageType.value = 'error'
+        message.value = 'La date ne peut pas être dans le futur'
+        return null
+      }
+
+      date = normalizedDate
+    }
+
+
     const url = date 
       ? `${api.value}/api/powercard/stats?import_date=${date}`
       : `${api.value}/api/powercard/stats`
@@ -135,12 +154,16 @@ const fetchStats = async (date = null) => {
     const data = await response.json()
 
     if (response.ok) {
+      messageType.value = ''
+      message.value = ''
       return data.data?.data ?? data.data
     } else {
       throw new Error(data.detail || 'Erreur lors de la récupération des stats')
     }
   } catch (error) {
     console.error('Erreur fetchStats:', error)
+    messageType.value = 'error'
+    message.value = error.message
     return null
   }
 }
@@ -161,6 +184,29 @@ const fetchStats = async (date = null) => {
       }
 
       const normalizedStart = normalizeDate(startDate)
+      
+      // Validation: vérifier que les dates ne sont pas dans le futur
+      const today = new Date()
+      today.setHours(0, 0, 0, 0) // Mettre à minuit pour comparaison correcte
+
+      const startDateObj = new Date(normalizedStart)
+      if (startDateObj > today) {
+        messageType.value = 'error'
+        message.value = 'La date de début ne peut pas être dans le futur'
+        return []
+      }
+
+      if (endDate) {
+        const normalizedEnd = normalizeDate(endDate)
+        const endDateObj = new Date(normalizedEnd)
+        
+        if (endDateObj > today) {
+          messageType.value = 'error'
+          message.value = 'La date de fin ne peut pas être dans le futur'
+          return []
+        }
+      }
+
       let url = `${api.value}/api/powercard/transactions?start_date=${normalizedStart}`
 
       if (endDate) {

@@ -93,7 +93,7 @@
             </v-data-table>
           </v-col>
         </v-row>
-
+        
         <v-row v-else>
           <v-col cols="12">
             <p class="text-caption">Aucune transaction chargée pour cette date.</p>
@@ -101,6 +101,19 @@
         </v-row>
       </v-container>
     </v-card-text>
+    <!-- <v-row class="mb-4">
+        <v-col cols="12">
+          <v-alert
+            v-if="message"
+            :type="messageType"
+            dense
+            border="left"
+            closable
+          >
+            {{ message }}
+          </v-alert>
+        </v-col>
+      </v-row> -->
   </v-card>
 </template>
 

@@ -31,19 +31,51 @@ const endDateTime = ref(null)
     endDateTime.value = null
   }
 
+  const isFutureDate = (date) => {
+  if (!date) return false
+
+  const selected = new Date(date)
+  selected.setHours(0, 0, 0, 0)
+
+  const today = new Date()
+  today.setHours(0, 0, 0, 0)
+
+  return selected > today
+}
+
   const fetchDiffs = async () => {
     clearMessage()
 
     if (mode.value === 'single') {
+     
       if (!processingDate.value) {
         messageType.value = 'error'
         message.value = 'Veuillez sélectionner une date de traitement'
         return false
       }
+
+      if (isFutureDate(processingDate.value)) {
+        messageType.value = 'error'
+        message.value = 'La date de traitement ne peut pas être dans le futur'
+        return false
+      }
+
     } else {
       if (!startDate.value || !endDate.value) {
         messageType.value = 'error'
         message.value = 'Veuillez sélectionner une date de début et une date de fin'
+        return false
+      }
+
+      if (isFutureDate(startDate.value)) {
+        messageType.value = 'error'
+        message.value = 'La date de début ne peut pas être dans le futur'
+        return false
+      }
+
+      if (isFutureDate(endDate.value)) {
+        messageType.value = 'error'
+        message.value = 'La date de fin ne peut pas être dans le futur'
         return false
       }
     }

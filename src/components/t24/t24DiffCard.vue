@@ -166,6 +166,19 @@
       <v-spacer />
       <v-btn text @click="showReferenceDialog = false">Fermer</v-btn>
     </v-card-actions>
+    <v-row class="mb-4">
+        <v-col cols="12">
+          <v-alert
+            v-if="message"
+            :type="messageType"
+            dense
+            border="left"
+            closable
+          >
+            {{ message }}
+          </v-alert>
+        </v-col>
+      </v-row>  
   </v-card>
 </v-dialog>
   </div>

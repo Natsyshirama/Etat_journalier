@@ -34,12 +34,35 @@ export function useTransactions() {
       return false
     }
 
+    // Validation: vérifier que les dates ne sont pas dans le futur
+    const today = new Date()
+    today.setHours(0, 0, 0, 0)
+
+    const normalizedStart = normalizeDate(startDate.value)
+    const startDateObj = new Date(normalizedStart)
+
+    if (startDateObj > today) {
+      messageType.value = 'error'
+      message.value = 'La date de début ne peut pas être dans le futur'
+      return false
+    }
+
+    if (endDate.value) {
+      const normalizedEnd = normalizeDate(endDate.value)
+      const endDateObj = new Date(normalizedEnd)
+
+      if (endDateObj > today) {
+        messageType.value = 'error'
+        message.value = 'La date de fin ne peut pas être dans le futur'
+        return false
+      }
+    }
+
     loading.value = true
     message.value = ''
     messageType.value = ''
 
     try {
-      const normalizedStart = normalizeDate(startDate.value)
       let url = `${api.value}/api/t24/transactions?start_date=${normalizedStart}`
 
       if (endDate.value) {

@@ -132,6 +132,19 @@
           </v-row>
         </v-container>
       </v-card-text>
+      <v-row class="mb-4">
+        <v-col cols="12">
+          <v-alert
+            v-if="message"
+            :type="messageType"
+            dense
+            border="left"
+            closable
+          >
+            {{ message }}
+          </v-alert>
+        </v-col>
+      </v-row>
     </v-card>
   </div>
 </template>
@@ -143,7 +156,10 @@ import { usePowerCardImport } from '../../composables/usePowerCardImport'
 const api = inject('api')
 const {
   setApiUrl,
-  fetchStats
+  fetchStats,
+  message,
+  messageType,
+  clearMessage
 } = usePowerCardImport()
 
 const selectedDate = ref('')
@@ -167,7 +183,7 @@ const formatAmount = (amount) => {
 
 const loadStats = async () => {
   statsLoading.value = true
-
+  clearMessage()  
   try {
     const stats = await fetchStats(selectedDate.value || null)
     singleStats.value = stats

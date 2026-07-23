@@ -86,8 +86,6 @@
             </v-col>
           </v-row>
 
-          
-
           <!-- Loading State -->
           <v-row v-if="transactionsLoading">
             <v-col cols="12">
@@ -177,6 +175,20 @@
           </v-row>
         </v-container>
       </v-card-text>
+      <!-- Afficher les messages d'erreur/succès -->
+      <v-row class="mb-4">
+        <v-col cols="12">
+          <v-alert
+            v-if="message"
+            :type="messageType"
+            dense
+            border="left"
+            closable
+          >
+            {{ message }}
+          </v-alert>
+        </v-col>
+      </v-row>
     </v-card>
   </div>
 </template>
@@ -190,7 +202,10 @@ const {
   setApiUrl,
   fetchTransactions,
   fetchLastLocalTime,
-  lastLocalTime
+  lastLocalTime,
+  message,        // <-- AJOUTER
+  messageType,
+  clearMessage 
 } = usePowerCardImport()
 
 const selectedProcessingCode = ref('')
@@ -236,6 +251,7 @@ const loadTransactions = async () => {
     alert('Veuillez sélectionner une date de début')
     return
   }
+  clearMessage()  
 
   transactionsLoading.value = true
   try {
