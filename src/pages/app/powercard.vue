@@ -13,6 +13,10 @@
         <v-icon start>mdi-table</v-icon>
         Transactions
       </v-tab>
+      <v-tab value="processing">
+        <v-icon start>mdi-sync</v-icon>
+        Processing
+      </v-tab>
     </v-tabs>
 
     <v-window v-model="activeTab">
@@ -30,6 +34,11 @@
       <v-window-item value="transactions">
         <PowerCardTransactions />
       </v-window-item>
+
+      <!-- Processing Tab -->
+      <v-window-item value="processing">
+        <PowerProcessing />
+      </v-window-item>
     </v-window>
   </div>
 </template>
@@ -39,6 +48,7 @@ import { ref } from 'vue'
 import PowerCardUpload from '../../components/powercard/PowerCardUpload.vue'
 import PowerCardStats from '../../components/powercard/PowerCardStats.vue'
 import PowerCardTransactions from '../../components/powercard/PowerCardTransactions.vue'
+import PowerProcessing from '../../components/powercard/PowerProcessing.vue'
 
 const activeTab = ref('import')
 </script>
