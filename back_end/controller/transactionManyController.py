@@ -1,6 +1,6 @@
 from sqlalchemy import text
 from db.db import DB
-from datetime import datetime
+from datetime import datetime, timedelta
 from decimal import Decimal, InvalidOperation
 import re
 from controller.transactionController import TransactionController
@@ -116,6 +116,10 @@ class TransactionManyController:
                 processing_date = period["processing_date"]
                 start_dt = period["start_datetime"]
                 end_dt = period["end_datetime"]
+                end_dt_plus = (
+                    datetime.strptime(end_dt, "%Y-%m-%d %H:%M:%S")
+                    + timedelta(seconds=59)
+                ).strftime("%Y-%m-%d %H:%M:%S")
 
                 if not start_dt or not end_dt:
                     continue
@@ -138,13 +142,13 @@ class TransactionManyController:
                 exact_sql = text("""
                     UPDATE transact_power_card
                     SET processing_date = :processing_date
-                    WHERE local_time BETWEEN :start_dt AND :end_dt
+                    WHERE local_time BETWEEN :start_dt AND :end_dt_plus
                     AND processing_date IS NULL
                 """)
                 exact_result = conn.execute(exact_sql, {
                     "processing_date": processing_date,
                     "start_dt": start_dt,
-                    "end_dt": end_dt
+                    "end_dt_plus": end_dt_plus
                 })
                 exact_count = exact_result.rowcount
 
@@ -154,20 +158,20 @@ class TransactionManyController:
                         UPDATE transact_power_card
                         SET processing_date = :processing_date
                         WHERE local_time > :previous_end
-                          AND local_time <= :end_dt
+                          AND local_time <= :end_dt_plus
                           AND processing_date IS NULL
                     """)
                     auto_result = conn.execute(auto_sql, {
                         "processing_date": processing_date,
                         "previous_end": previous_end,
-                        "end_dt": end_dt
+                        "end_dt": end_dt_plus
                     })
                     auto_count = auto_result.rowcount
 
                 processed.append({
                     "processing_date": processing_date,
                     "start_datetime": start_dt,
-                    "end_datetime": end_dt,
+                    "end_datetime": end_dt_plus,
                     "rows_in_range": total_in_range,
                     "warning": warning,
                     "exact_updated_rows": exact_count,
@@ -175,7 +179,7 @@ class TransactionManyController:
                     "total_updated_rows": exact_count + auto_count
                 })
 
-                previous_end = end_dt
+                previous_end = end_dt_plus
 
             conn.commit()
             return {"success": True, "processed": processed}

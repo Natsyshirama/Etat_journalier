@@ -138,13 +138,13 @@ class ImportTransactT24Controller:
 
         for idx, row in df.iterrows():
             try:
-                account_number = row.get("num_compte_credit") or row.get("num_compte") or row.get("num_compte_credit")
+                account_number = row.get("creditaccountnumber") or row.get("num_compte_credit") or row.get("num_compte") or row.get("num_compte_credit")
                 credit_amount = row.get("creditamount") or row.get("credit_amount") or row.get("creditAmount")
                 processing_date_raw = row.get("processingdate") or row.get("processing_date")
-                pan = row.get("l_at_pan_no")
-                rrn = row.get("l_at_rrn")
-                compte_db_cions = row.get("compte_db_cions")
-                saisie_le = row.get("saisi_le") 
+                pan = row.get("l_at_pan_no") or row.get("latpanno")
+                rrn = row.get("l_at_rrn") or row.get("latrrn")
+                compte_db_cions = row.get("compte_db_cions") or row.get("chargesacctno")
+                saisie_le = row.get("saisi_le") or row.get("datetime")
 
                 processing_date = self.convert_processing_date(processing_date_raw)
 
