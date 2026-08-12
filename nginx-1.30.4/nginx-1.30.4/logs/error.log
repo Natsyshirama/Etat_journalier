@@ -1,0 +1,6 @@
+2026/08/12 09:01:14 [emerg] 27612#30876: duplicate location "/" in D:\marc\GAB\Etat_journalier\nginx-1.30.4\nginx-1.30.4/conf/nginx.conf:50
+2026/08/12 09:04:00 [emerg] 26288#28216: duplicate location "/" in D:\marc\GAB\Etat_journalier\nginx-1.30.4\nginx-1.30.4/conf/nginx.conf:50
+2026/08/12 09:06:13 [emerg] 31112#9208: duplicate location "/" in D:\marc\GAB\Etat_journalier\nginx-1.30.4\nginx-1.30.4/conf/nginx.conf:50
+2026/08/12 09:06:22 [emerg] 8088#30244: duplicate location "/" in D:\marc\GAB\Etat_journalier\nginx-1.30.4\nginx-1.30.4/conf/nginx.conf:50
+2026/08/12 09:09:26 [emerg] 10772#26908: bind() to 0.0.0.0:80 failed (10013: Une tentative d’accès à un socket de manière interdite par ses autorisations d’accès a été tentée)
+2026/08/12 09:19:08 [notice] 28140#22316: signal process started

@@ -6,7 +6,7 @@
   "scripts": {
     "dev": "vite --host",
     "build": "vite build",
-    "py": "cd back_end && uvicorn app:app --host 0.0.0.0 --port 8000 --reload",
+    "py": "cd back_end && uvicorn app:app --host 0.0.0.0 --port 8000 --workers 4",
     "py_prod": "cd back_end && python main_https.py",
     "preview": "vite preview"
   },
