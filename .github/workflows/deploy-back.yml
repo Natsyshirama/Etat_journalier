@@ -1,0 +1,27 @@
+name: Deploy Backend
+
+on:
+  push:
+    branches:
+      - production
+
+jobs:
+  deploy:
+    runs-on: self-hosted
+    steps:
+      - name: Pull latest code
+        run: |
+          cd D:\marc\GAB\Etat_journalier\
+          git checkout production
+          git pull origin production
+
+      - name: Build Frontend
+        run: |
+          cd D:\marc\GAB\Etat_journalier\
+          npm install
+          npm run build
+
+      - name: Build and Restart Backend
+        run: |
+          cd D:\marc\GAB\Etat_journalier\
+          pm2 restart ecosystem.config.cjs
