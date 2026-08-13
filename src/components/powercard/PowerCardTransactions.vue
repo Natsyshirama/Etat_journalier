@@ -30,8 +30,8 @@
       <v-card-text>
         <v-container>
           <!-- Filters -->
-          <v-row class="mb-4">
-            <v-col cols="12" sm="6">
+          <v-row class="mb-2" dense>
+            <v-col cols="12" sm="4" md="3">
               <v-text-field
                 v-model="selectedDate"
                 type="date"
@@ -41,25 +41,28 @@
                 :required="true"
               />
             </v-col>
-            <v-col cols="12" sm="6">
+            <v-col cols="12" sm="4" md="3">
               <v-text-field
                 v-model="selectedEndDate"
                 type="date"
-                label="Date fin (optionnelle)"
+                label="Date fin"
                 outlined
                 dense
               />
             </v-col>
-            <v-col cols="12" sm="6">
+            <v-col cols="12" sm="4" md="2">
               <v-btn
                 color="primary"
                 :loading="transactionsLoading"
                 @click="loadTransactions"
+                block
+                size="small"
               >
                 <v-icon start>mdi-refresh</v-icon>
                 Charger
               </v-btn>
             </v-col>
+            
           </v-row>
 
           <!-- Processing Code and Action Filters -->
@@ -219,14 +222,14 @@ const transactionsLoading = ref(false)
 const transactions = ref([])
 
 const headers = [
-  { title: 'Reference', key: 'reference', width: 120 },
-  { title: 'PAN', key: 'pan', width: 150 },
-  { title: 'Processing Code', key: 'processing_code', width: 150 },
-  { title: 'Action', key: 'action', width: 120 },
-  { title: 'Date/Heure', key: 'local_time', width: 180 },
-  { title: 'Montant', key: 'transaction_amount', width: 140 },
-  { title: 'Terminal', key: 'terminal_no', width: 100 },
-  { title: 'Import Date', key: 'import_date', width: 120 }
+  { title: 'Reference', key: 'reference', width: 90 },
+  { title: 'PAN', key: 'pan', width: 110 },
+  { title: 'Processing Code', key: 'processing_code', width: 100 },
+  { title: 'Action', key: 'action', width: 90 },
+  { title: 'Date/Heure', key: 'local_time', width: 140 },
+  { title: 'Montant', key: 'transaction_amount', width: 100 },
+  { title: 'Terminal', key: 'terminal_no', width: 80 },
+  { title: 'Import Date', key: 'import_date', width: 100 }
 ]
 
 
