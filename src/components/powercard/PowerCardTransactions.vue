@@ -27,11 +27,13 @@
             </v-alert>
           </v-col>
         </v-row>
-      <v-card-text>
-        <v-container>
+      <v-card-text style="padding: 0; padding-left: 16px; padding-right: 16px;">
+       <div style="max-height: 70vh; overflow-y: auto; overflow-x: hidden; padding-right: 10px;">
+  
+        
           <!-- Filters -->
-          <v-row class="mb-4">
-            <v-col cols="12" sm="6">
+          <v-row class="mb-2" >
+            <v-col cols="12" sm="4" md="3">
               <v-text-field
                 v-model="selectedDate"
                 type="date"
@@ -41,25 +43,28 @@
                 :required="true"
               />
             </v-col>
-            <v-col cols="12" sm="6">
+            <v-col cols="12" sm="4" md="3">
               <v-text-field
                 v-model="selectedEndDate"
                 type="date"
-                label="Date fin (optionnelle)"
+                label="Date fin"
                 outlined
                 dense
               />
             </v-col>
-            <v-col cols="12" sm="6">
+            <v-col cols="12" sm="4" md="2">
               <v-btn
                 color="primary"
                 :loading="transactionsLoading"
                 @click="loadTransactions"
+                block
+                
               >
                 <v-icon start>mdi-refresh</v-icon>
                 Charger
               </v-btn>
             </v-col>
+            
           </v-row>
 
           <!-- Processing Code and Action Filters -->
@@ -96,68 +101,73 @@
           <!-- Transactions Table -->
           <v-row v-else>
             <v-col cols="12">
-              <v-data-table
-                :headers="headers"
-                :items="filteredTransactions"
-                :loading="transactionsLoading"
-                :items-per-page="50"
-                class="elevation-1"
-              >
-                <template #item.action="{ item }">
-                  <v-chip
-                    :color="item.action === 'Approved' ? 'green' : 'red'"
-                    text-color="white"
-                    size="small"
-                  >
-                    {{ item.action }}
-                  </v-chip>
-                </template>
+              <div style="height: 500px; overflow-y: auto; overflow-x: auto; border: 1px solid #e0e0e0; border-radius: 4px;">
+                <v-data-table
+                  :headers="headers"
+                  :items="filteredTransactions"
+                  :loading="transactionsLoading"
+                  :items-per-page="10"
+                  dense
+                  fixed-header
+                  height="400px"
+                  class="elevation-1"
+                >
+                  <template #item.action="{ item }">
+                    <v-chip
+                      :color="item.action === 'Approved' ? 'green' : 'red'"
+                      text-color="white"
+                      size="small"
+                    >
+                      {{ item.action }}
+                    </v-chip>
+                  </template>
 
-                <template #item.local_time="{ item }">
-                  {{ formatDateTime(item.local_time) }}
-                </template>
+                  <template #item.local_time="{ item }">
+                    {{ formatDateTime(item.local_time) }}
+                  </template>
 
-                <template #item.transaction_amount="{ item }">
-                  {{ formatAmount(item.transaction_amount) }}
-                </template>
+                  <template #item.transaction_amount="{ item }">
+                    {{ formatAmount(item.transaction_amount) }}
+                  </template>
 
-                <template #expanded-row="{ columns, item }">
-                  <tr>
-                    <td :colspan="columns.length" class="expansion-row">
-                      <v-container>
-                        <v-row>
-                          <v-col cols="12" sm="6" md="3">
-                            <p><strong>Reference:</strong></p>
-                            <p>{{ item.reference }}</p>
-                          </v-col>
-                          <v-col cols="12" sm="6" md="3">
-                            <p><strong>PAN:</strong></p>
-                            <p>{{ item.pan }}</p>
-                          </v-col>
-                          <v-col cols="12" sm="6" md="3">
-                            <p><strong>Terminal:</strong></p>
-                            <p>{{ item.terminal_no }}</p>
-                          </v-col>
-                          <v-col cols="12" sm="6" md="3">
-                            <p><strong>Source Account:</strong></p>
-                            <p>{{ item.source_account_number }}</p>
-                          </v-col>
-                        </v-row>
-                        <v-row>
-                          <v-col cols="12" sm="6">
-                            <p><strong>Message:</strong></p>
-                            <p>{{ item.message }}</p>
-                          </v-col>
-                          <v-col cols="12" sm="6">
-                            <p><strong>Processing Code:</strong></p>
-                            <p>{{ item.processing_code }}</p>
-                          </v-col>
-                        </v-row>
-                      </v-container>
-                    </td>
-                  </tr>
-                </template>
-              </v-data-table>
+                  <template #expanded-row="{ columns, item }">
+                    <tr>
+                      <td :colspan="columns.length" class="expansion-row">
+                        <v-container>
+                          <v-row>
+                            <v-col cols="12" sm="6" md="3">
+                              <p><strong>Reference:</strong></p>
+                              <p>{{ item.reference }}</p>
+                            </v-col>
+                            <v-col cols="12" sm="6" md="3">
+                              <p><strong>PAN:</strong></p>
+                              <p>{{ item.pan }}</p>
+                            </v-col>
+                            <v-col cols="12" sm="6" md="3">
+                              <p><strong>Terminal:</strong></p>
+                              <p>{{ item.terminal_no }}</p>
+                            </v-col>
+                            <v-col cols="12" sm="6" md="3">
+                              <p><strong>Source Account:</strong></p>
+                              <p>{{ item.source_account_number }}</p>
+                            </v-col>
+                          </v-row>
+                          <v-row>
+                            <v-col cols="12" sm="6">
+                              <p><strong>Message:</strong></p>
+                              <p>{{ item.message }}</p>
+                            </v-col>
+                            <v-col cols="12" sm="6">
+                              <p><strong>Processing Code:</strong></p>
+                              <p>{{ item.processing_code }}</p>
+                            </v-col>
+                          </v-row>
+                        </v-container>
+                      </td>
+                    </tr>
+                  </template>
+                </v-data-table>
+              </div>
             </v-col>
           </v-row>
 
@@ -173,7 +183,8 @@
               />
             </v-col>
           </v-row>
-        </v-container>
+        
+      </div>    
       </v-card-text>
       <!-- Afficher les messages d'erreur/succès -->
       <v-row class="mb-4">
@@ -219,14 +230,14 @@ const transactionsLoading = ref(false)
 const transactions = ref([])
 
 const headers = [
-  { title: 'Reference', key: 'reference', width: 120 },
-  { title: 'PAN', key: 'pan', width: 150 },
-  { title: 'Processing Code', key: 'processing_code', width: 150 },
-  { title: 'Action', key: 'action', width: 120 },
-  { title: 'Date/Heure', key: 'local_time', width: 180 },
-  { title: 'Montant', key: 'transaction_amount', width: 140 },
-  { title: 'Terminal', key: 'terminal_no', width: 100 },
-  { title: 'Import Date', key: 'import_date', width: 120 }
+  { title: 'Reference', key: 'reference', width: 90 },
+  { title: 'PAN', key: 'pan', width: 110 },
+  { title: 'Processing Code', key: 'processing_code', width: 100 },
+  { title: 'Action', key: 'action', width: 90 },
+  { title: 'Date/Heure', key: 'local_time', width: 140 },
+  { title: 'Montant', key: 'transaction_amount', width: 100 },
+  { title: 'Terminal', key: 'terminal_no', width: 80 },
+  { title: 'Import Date', key: 'import_date', width: 100 }
 ]
 
 
@@ -295,6 +306,17 @@ onMounted(() => {
 
 .expansion-row {
   background-color: #f5f5f5;
+}
+:deep(.v-table__wrapper) {
+  max-height: 400px !important;
+}
+
+:deep(.v-data-table__thead) {
+  position: sticky;
+  top: 0;
+  z-index: 10;
+  background-color: white;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
 }
 </style>
 
