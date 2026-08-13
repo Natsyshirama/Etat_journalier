@@ -27,10 +27,12 @@
             </v-alert>
           </v-col>
         </v-row>
-      <v-card-text>
-        <v-container>
+      <v-card-text style="padding: 0; padding-left: 16px; padding-right: 16px;">
+       <div style="max-height: 70vh; overflow-y: auto; overflow-x: hidden; padding-right: 10px;">
+  
+        
           <!-- Filters -->
-          <v-row class="mb-2" dense>
+          <v-row class="mb-2" >
             <v-col cols="12" sm="4" md="3">
               <v-text-field
                 v-model="selectedDate"
@@ -106,8 +108,9 @@
                   :loading="transactionsLoading"
                   :items-per-page="10"
                   dense
+                  fixed-header
+                  height="400px"
                   class="elevation-1"
-                  style="min-height: 500px;"
                 >
                   <template #item.action="{ item }">
                     <v-chip
@@ -180,7 +183,8 @@
               />
             </v-col>
           </v-row>
-        </v-container>
+        
+      </div>    
       </v-card-text>
       <!-- Afficher les messages d'erreur/succès -->
       <v-row class="mb-4">
@@ -302,6 +306,17 @@ onMounted(() => {
 
 .expansion-row {
   background-color: #f5f5f5;
+}
+:deep(.v-table__wrapper) {
+  max-height: 400px !important;
+}
+
+:deep(.v-data-table__thead) {
+  position: sticky;
+  top: 0;
+  z-index: 10;
+  background-color: white;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
 }
 </style>
 
