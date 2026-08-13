@@ -99,68 +99,72 @@
           <!-- Transactions Table -->
           <v-row v-else>
             <v-col cols="12">
-              <v-data-table
-                :headers="headers"
-                :items="filteredTransactions"
-                :loading="transactionsLoading"
-                :items-per-page="50"
-                class="elevation-1"
-              >
-                <template #item.action="{ item }">
-                  <v-chip
-                    :color="item.action === 'Approved' ? 'green' : 'red'"
-                    text-color="white"
-                    size="small"
-                  >
-                    {{ item.action }}
-                  </v-chip>
-                </template>
+              <div style="height: 500px; overflow-y: auto; overflow-x: auto; border: 1px solid #e0e0e0; border-radius: 4px;">
+                <v-data-table
+                  :headers="headers"
+                  :items="filteredTransactions"
+                  :loading="transactionsLoading"
+                  :items-per-page="10"
+                  dense
+                  class="elevation-1"
+                  style="min-height: 500px;"
+                >
+                  <template #item.action="{ item }">
+                    <v-chip
+                      :color="item.action === 'Approved' ? 'green' : 'red'"
+                      text-color="white"
+                      size="small"
+                    >
+                      {{ item.action }}
+                    </v-chip>
+                  </template>
 
-                <template #item.local_time="{ item }">
-                  {{ formatDateTime(item.local_time) }}
-                </template>
+                  <template #item.local_time="{ item }">
+                    {{ formatDateTime(item.local_time) }}
+                  </template>
 
-                <template #item.transaction_amount="{ item }">
-                  {{ formatAmount(item.transaction_amount) }}
-                </template>
+                  <template #item.transaction_amount="{ item }">
+                    {{ formatAmount(item.transaction_amount) }}
+                  </template>
 
-                <template #expanded-row="{ columns, item }">
-                  <tr>
-                    <td :colspan="columns.length" class="expansion-row">
-                      <v-container>
-                        <v-row>
-                          <v-col cols="12" sm="6" md="3">
-                            <p><strong>Reference:</strong></p>
-                            <p>{{ item.reference }}</p>
-                          </v-col>
-                          <v-col cols="12" sm="6" md="3">
-                            <p><strong>PAN:</strong></p>
-                            <p>{{ item.pan }}</p>
-                          </v-col>
-                          <v-col cols="12" sm="6" md="3">
-                            <p><strong>Terminal:</strong></p>
-                            <p>{{ item.terminal_no }}</p>
-                          </v-col>
-                          <v-col cols="12" sm="6" md="3">
-                            <p><strong>Source Account:</strong></p>
-                            <p>{{ item.source_account_number }}</p>
-                          </v-col>
-                        </v-row>
-                        <v-row>
-                          <v-col cols="12" sm="6">
-                            <p><strong>Message:</strong></p>
-                            <p>{{ item.message }}</p>
-                          </v-col>
-                          <v-col cols="12" sm="6">
-                            <p><strong>Processing Code:</strong></p>
-                            <p>{{ item.processing_code }}</p>
-                          </v-col>
-                        </v-row>
-                      </v-container>
-                    </td>
-                  </tr>
-                </template>
-              </v-data-table>
+                  <template #expanded-row="{ columns, item }">
+                    <tr>
+                      <td :colspan="columns.length" class="expansion-row">
+                        <v-container>
+                          <v-row>
+                            <v-col cols="12" sm="6" md="3">
+                              <p><strong>Reference:</strong></p>
+                              <p>{{ item.reference }}</p>
+                            </v-col>
+                            <v-col cols="12" sm="6" md="3">
+                              <p><strong>PAN:</strong></p>
+                              <p>{{ item.pan }}</p>
+                            </v-col>
+                            <v-col cols="12" sm="6" md="3">
+                              <p><strong>Terminal:</strong></p>
+                              <p>{{ item.terminal_no }}</p>
+                            </v-col>
+                            <v-col cols="12" sm="6" md="3">
+                              <p><strong>Source Account:</strong></p>
+                              <p>{{ item.source_account_number }}</p>
+                            </v-col>
+                          </v-row>
+                          <v-row>
+                            <v-col cols="12" sm="6">
+                              <p><strong>Message:</strong></p>
+                              <p>{{ item.message }}</p>
+                            </v-col>
+                            <v-col cols="12" sm="6">
+                              <p><strong>Processing Code:</strong></p>
+                              <p>{{ item.processing_code }}</p>
+                            </v-col>
+                          </v-row>
+                        </v-container>
+                      </td>
+                    </tr>
+                  </template>
+                </v-data-table>
+              </div>
             </v-col>
           </v-row>
 
