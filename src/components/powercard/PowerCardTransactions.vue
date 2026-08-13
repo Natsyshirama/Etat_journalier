@@ -58,7 +58,7 @@
                 :loading="transactionsLoading"
                 @click="loadTransactions"
                 block
-                size="small"
+                
               >
                 <v-icon start>mdi-refresh</v-icon>
                 Charger

@@ -2,28 +2,11 @@
   <div class="t24-diff-card">
     <v-card class="mb-4">
       <v-card-title>Différences PowerCard / T24</v-card-title>
-      <v-card-text>
-        <v-container>
-          <v-row>
-            <v-col cols="12" sm="4">
-              <v-text-field
-                v-model="processingDate"
-                type="date"
-                label="Date de traitement"
-                :disabled="loading"
-                outlined
-                dense
-              />
-            </v-col>
-            <v-col cols="12" sm="4" class="d-flex align-end">
-              <v-btn color="primary" :loading="loading" @click="handleFetch">
-                Charger
-              </v-btn>
-            </v-col>
-          </v-row>
-
-          <v-row>
-            <v-col cols="12" sm="4">
+      <v-card-text style="padding: 0; padding-left: 16px; padding-right: 16px;">
+        <div style="max-height: 70vh; overflow-y: auto; overflow-x: hidden; padding-right: 10px;">
+          <!-- Mode Selection -->
+          <v-row class="mb-2">
+            <v-col cols="12" sm="4" md="3">
               <v-select
                 v-model="mode"
                 :items="modeItems"
@@ -35,8 +18,9 @@
             </v-col>
           </v-row>
 
-          <v-row v-if="mode === 'single'">
-            <v-col cols="12" sm="4">
+          <!-- Single Mode: Date Unique -->
+          <v-row v-if="mode === 'single'" class="mb-2">
+            <v-col cols="12" sm="4" md="3">
               <v-text-field
                 v-model="processingDate"
                 type="date"
@@ -46,10 +30,22 @@
                 dense
               />
             </v-col>
+            <v-col cols="12" sm="4" md="2">
+              <v-btn 
+                color="primary" 
+                :loading="loading" 
+                @click="handleFetch"
+                block
+              >
+                <v-icon start>mdi-refresh</v-icon>
+                Charger
+              </v-btn>
+            </v-col>
           </v-row>
 
-          <v-row v-else>
-            <v-col cols="12" sm="4">
+          <!-- Range Mode: Date Début & Date Fin -->
+          <v-row v-else class="mb-2">
+            <v-col cols="12" sm="4" md="3">
               <v-text-field
                 v-model="startDate"
                 type="date"
@@ -59,7 +55,7 @@
                 dense
               />
             </v-col>
-            <v-col cols="12" sm="4">
+            <v-col cols="12" sm="4" md="3">
               <v-text-field
                 v-model="endDate"
                 type="date"
@@ -69,24 +65,21 @@
                 dense
               />
             </v-col>
-          </v-row>
-
-          <v-row v-if="startDateTime || endDateTime" class="mb-4">
-            <v-col cols="12" sm="6">
-              <v-card class="pa-3">
-                <div class="text-subtitle-2">Début saisie_le</div>
-                <div>{{ startDateTime ?? 'Aucune date disponible' }}</div>
-              </v-card>
-            </v-col>
-            <v-col cols="12" sm="6">
-              <v-card class="pa-3">
-                <div class="text-subtitle-2">Fin saisie_le</div>
-                <div>{{ endDateTime ?? 'Aucune date disponible' }}</div>
-              </v-card>
+            <v-col cols="12" sm="4" md="2">
+              <v-btn 
+                color="primary" 
+                :loading="loading" 
+                @click="handleFetch"
+                block
+                
+              >
+                <v-icon start>mdi-refresh</v-icon>
+                Charger
+              </v-btn>
             </v-col>
           </v-row>
 
-          <v-row v-if="message">
+          <v-row v-if="message" class="mb-4">
             <v-col cols="12">
               <v-alert :type="messageType" dense>
                 {{ message }}
@@ -94,52 +87,76 @@
             </v-col>
           </v-row>
 
+          <v-row v-if="startDateTime || endDateTime" class="mb-4">
+            <v-col cols="12" sm="6" md="3">
+              <v-card class="pa-3">
+                <div class="text-subtitle-2">Début saisie_le</div>
+                <div>{{ startDateTime ?? 'Aucune date disponible' }}</div>
+              </v-card>
+            </v-col>
+            <v-col cols="12" sm="6" md="3">
+              <v-card class="pa-3">
+                <div class="text-subtitle-2">Fin saisie_le</div>
+                <div>{{ endDateTime ?? 'Aucune date disponible' }}</div>
+              </v-card>
+            </v-col>
+          </v-row>
+
           <v-row v-if="diffs.length">
             <v-col cols="12">
-              <v-data-table
-                :items="diffs"
-                :headers="headers"
-                :items-per-page="10"
-                class="elevation-1"
-              >
-                <template #item.powercard="{ item }">
-                  <div @click="openPowerCardReference(item.powercard.reference)" class="reference-link">
-                    <div><strong>PAN:</strong> {{ item.powercard.pan }}</div>
-                    <div><strong>Réf.:</strong> {{ item.powercard.reference }}</div>
-                    <div><strong>Action:</strong> {{ item.powercard.action }}</div>
-                    <div><strong>Montant:</strong> {{ item.powercard.transaction_amount }}</div>
-                  </div>
-                </template>
-                <template #item.t24_matches="{ item }">
-                  <div>
-                    <div><strong>{{ item.t24_matches_count }} match(s)</strong></div>
-                    <div v-if="item.t24_matches.length">
-                      <ul class="match-list">
-                        <li
-                          v-for="(match, index) in item.t24_matches"
-                          :key="index"
-                          class="reference-link"
-                          @click="openT24Reference(match.rrn)"
-                        >
-                          {{ match.pan }} / {{ match.rrn }} / {{ match.credit_amount }} / {{ match.saisie_le }}
-                        </li>
-                      </ul>
+              <div style="overflow-x: auto;">
+                <v-data-table
+                  :items="diffs"
+                  :headers="headers"
+                  :items-per-page="10"
+                  dense
+                  fixed-header
+                  height="400px"
+                  class="elevation-1"
+                >
+                  <template #item.powercard="{ item }">
+                    <div @click="openPowerCardReference(item.powercard.reference)" class="reference-link">
+                      <div><strong>PAN:</strong> {{ item.powercard.pan }}</div>
+                      <div><strong>Réf.:</strong> {{ item.powercard.reference }}</div>
+                      <div><strong>Action:</strong> {{ item.powercard.action }}</div>
+                      <div><strong>Montant:</strong> {{ item.powercard.transaction_amount }}</div>
                     </div>
-                  </div>
-                </template>
-                <template #item.processing_date="{ item }">
-                  {{ item.processing_date || '-' }}
-                </template>
-              </v-data-table>
+                  </template>
+                  <template #item.t24_matches="{ item }">
+                    <div>
+                      <div><strong>{{ item.t24_matches_count }} match(s)</strong></div>
+                      <div v-if="item.t24_matches.length">
+                        <ul class="match-list">
+                          <li
+                            v-for="(match, index) in item.t24_matches"
+                            :key="index"
+                            class="reference-link"
+                            @click="openT24Reference(match.rrn)"
+                          >
+                            {{ match.pan }} / {{ match.rrn }} / {{ match.credit_amount }} / {{ match.saisie_le }}
+                          </li>
+                        </ul>
+                      </div>
+                    </div>
+                  </template>
+                  <template #item.processing_date="{ item }">
+                    {{ item.processing_date || '-' }}
+                  </template>
+                </v-data-table>
+              </div>
             </v-col>
           </v-row>
 
           <v-row v-else>
             <v-col cols="12">
-              <p class="text-caption">Aucune différence trouvée. Sélectionne une date et clique sur Charger.</p>
+              <v-empty-state
+                headline="Aucune différence"
+                description="Sélectionne une date et clique sur Charger."
+                icon="mdi-database-off"
+              />
             </v-col>
           </v-row>
-        </v-container>
+        </div>
       </v-card-text>
     </v-card>
     <v-dialog v-model="showReferenceDialog" max-width="800px">
