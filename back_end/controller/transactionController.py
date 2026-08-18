@@ -360,6 +360,39 @@ class TransactionController:
                         't24_matches': matches
                     })
 
+            # MANQUANT : Boucle pour identifier les T24 non-matchées
+            matched_t24_ids = set()
+            for diff in diff_rows:
+                for t24_match in diff.get('t24_matches', []):
+                    matched_t24_ids.add(t24_match['id'])
+
+            orphan_t24 = [t24 for t24 in t24_rows if t24['id'] not in matched_t24_ids]
+            if orphan_t24:
+                for t24 in orphan_t24:
+                    diff_rows.append({
+                        'type': 'missing_in_powercard',
+                        'powercard': None,
+                        't24': t24
+                    })
+                    
+
+        # MANQUANT : Comparaison des montants pour matches trouvés
+            for diff in diff_rows:
+                if has_match:
+                    for t24_match in matches:
+                        pc_amount = self._normalize_amount(pc.get('transaction_amount'))
+                        t24_amount = self._normalize_amount(t24_match.get('credit_amount'))
+                        if pc_amount != t24_amount:
+                            diff_rows.append({
+                                'type': 'amount_divergence',
+                                'powercard': pc,
+                                't24_matches': [t24_match],
+                                'details': {
+                                    'pc_amount': pc_amount,
+                                    't24_amount': t24_amount
+                                }
+                            })
+
             return {
                 'success': True,
                 'count': len(diff_rows),
