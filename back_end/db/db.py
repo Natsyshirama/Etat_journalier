@@ -3,7 +3,7 @@ from sqlalchemy import create_engine
 
 class DB:
     def __init__(self):
-        self.db_url = 'mysql+pymysql://root:@localhost/money_deb'
+        self.db_url = 'mysql+pymysql://rgab-dev:azerty@2026@localhost/money_deb'
         self.engine = create_engine(self.db_url, pool_size=5, max_overflow=10)
 
     def connect(self):
