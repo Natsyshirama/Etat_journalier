@@ -11,17 +11,17 @@ jobs:
     steps:
       - name: Pull latest code
         run: |
-          cd D:\marc\GAB\Etat_journalier\
+          cd /var/www/money/Etat_journalier
           git checkout production
           git pull origin production
 
       - name: Build Frontend
         run: |
-          cd D:\marc\GAB\Etat_journalier\
+          cd /var/www/money/Etat_journalier
           npm install
           npm run build
 
       - name: Build and Restart Backend
         run: |
-          cd D:\marc\GAB\Etat_journalier\
+          cd /var/www/money/Etat_journalier
           pm2 restart ecosystem.config.cjs
