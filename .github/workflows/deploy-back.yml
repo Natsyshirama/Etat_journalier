@@ -15,13 +15,13 @@ jobs:
           git checkout production
           git pull origin production
 
+      - name: Build and Restart Backend
+        run: |
+          cd /var/www/money/Etat_journalier
+          pm2 restart ecosystem.config.cjs
+          
       - name: Build Frontend
         run: |
           cd /var/www/money/Etat_journalier
           npm install
           npm run build
-
-      - name: Build and Restart Backend
-        run: |
-          cd /var/www/money/Etat_journalier
-          pm2 restart ecosystem.config.cjs
