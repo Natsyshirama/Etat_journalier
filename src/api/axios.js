@@ -2,7 +2,7 @@
 import axios from 'axios';
 
 const api = axios.create({
-  baseURL: 'http://127.0.0.1:8000', // ton IP de backend Flask
+  baseURL: 'http://10.192.251.170:8000', // ton IP de backend Flask
   headers: {
     'Content-Type': 'application/json',
   },
