@@ -18,8 +18,8 @@ jobs:
       - name: Build and Restart Backend
         run: |
           cd /var/www/money/Etat_journalier
-          pm2 restart ecosystem.config.cjs
-          
+          pm2 restart fastapi-backend
+
       - name: Build Frontend
         run: |
           cd /var/www/money/Etat_journalier
