@@ -1,7 +1,7 @@
 import bcrypt
 from sqlalchemy import create_engine, text
 
-engine = create_engine("mysql+pymysql://root:root@localhost/money")
+engine = create_engine("'mysql+pymysql://rgab-dev:azerty%402026@localhost/money_deb'")
 
 username = "admin"
 password = "admin"
