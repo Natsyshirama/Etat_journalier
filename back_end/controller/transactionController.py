@@ -361,19 +361,46 @@ class TransactionController:
                     })
 
             # MANQUANT : Boucle pour identifier les T24 non-matchées
+            # Identifier les T24 non-matchées
             matched_t24_ids = set()
+
             for diff in diff_rows:
                 for t24_match in diff.get('t24_matches', []):
                     matched_t24_ids.add(t24_match['id'])
 
-            orphan_t24 = [t24 for t24 in t24_rows if t24['id'] not in matched_t24_ids]
-            if orphan_t24:
-                for t24 in orphan_t24:
-                    diff_rows.append({
-                        'type': 'missing_in_powercard',
-                        'powercard': None,
-                        't24': t24
-                    })
+            # Convertir les bornes en datetime
+            start_dt_obj = datetime.strptime(start_dt, "%Y-%m-%d %H:%M:%S") if start_dt else None
+            end_dt_obj = datetime.strptime(end_dt, "%Y-%m-%d %H:%M:%S") if end_dt else None
+
+            orphan_t24 = []
+
+            for t24 in t24_rows:
+
+                # Déjà associé à une transaction PowerCard
+                if t24['id'] in matched_t24_ids:
+                    continue
+
+                # Parser saisie_le
+                t24_dt = self._parse_saisie_le(t24.get('saisie_le'))
+
+                # Si impossible de parser, on ne considère pas cette ligne
+                # comme missing_in_powercard
+                if not t24_dt:
+                    continue
+
+                # Vérifier que saisie_le est dans la plage temporelle
+                if start_dt_obj and end_dt_obj:
+                    if not (start_dt_obj <= t24_dt <= end_dt_obj):
+                        continue
+
+                orphan_t24.append(t24)
+
+            for t24 in orphan_t24:
+                diff_rows.append({
+                    'type': 'missing_in_powercard',
+                    'powercard': None,
+                    't24': t24
+                })
                     
 
         # MANQUANT : Comparaison des montants pour matches trouvés
