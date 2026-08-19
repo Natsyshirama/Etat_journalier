@@ -68,8 +68,21 @@
           </v-row>
 
           <!-- Processing Code and Action Filters -->
-          <v-row class="mb-4">
+          <v-row v-if="transactions.length" class="mb-4">
+            
+              <v-col cols="12" sm="6" md="3">
+                <v-text-field
+                  v-model="search"
+                  label="Rechercher"
+                  placeholder="Référence, PAN, compte..."
+                  clearable
+                  outlined
+                  dense
+                />
+              </v-col>
+            <
             <v-col cols="12" sm="6" md="3">
+
               <v-select
                 v-model="selectedProcessingCode"
                 :items="processingCodeOptions"
@@ -89,6 +102,11 @@
                 clearable
               />
             </v-col>
+          </v-row>
+
+          <!-- Search Field -->
+          <v-row class="mb-4">
+            
           </v-row>
 
           <!-- Loading State -->
@@ -228,7 +246,7 @@ const selectedDate = ref('')
 const selectedEndDate = ref('')
 const transactionsLoading = ref(false)
 const transactions = ref([])
-
+const search = ref('')
 const headers = [
   { title: 'Reference', key: 'reference', width: 90 },
   { title: 'PAN', key: 'pan', width: 110 },
@@ -273,6 +291,7 @@ const loadTransactions = async () => {
       0
     )
     transactions.value = Array.isArray(data) ? data : []
+    saveCache()
   } catch (error) {
     console.error('Erreur chargement transactions:', error)
     transactions.value = []
@@ -282,19 +301,57 @@ const loadTransactions = async () => {
 }
 
 const filteredTransactions = computed(() => {
-  return transactions.value.filter(item => {
-    if (selectedProcessingCode.value && item.processing_code !== selectedProcessingCode.value) {
-      return false
-    }
-    if (selectedAction.value && item.action !== selectedAction.value) {
-      return false
-    }
-    return true
+  const searchValue = search.value.trim().toLowerCase()
+
+  return transactions.value.filter((item) => {
+    const matchesSearch =
+      !searchValue ||
+      Object.values(item).some((value) =>
+        String(value ?? '').toLowerCase().includes(searchValue)
+      )
+
+    const matchesProcessingCode =
+      !selectedProcessingCode.value ||
+      item.processing_code === selectedProcessingCode.value
+
+    const matchesAction =
+      !selectedAction.value ||
+      item.action === selectedAction.value
+
+    return matchesSearch && matchesProcessingCode && matchesAction
   })
 })
 
+const CACHE_KEY = 'powercard_transactions_cache'
+
+const saveCache = () => {
+  sessionStorage.setItem(CACHE_KEY, JSON.stringify({
+    selectedDate: selectedDate.value,
+    selectedEndDate: selectedEndDate.value,
+    transactions: transactions.value
+  }))
+}
+
+const restoreCache = () => {
+  const cached = sessionStorage.getItem(CACHE_KEY)
+  if (!cached) return
+
+  try {
+    const data = JSON.parse(cached)
+
+    selectedDate.value = data.selectedDate || ''
+    selectedEndDate.value = data.selectedEndDate || ''
+    transactions.value = Array.isArray(data.transactions)
+      ? data.transactions
+      : []
+  } catch {
+    sessionStorage.removeItem(CACHE_KEY)
+  }
+}
+
 onMounted(() => {
   setApiUrl(api)
+  restoreCache()
   fetchLastLocalTime()
 })
 </script>
