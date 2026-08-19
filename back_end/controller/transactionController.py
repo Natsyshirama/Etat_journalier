@@ -327,38 +327,104 @@ class TransactionController:
                 
 
             diff_rows = []
+
             for pc in pc_rows:
+
                 action = str(pc.get('action') or '').strip().lower()
+
                 pan_key = self._normalize_pan(pc.get('pan'))
                 rrn_key = self._normalize_reference(pc.get('reference'))
-                amount_key = self._normalize_amount(pc.get('transaction_amount'))
 
-                # 1) Matching prioritaire par RRN
-                matches = t24_by_rrn.get(rrn_key, []) if rrn_key is not None else []
+                pc_amount = self._normalize_amount(
+                    pc.get('transaction_amount')
+                )
+
+                # ====================================================
+                # 1. MATCHING PAR RRN
+                # ====================================================
+
+                matches = (
+                    t24_by_rrn.get(rrn_key, [])
+                    if rrn_key is not None
+                    else []
+                )
+
                 has_match = len(matches) > 0
 
-                # 2) Verification de coherence du PAN sur les matches trouves
-                pan_matches = [m for m in matches if self._normalize_pan(m.get('pan')) == pan_key]
-                pan_coherent = len(pan_matches) > 0 if has_match else None
+                # ====================================================
+                # 2. VERIFICATION PAN
+                # ====================================================
+
+                pan_matches = [
+                    m for m in matches
+                    if self._normalize_pan(m.get('pan')) == pan_key
+                ]
+
+                pan_coherent = (
+                    len(pan_matches) > 0
+                    if has_match
+                    else None
+                )
+
+                # ====================================================
+                # 3. POWER CARD APPROVED MAIS ABSENT T24
+                # ====================================================
 
                 if action == 'approved' and not has_match:
+
                     diff_rows.append({
                         'type': 'approved_missing_in_t24',
                         'powercard': pc,
                         't24_matches': []
                     })
+
+                # ====================================================
+                # 4. RRN IDENTIQUE MAIS PAN DIFFERENT
+                # ====================================================
+
                 elif action == 'approved' and has_match and not pan_coherent:
+
                     diff_rows.append({
                         'type': 'pan_incoherent',
                         'powercard': pc,
                         't24_matches': matches
                     })
+
+                # ====================================================
+                # 5. NON APPROVED MAIS PRESENT DANS T24
+                # ====================================================
+
                 elif action != 'approved' and has_match:
+
                     diff_rows.append({
                         'type': 'nonapproved_present_in_t24',
                         'powercard': pc,
                         't24_matches': matches
                     })
+
+                # ====================================================
+                # 6. RRN + PAN IDENTIQUES MAIS MONTANT DIFFERENT
+                # ====================================================
+
+                if has_match and pan_coherent:
+
+                    for t24_match in pan_matches:
+
+                        t24_amount = self._normalize_amount(
+                            t24_match.get('credit_amount')
+                        )
+
+                        if pc_amount != t24_amount:
+
+                            diff_rows.append({
+                                'type': 'amount_divergence',
+                                'powercard': pc,
+                                't24_matches': [t24_match],
+                                'details': {
+                                    'pc_amount': pc_amount,
+                                    't24_amount': t24_amount
+                                }
+                            })
 
             # MANQUANT : Boucle pour identifier les T24 non-matchées
             # Identifier les T24 non-matchées
@@ -403,22 +469,7 @@ class TransactionController:
                 })
                     
 
-        # MANQUANT : Comparaison des montants pour matches trouvés
-            for diff in diff_rows:
-                if has_match:
-                    for t24_match in matches:
-                        pc_amount = self._normalize_amount(pc.get('transaction_amount'))
-                        t24_amount = self._normalize_amount(t24_match.get('credit_amount'))
-                        if pc_amount != t24_amount:
-                            diff_rows.append({
-                                'type': 'amount_divergence',
-                                'powercard': pc,
-                                't24_matches': [t24_match],
-                                'details': {
-                                    'pc_amount': pc_amount,
-                                    't24_amount': t24_amount
-                                }
-                            })
+        
 
             return {
                 'success': True,
