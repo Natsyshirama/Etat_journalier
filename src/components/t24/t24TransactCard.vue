@@ -54,14 +54,27 @@
               :loading="loading"
               @click="handleFetch"
               block
-              size="small"
+              
             >
               <v-icon start>mdi-refresh</v-icon>
               Charger
             </v-btn>
           </v-col>
-        </v-row>
 
+          
+        </v-row>
+        <v-row v-if="transactions.length" class="mb-2">
+          <v-col cols="12" sm="4" md="3">
+            <v-text-field
+              v-model="search"
+              label="Rechercher"
+              placeholder="ID, PAN, RRN, compte..."
+              clearable
+              outlined
+              dense
+            />
+          </v-col>
+        </v-row>
         <v-row v-if="message" class="mb-4">
           <v-col cols="12">
             <v-alert :type="messageType" dense>
@@ -84,12 +97,14 @@
             </v-card>
           </v-col>
         </v-row>
-
+        <div v-if="search" class="text-caption mb-2">
+            {{ filteredTransactions.length }} transaction(s) trouvée(s)
+          </div>
         <v-row v-if="transactions.length">
           <v-col cols="12">
             <div style="overflow-x: auto;">
               <v-data-table
-                :items="transactions"
+                :items="filteredTransactions"
                 :headers="headers"
                 :items-per-page="10"
                 dense
@@ -120,7 +135,7 @@
 </template>
 
 <script setup>
-import { onMounted, inject } from 'vue'
+import { computed, onMounted, inject, ref } from 'vue'
 import { useTransactions } from '../../composables/useTransactions'
 
 const api = inject('api')
@@ -154,11 +169,64 @@ const headers = [
 
 const handleFetch = async () => {
   clearMessage()
-  await fetchTransactions()
+
+  const success = await fetchTransactions()
+
+  if (success !== false && transactions.value.length) {
+    saveCache()
+  }
+}
+
+const search = ref('')
+
+const filteredTransactions = computed(() => {
+  const value = search.value.trim().toLowerCase()
+
+  if (!value) {
+    return transactions.value
+  }
+
+  return transactions.value.filter((transaction) =>
+    Object.values(transaction).some((field) =>
+      String(field ?? '').toLowerCase().includes(value)
+    )
+  )
+})
+
+const CACHE_KEY = 't24_transactions_cache'
+
+const saveCache = () => {
+  sessionStorage.setItem(CACHE_KEY, JSON.stringify({
+    startDate: startDate.value,
+    endDate: endDate.value,
+    transactions: transactions.value,
+    startDateTime: startDateTime.value,
+    endDateTime: endDateTime.value
+  }))
+}
+
+const restoreCache = () => {
+  const cached = sessionStorage.getItem(CACHE_KEY)
+  if (!cached) return
+
+  try {
+    const data = JSON.parse(cached)
+
+    startDate.value = data.startDate || ''
+    endDate.value = data.endDate || ''
+    transactions.value = Array.isArray(data.transactions)
+      ? data.transactions
+      : []
+    startDateTime.value = data.startDateTime || null
+    endDateTime.value = data.endDateTime || null
+  } catch {
+    sessionStorage.removeItem(CACHE_KEY)
+  }
 }
 
 onMounted(() => {
   setApiUrl(api)
+  restoreCache()
   fetchLastSaisieLe()
 })
 </script>
