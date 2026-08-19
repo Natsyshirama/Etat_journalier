@@ -327,62 +327,95 @@ class TransactionController:
                 
 
             diff_rows = []
+
             for pc in pc_rows:
+
                 action = str(pc.get('action') or '').strip().lower()
+
                 pan_key = self._normalize_pan(pc.get('pan'))
                 rrn_key = self._normalize_reference(pc.get('reference'))
-                amount_key = self._normalize_amount(pc.get('transaction_amount'))
 
-                # 1) Matching prioritaire par RRN
-                matches = t24_by_rrn.get(rrn_key, []) if rrn_key is not None else []
+                pc_amount = self._normalize_amount(
+                    pc.get('transaction_amount')
+                )
+
+                # ====================================================
+                # 1. MATCHING PAR RRN
+                # ====================================================
+
+                matches = (
+                    t24_by_rrn.get(rrn_key, [])
+                    if rrn_key is not None
+                    else []
+                )
+
                 has_match = len(matches) > 0
 
-                # 2) Verification de coherence du PAN sur les matches trouves
-                pan_matches = [m for m in matches if self._normalize_pan(m.get('pan')) == pan_key]
-                pan_coherent = len(pan_matches) > 0 if has_match else None
+                # ====================================================
+                # 2. VERIFICATION PAN
+                # ====================================================
+
+                pan_matches = [
+                    m for m in matches
+                    if self._normalize_pan(m.get('pan')) == pan_key
+                ]
+
+                pan_coherent = (
+                    len(pan_matches) > 0
+                    if has_match
+                    else None
+                )
+
+                # ====================================================
+                # 3. POWER CARD APPROVED MAIS ABSENT T24
+                # ====================================================
 
                 if action == 'approved' and not has_match:
+
                     diff_rows.append({
                         'type': 'approved_missing_in_t24',
                         'powercard': pc,
                         't24_matches': []
                     })
+
+                # ====================================================
+                # 4. RRN IDENTIQUE MAIS PAN DIFFERENT
+                # ====================================================
+
                 elif action == 'approved' and has_match and not pan_coherent:
+
                     diff_rows.append({
                         'type': 'pan_incoherent',
                         'powercard': pc,
                         't24_matches': matches
                     })
+
+                # ====================================================
+                # 5. NON APPROVED MAIS PRESENT DANS T24
+                # ====================================================
+
                 elif action != 'approved' and has_match:
+
                     diff_rows.append({
                         'type': 'nonapproved_present_in_t24',
                         'powercard': pc,
                         't24_matches': matches
                     })
 
-            # MANQUANT : Boucle pour identifier les T24 non-matchées
-            matched_t24_ids = set()
-            for diff in diff_rows:
-                for t24_match in diff.get('t24_matches', []):
-                    matched_t24_ids.add(t24_match['id'])
+                # ====================================================
+                # 6. RRN + PAN IDENTIQUES MAIS MONTANT DIFFERENT
+                # ====================================================
 
-            orphan_t24 = [t24 for t24 in t24_rows if t24['id'] not in matched_t24_ids]
-            if orphan_t24:
-                for t24 in orphan_t24:
-                    diff_rows.append({
-                        'type': 'missing_in_powercard',
-                        'powercard': None,
-                        't24': t24
-                    })
-                    
+                if has_match and pan_coherent:
 
-        # MANQUANT : Comparaison des montants pour matches trouvés
-            for diff in diff_rows:
-                if has_match:
-                    for t24_match in matches:
-                        pc_amount = self._normalize_amount(pc.get('transaction_amount'))
-                        t24_amount = self._normalize_amount(t24_match.get('credit_amount'))
+                    for t24_match in pan_matches:
+
+                        t24_amount = self._normalize_amount(
+                            t24_match.get('credit_amount')
+                        )
+
                         if pc_amount != t24_amount:
+
                             diff_rows.append({
                                 'type': 'amount_divergence',
                                 'powercard': pc,
@@ -392,6 +425,51 @@ class TransactionController:
                                     't24_amount': t24_amount
                                 }
                             })
+
+            # MANQUANT : Boucle pour identifier les T24 non-matchées
+            # Identifier les T24 non-matchées
+            matched_t24_ids = set()
+
+            for diff in diff_rows:
+                for t24_match in diff.get('t24_matches', []):
+                    matched_t24_ids.add(t24_match['id'])
+
+            # Convertir les bornes en datetime
+            start_dt_obj = datetime.strptime(start_dt, "%Y-%m-%d %H:%M:%S") if start_dt else None
+            end_dt_obj = datetime.strptime(end_dt, "%Y-%m-%d %H:%M:%S") if end_dt else None
+
+            orphan_t24 = []
+
+            for t24 in t24_rows:
+
+                # Déjà associé à une transaction PowerCard
+                if t24['id'] in matched_t24_ids:
+                    continue
+
+                # Parser saisie_le
+                t24_dt = self._parse_saisie_le(t24.get('saisie_le'))
+
+                # Si impossible de parser, on ne considère pas cette ligne
+                # comme missing_in_powercard
+                if not t24_dt:
+                    continue
+
+                # Vérifier que saisie_le est dans la plage temporelle
+                if start_dt_obj and end_dt_obj:
+                    if not (start_dt_obj <= t24_dt <= end_dt_obj):
+                        continue
+
+                orphan_t24.append(t24)
+
+            for t24 in orphan_t24:
+                diff_rows.append({
+                    'type': 'missing_in_powercard',
+                    'powercard': None,
+                    't24': t24
+                })
+                    
+
+        
 
             return {
                 'success': True,
