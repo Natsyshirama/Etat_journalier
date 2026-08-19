@@ -115,19 +115,21 @@
                   class="elevation-1"
                 >
                   <template #item.powercard="{ item }">
-                    <div v-if="item.type === 'missing_in_powercard' ">—</div>
-                    <div v-else-if="item.powercard">
+                    <div v-if="item.type === 'missing_in_powercard'">
+                      —
+                    </div>
+
+                    <div
+                      v-else-if="item.powercard"
+                      class="reference-link"
+                      @click="openPowerCardReference(item.powercard.reference)"
+                    >
                       <div><strong>PAN:</strong> {{ item.powercard.pan }}</div>
                       <div><strong>Réf.:</strong> {{ item.powercard.reference }}</div>
                       <div><strong>Action:</strong> {{ item.powercard.action }}</div>
                       <div><strong>Montant:</strong> {{ item.powercard.transaction_amount }}</div>
                     </div>
-                    <div v-else-if="item.t24">
-                      <div><strong>T24 seul</strong></div>
-                      <div><strong>PAN:</strong> {{ item.t24.pan }}</div>
-                      <div><strong>RRN:</strong> {{ item.t24.rrn }}</div>
-                      <div><strong>Montant:</strong> {{ item.t24.credit_amount }}</div>
-                    </div>
+
                     <div v-else>—</div>
                   </template>
                   <template #item.t24_matches="{ item }">
@@ -146,8 +148,15 @@
                       </ul>
                     </div>
                     <div v-else-if="item.t24">
-                      <div><strong>T24 seul</strong></div>
-                      <div>{{ item.t24.pan }} / {{ item.t24.rrn }} / {{ item.t24.credit_amount }}</div>
+                      <div
+                        class="reference-link"
+                        @click="openT24Reference(item.t24.rrn)"
+                      >
+                        <div><strong>T24 seul</strong></div>
+                        <div><strong>PAN:</strong> {{ item.t24.pan }}</div>
+                        <div><strong>RRN:</strong> {{ item.t24.rrn }}</div>
+                        <div><strong>Montant:</strong> {{ item.t24.credit_amount }}</div>
+                      </div>
                     </div>
                     <div v-else>—</div>
                   </template>
