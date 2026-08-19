@@ -115,29 +115,50 @@
                   class="elevation-1"
                 >
                   <template #item.powercard="{ item }">
-                    <div @click="openPowerCardReference(item.powercard.reference)" class="reference-link">
+                    <div v-if="item.type === 'missing_in_powercard'">
+                      —
+                    </div>
+
+                    <div
+                      v-else-if="item.powercard"
+                      class="reference-link"
+                      @click="openPowerCardReference(item.powercard.reference)"
+                    >
                       <div><strong>PAN:</strong> {{ item.powercard.pan }}</div>
                       <div><strong>Réf.:</strong> {{ item.powercard.reference }}</div>
                       <div><strong>Action:</strong> {{ item.powercard.action }}</div>
                       <div><strong>Montant:</strong> {{ item.powercard.transaction_amount }}</div>
                     </div>
+
+                    <div v-else>—</div>
                   </template>
                   <template #item.t24_matches="{ item }">
-                    <div>
+                    <div v-if=" item.type === 'approved_missing_in_t24'">—</div>
+                    <div v-else-if="item.t24_matches?.length">
                       <div><strong>{{ item.t24_matches_count }} match(s)</strong></div>
-                      <div v-if="item.t24_matches.length">
-                        <ul class="match-list">
-                          <li
-                            v-for="(match, index) in item.t24_matches"
-                            :key="index"
-                            class="reference-link"
-                            @click="openT24Reference(match.rrn)"
-                          >
-                            {{ match.pan }} / {{ match.rrn }} / {{ match.credit_amount }} / {{ match.saisie_le }}
-                          </li>
-                        </ul>
+                      <ul class="match-list">
+                        <li
+                          v-for="(match, index) in item.t24_matches"
+                          :key="index"
+                          class="reference-link"
+                          @click="openT24Reference(match.rrn)"
+                        >
+                          {{ match.pan }} / {{ match.rrn }} / {{ match.credit_amount }} / {{ match.saisie_le }}
+                        </li>
+                      </ul>
+                    </div>
+                    <div v-else-if="item.t24">
+                      <div
+                        class="reference-link"
+                        @click="openT24Reference(item.t24.rrn)"
+                      >
+                        <div><strong>T24 seul</strong></div>
+                        <div><strong>PAN:</strong> {{ item.t24.pan }}</div>
+                        <div><strong>RRN:</strong> {{ item.t24.rrn }}</div>
+                        <div><strong>Montant:</strong> {{ item.t24.credit_amount }}</div>
                       </div>
                     </div>
+                    <div v-else>—</div>
                   </template>
                   <template #item.processing_date="{ item }">
                     {{ item.processing_date || '-' }}
