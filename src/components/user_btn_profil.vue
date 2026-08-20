@@ -54,8 +54,7 @@
 <script setup>
 import { ref , onMounted,inject} from 'vue'
 import { usePopupStore } from '../stores'  
-
-
+import { clearAppCache } from '@/utils/auth'
 
 const api = inject('api') 
 const menu = ref(false) 
@@ -88,18 +87,18 @@ const toggleTheme=()=> {
   }
 }
 
-const logout=async ()=> {
-     const response = await fetch(`${api}/api/logout`, {  
-      method: "POST",
-            credentials: "include"
-        })
-        
-      console.log(response.status);
-      if (response.status == 200) {
-        localStorage.removeItem("access_token")
-        location.replace('/login')
-      }
-      
+const logout = async () => {
+  try {
+    await fetch(`${api}/api/logout`, {
+      method: 'POST',
+      credentials: 'include'
+    })
+  } finally {
+    clearAppCache()
+    localStorage.removeItem('access_token')
+    localStorage.removeItem('privilege')
+    location.replace('/login')
+  }
 }
 
 onMounted(() => { 
