@@ -61,7 +61,7 @@ const toolbarTitle = computed(() => {
   if (isDecDetal.value) return 'Détail Décaissement'
   if (isAgence.value) return 'Gestion des Agences'
   if (isPowerCard.value) return 'Power Card'
-  if (ist24.value) return 'Gesstion transaction GAB'
+  if (ist24.value) return 'Transaction GAB'
 
  return 'Encours Credits'
 })
