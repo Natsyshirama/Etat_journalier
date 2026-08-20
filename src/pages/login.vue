@@ -41,7 +41,8 @@
 </template>
 
 <script setup>
-import { ref,inject } from "vue"
+import { ref, inject, onMounted } from 'vue'
+import { clearAppCache } from '@/utils/auth'
 import { useNotificationStore } from '@/stores/notification'
 const notificationStore = useNotificationStore()
 
@@ -111,7 +112,9 @@ const handleSubmit = async () => {
     errorMessage.value = err.message || "Une erreur est survenue";
   }
 }
-
+onMounted(() => {
+  clearAppCache()
+})
 </script>
 
 
