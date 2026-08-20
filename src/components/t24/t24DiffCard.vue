@@ -223,7 +223,7 @@
 </template>
 
 <script setup>
-import { onMounted, inject } from 'vue'
+import { onMounted, inject, ref } from 'vue'
 import { useT24Diff } from '../../composables/useT24Diff'
 
 const apiUrl = inject('api')
@@ -296,10 +296,46 @@ const headers = [
   { title: 'PowerCard', key: 'powercard' },
   { title: 'Matches T24', key: 't24_matches' }
 ]
+const cacheKey = 't24_diff_cache'
 
+const saveCache = () => {
+  sessionStorage.setItem(cacheKey, JSON.stringify({
+    mode: mode.value,
+    processingDate: processingDate.value,
+    startDate: startDate.value,
+    endDate: endDate.value,
+    diffs: diffs.value,
+    startDateTime: startDateTime.value,
+    endDateTime: endDateTime.value
+  }))
+}
+
+const restoreCache = () => {
+  const cached = sessionStorage.getItem(cacheKey)
+  if (!cached) return
+
+  try {
+    const data = JSON.parse(cached)
+
+    mode.value = data.mode || 'single'
+    processingDate.value = data.processingDate || ''
+    startDate.value = data.startDate || ''
+    endDate.value = data.endDate || ''
+    diffs.value = Array.isArray(data.diffs) ? data.diffs : []
+    startDateTime.value = data.startDateTime || null
+    endDateTime.value = data.endDateTime || null
+  } catch {
+    sessionStorage.removeItem(cacheKey)
+  }
+}
 const handleFetch = async () => {
   clearMessage()
-  await fetchDiffs()
+
+  const success = await fetchDiffs()
+
+  if (success && diffs.value.length) {
+    saveCache()
+  }
 }
 
 onMounted(() => {
