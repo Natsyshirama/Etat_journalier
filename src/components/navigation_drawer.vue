@@ -71,13 +71,13 @@ const list_menu =[
      icon: 'mdi-database',  // ou mdi-office-building-outline
     title: 'GAB Transactions', 
     to: '/app/t24', 
-    access: 'admin'
+    access: 'all'
   },
   { 
     icon: 'mdi-database-import',  // ou mdi-swap-horizontal
     title: 'Power Card', 
     to: '/app/powercard', 
-    access: 'admin' 
+    access: 'all' 
   },
   
   { 

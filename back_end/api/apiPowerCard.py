@@ -1,12 +1,28 @@
-from fastapi import APIRouter, HTTPException, UploadFile, File, Query
+from fastapi import APIRouter, HTTPException, UploadFile, File, Query,Request
 from typing import Optional
 from controller.PowerCardController import PowerCardController
 from controller.importPowerCardController import ImportPowerCardController
 from controller.importTransactT24Controller import ImportTransactT24Controller
+from controller.Users import Users
+
 router = APIRouter()
 power_card_controller = PowerCardController()
 import_power_card_controller = ImportPowerCardController()
 import_t24 = ImportTransactT24Controller()
+
+user = Users()
+
+def require_admin(request: Request):
+    current_user = user.get_current_user(request)
+
+    if current_user.get("privillege") != "admin":
+        raise HTTPException(
+            status_code=403,
+            detail="Accès réservé aux administrateurs"
+        )
+
+    return current_user
+
 
 @router.get("/powercard/last_local_time")
 async def get_powercard_last_local_time():
@@ -86,9 +102,12 @@ async def get_t24_last_saisie_le():
 
 @router.post("/t24/import")
 async def import_transaction_t24(
+    request: Request,
     file: UploadFile = File(...),
     import_date: str = Query(..., description="Date d'import au format YYYY-MM-DD")
 ):
+    require_admin(request)
+
     """
     Importer un fichier T24
     
