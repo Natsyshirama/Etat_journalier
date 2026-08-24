@@ -21,8 +21,41 @@
 
         <form @submit.prevent="handleSubmit">
           <input type="text" placeholder="Votre nom d'utilisateur" v-model="username" />
-          <input type="password" placeholder="Mot de passe" v-model="password" />
-          <input  v-if="activeTab !== 'signIn'" type="password" placeholder="Verification mot de passe" v-model="verif_password" />
+          <div class="password-field">
+            <input
+              :type="showPassword ? 'text' : 'password'"
+              placeholder="Mot de passe"
+              v-model="password"
+              :minlength="activeTab === 'signIn' ? undefined : 8"
+              required
+            />
+            <button
+              v-if="activeTab !== 'signIn'"
+              type="button"
+              class="password-toggle"
+              :aria-label="showPassword ? 'Masquer le mot de passe' : 'Afficher le mot de passe'"
+              @click="showPassword = !showPassword"
+            >
+              {{ showPassword ? 'Masquer' : 'Afficher' }}
+            </button>
+          </div>
+          <div v-if="activeTab !== 'signIn'" class="password-field">
+            <input
+              :type="showVerificationPassword ? 'text' : 'password'"
+              placeholder="Verification mot de passe"
+              v-model="verif_password"
+              minlength="8"
+              required
+            />
+            <button
+              type="button"
+              class="password-toggle"
+              :aria-label="showVerificationPassword ? 'Masquer la verification' : 'Afficher la verification'"
+              @click="showVerificationPassword = !showVerificationPassword"
+            >
+              {{ showVerificationPassword ? 'Masquer' : 'Afficher' }}
+            </button>
+          </div>
           <input v-if="activeTab !== 'signIn'"  type="text" placeholder="Immatricule" v-model="immatricule" />
           <a href="#" v-if="activeTab === 'signIn'" class="forgot">Mot de passe oublier?</a>
           <button type="submit">{{ activeTab === 'signIn' ? 'Connexion' : 'Inscription' }}</button>
@@ -54,6 +87,8 @@ const password = ref("")
 const verif_password = ref("")
 const immatricule = ref("")
 const errorMessage = ref("")
+const showPassword = ref(false)
+const showVerificationPassword = ref(false)
 
 const handleSubmit = async () => {    
   errorMessage.value = "" // réinitialiser l'erreur
@@ -82,6 +117,10 @@ const handleSubmit = async () => {
 
     } else {
       // Inscription
+      if (password.value.length < 8) {
+        throw new Error("Le mot de passe doit contenir au moins 8 caracteres")
+      }
+
       if (password.value !== verif_password.value) {
         throw new Error("Les mots de passe ne correspondent pas");
       } 
@@ -204,6 +243,12 @@ onMounted(() => {
   flex-direction: column;
 }
 
+.password-field {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
 .login-right input {
   margin-bottom: 15px;
   padding: 12px 15px;
@@ -213,6 +258,23 @@ onMounted(() => {
   background: rgba(255,255,255,0.15);
   color: #fff;
   font-size: 1rem;
+}
+
+.password-field input {
+  width: 100%;
+  padding-right: 90px;
+}
+
+.password-toggle {
+  position: absolute;
+  right: 10px;
+  top: 7px;
+  padding: 5px;
+  border: none;
+  background: transparent;
+  color: #ddd;
+  cursor: pointer;
+  font-size: 0.8rem;
 }
 
 .login-right .forgot {
