@@ -1,7 +1,7 @@
 <template>
   <div class="power-card-page">
     <v-tabs v-model="activeTab" class="mb-4">
-      <v-tab value="import">
+      <v-tab v-if="isAdmin" value="import">
         <v-icon start>mdi-upload</v-icon>
         Import Power Card
       </v-tab>
@@ -21,7 +21,7 @@
 
     <v-window v-model="activeTab">
       <!-- Import Tab -->
-      <v-window-item value="import">
+      <v-window-item v-if="isAdmin" value="import">
         <PowerCardUpload />
       </v-window-item>
 
@@ -44,13 +44,19 @@
 </template>
 
 <script setup>
-import { ref } from 'vue'
+import { ref, computed } from 'vue'
+import { usePopupStore } from '../../stores'
+
 import PowerCardUpload from '../../components/powercard/PowerCardUpload.vue'
 import PowerCardStats from '../../components/powercard/PowerCardStats.vue'
 import PowerCardTransactions from '../../components/powercard/PowerCardTransactions.vue'
-import PowerProcessing from '../../components/powercard/powerProcessing.vue'
+import PowerProcessing from '../../components/powercard/PowerProcessing.vue'
 
 const activeTab = ref('import')
+const popupStore = usePopupStore()
+
+const isAdmin = computed(() => popupStore.user_access.access === 'admin')
+
 </script>
 
 <style scoped>

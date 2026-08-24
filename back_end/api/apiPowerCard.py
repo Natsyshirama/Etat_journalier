@@ -44,9 +44,11 @@ async def get_powercard_last_local_time():
 
 @router.post("/powercard/import")
 async def import_power_card(
+    request: Request,
     file: UploadFile = File(...),
     import_date: str = Query(..., description="Date d'import au format YYYY-MM-DD")
 ):
+    require_admin(request)
     """
     Importer un fichier Power Card
     
