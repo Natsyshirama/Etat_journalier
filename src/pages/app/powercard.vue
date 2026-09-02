@@ -56,7 +56,7 @@ const activeTab = ref('transactions')
 const popupStore = usePopupStore()
 
 const isAdmin = computed(() => popupStore.user_access.access === 'admin')
-
+ console.log(popupStore.user_access) 
 
 </script>
 
