@@ -55,7 +55,9 @@ import PowerProcessing from '../../components/powercard/PowerProcessing.vue'
 const activeTab = ref('import')
 const popupStore = usePopupStore()
 
-const isAdmin = computed(() => popupStore.user_access.access === 'admin')
+const isAdmin = computed(() =>
+  ['admin', 'superadmin'].includes((popupStore.user_access.access || '').toLowerCase())
+)
 
 </script>
 

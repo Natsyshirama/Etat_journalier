@@ -95,6 +95,7 @@ const logout = async () => {
     })
   } finally {
     clearAppCache()
+    popupStore.user_access.access = ''
     localStorage.removeItem('access_token')
     localStorage.removeItem('privilege')
     location.replace('/login')
