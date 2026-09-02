@@ -112,7 +112,7 @@ const handleSubmit = async () => {
       }
 
       localStorage.setItem("access_token", data.access_token);
-      localStorage.setItem("privilege", data.privilege);
+      localStorage.setItem("privilege", data.privillege);
       location.replace('/app/t24');
 
     } else {
