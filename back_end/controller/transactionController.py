@@ -328,6 +328,8 @@ class TransactionController:
 
             diff_rows = []
 
+            matched_t24_ids = set()
+
             for pc in pc_rows:
 
                 action = str(pc.get('action') or '').strip().lower()
@@ -350,6 +352,10 @@ class TransactionController:
                 )
 
                 has_match = len(matches) > 0
+
+                if has_match:
+                    for t24_match in matches:
+                        matched_t24_ids.add(t24_match['id'])
 
                 # ====================================================
                 # 2. VERIFICATION PAN
@@ -426,13 +432,7 @@ class TransactionController:
                                 }
                             })
 
-            # MANQUANT : Boucle pour identifier les T24 non-matchées
-            # Identifier les T24 non-matchées
-            matched_t24_ids = set()
-
-            for diff in diff_rows:
-                for t24_match in diff.get('t24_matches', []):
-                    matched_t24_ids.add(t24_match['id'])
+            
 
             # Convertir les bornes en datetime
             start_dt_obj = datetime.strptime(start_dt, "%Y-%m-%d %H:%M:%S") if start_dt else None
