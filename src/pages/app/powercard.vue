@@ -44,7 +44,7 @@
 </template>
 
 <script setup>
-import { ref, computed } from 'vue'
+import { ref, computed, watch } from 'vue'
 import { usePopupStore } from '../../stores'
 
 import PowerCardUpload from '../../components/powercard/PowerCardUpload.vue'
@@ -56,12 +56,21 @@ const activeTab = ref('transactions')
 const popupStore = usePopupStore()
 
 const isAdmin = computed(() => {
-  console.log('PowerCard user_access:', popupStore.user_access)
-  console.log('PowerCard access:', popupStore.user_access?.access)
-  console.log('PowerCard isAdmin:', popupStore.user_access?.access === 'admin')
-
   return popupStore.user_access?.access === 'admin'
 })
+
+watch(
+  () => popupStore.user_access,
+  (value) => {
+    console.log('USER ACCESS:', value)
+    console.log('ACCESS:', value?.access)
+    console.log('IS ADMIN:', isAdmin.value)
+  },
+  {
+    immediate: true,
+    deep: true
+  }
+)
 
 </script>
 
