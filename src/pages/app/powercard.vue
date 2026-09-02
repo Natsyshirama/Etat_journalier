@@ -52,7 +52,7 @@ import PowerCardStats from '../../components/powercard/PowerCardStats.vue'
 import PowerCardTransactions from '../../components/powercard/PowerCardTransactions.vue'
 import PowerProcessing from '../../components/powercard/PowerProcessing.vue'
 
-const activeTab = ref('import')
+const activeTab = ref('transactions')
 const popupStore = usePopupStore()
 
 const isAdmin = computed(() => popupStore.user_access.access === 'admin')
