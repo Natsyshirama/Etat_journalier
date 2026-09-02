@@ -55,8 +55,13 @@ import PowerProcessing from '../../components/powercard/PowerProcessing.vue'
 const activeTab = ref('transactions')
 const popupStore = usePopupStore()
 
-const isAdmin = computed(() => popupStore.user_access.access === 'admin')
- console.log(popupStore.user_access) 
+const isAdmin = computed(() => {
+  console.log('PowerCard user_access:', popupStore.user_access)
+  console.log('PowerCard access:', popupStore.user_access?.access)
+  console.log('PowerCard isAdmin:', popupStore.user_access?.access === 'admin')
+
+  return popupStore.user_access?.access === 'admin'
+})
 
 </script>
 
