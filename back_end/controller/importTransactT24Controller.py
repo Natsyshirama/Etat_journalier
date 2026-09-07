@@ -66,7 +66,8 @@ class ImportTransactT24Controller:
 
             df = pd.read_csv(
                 io.StringIO(content),
-                sep=',',
+                sep=None,
+                engine='python',
                 quotechar='"',
                 dtype=str,
                 keep_default_na=False,
