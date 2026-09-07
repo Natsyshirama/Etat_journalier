@@ -4,7 +4,7 @@ from controller.PowerCardController import PowerCardController
 from controller.importPowerCardController import ImportPowerCardController
 from controller.importTransactT24Controller import ImportTransactT24Controller
 from controller.Users import Users
-
+from datetime import datetime
 router = APIRouter()
 power_card_controller = PowerCardController()
 import_power_card_controller = ImportPowerCardController()
@@ -187,6 +187,58 @@ async def get_power_card_stats(import_date: Optional[str] = Query(None, descript
         raise HTTPException(status_code=500, detail=str(e))
 
 
+@router.get("/powercard/stats/by-terminal")
+async def get_stats_by_terminal_all_date():
+    try:
+        result = power_card_controller.get_stats_by_terminal_all_date()
+
+        if not result.get("success", False):
+            raise HTTPException(
+                status_code=500,
+                detail=result.get("error", "Erreur interne")
+            )
+
+        return {
+            "status": "success",
+            "data": result["data"],
+            "count": result["count"]
+        }
+
+    except HTTPException as he:
+        raise he
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@router.get("/powercard/stats/by-terminal/{date}")
+async def get_stats_by_terminal_for_date(date: str):
+    try:
+        try:
+            datetime.strptime(date, "%Y-%m-%d")
+        except ValueError:
+            raise HTTPException(
+                status_code=400,
+                detail="Format invalide. Utilisez YYYY-MM-DD"
+            )
+
+        result = power_card_controller.get_stats_by_terminal_for_date(date)
+
+        if not result.get("success", False):
+            raise HTTPException(
+                status_code=500,
+                detail=result.get("error", "Erreur interne")
+            )
+
+        return {
+            "status": "success",
+            "data": result["data"],
+            "count": result["count"]
+        }
+
+    except HTTPException as he:
+        raise he
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
 @router.get("/powercard/transactions")
 async def get_transactions(
     start_date: str = Query(..., description="Date de début au format YYYY-MM-DD"),
