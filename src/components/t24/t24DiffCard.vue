@@ -102,6 +102,35 @@
             </v-col>
           </v-row>
 
+          <v-row v-if="diffs.length" class="mb-2 justify-end">
+            <v-col cols="auto">
+              <v-menu location="bottom end" offset="8">
+                <template #activator="{ props }">
+                  <v-btn
+                    v-bind="props"
+                    color="primary"
+                    icon="mdi-download"
+                    title="Télécharger les différences"
+                    aria-label="Télécharger les différences"
+                  />
+                </template>
+
+                <v-list density="compact">
+                  <v-list-item
+                    prepend-icon="mdi-file-delimited"
+                    title="CSV"
+                    @click="exportDiffs('csv')"
+                  />
+                  <v-list-item
+                    prepend-icon="mdi-file-excel"
+                    title="Excel"
+                    @click="exportDiffs('xlsx')"
+                  />
+                </v-list>
+              </v-menu>
+            </v-col>
+          </v-row>
+
           <v-row v-if="diffs.length">
             <v-col cols="12">
               <div style="overflow-x: auto;">
@@ -225,6 +254,7 @@
 <script setup>
 import { onMounted, inject, ref } from 'vue'
 import { useT24Diff } from '../../composables/useT24Diff'
+import { exportTable } from '../../composables/exportTable'
 
 const apiUrl = inject('api')
 const referenceFieldsT24 = [
@@ -336,6 +366,53 @@ const handleFetch = async () => {
   if (success && diffs.value.length) {
     saveCache()
   }
+}
+
+const exportDiffs = (format) => {
+  const rows = diffs.value.map((item) => ({
+    processing_date: item.processing_date || '',
+    type: item.type || '',
+
+    powercard_pan: item.powercard?.pan || '',
+    powercard_reference: item.powercard?.reference || '',
+    powercard_action: item.powercard?.action || '',
+    powercard_amount: item.powercard?.transaction_amount || '',
+
+    t24_matches_count: item.t24_matches_count || 0,
+
+    t24_matches: (item.t24_matches || [])
+      .map((match) => (
+        `${match.pan || ''} / ${match.rrn || ''} / ` +
+        `${match.credit_amount || ''} / ${match.saisie_le || ''}`
+      ))
+      .join(' ; '),
+
+    t24_pan: item.t24?.pan || '',
+    t24_rrn: item.t24?.rrn || '',
+    t24_amount: item.t24?.credit_amount || ''
+  }))
+
+  const columns = [
+    { key: 'processing_date', title: 'Processing Date' },
+    { key: 'type', title: 'Type' },
+    { key: 'powercard_pan', title: 'PowerCard PAN' },
+    { key: 'powercard_reference', title: 'PowerCard Référence' },
+    { key: 'powercard_action', title: 'PowerCard Action' },
+    { key: 'powercard_amount', title: 'PowerCard Montant' },
+    { key: 't24_matches_count', title: 'Nombre de matchs T24' },
+    { key: 't24_matches', title: 'Matches T24' },
+    { key: 't24_pan', title: 'T24 PAN' },
+    { key: 't24_rrn', title: 'T24 RRN' },
+    { key: 't24_amount', title: 'T24 Montant' }
+  ]
+
+  exportTable({
+    rows,
+    columns,
+    filename: 'differences_powercard_t24',
+    format,
+    sheetName: 'Différences'
+  })
 }
 
 onMounted(() => {
