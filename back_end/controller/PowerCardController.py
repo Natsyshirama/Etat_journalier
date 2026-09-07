@@ -258,3 +258,124 @@ class PowerCardController:
             "success": True,
             "data": stats
         }
+
+    def _get_terminal_stats(self, conn, local_date=None):
+        date_filter = ""
+        params = {}
+
+        if local_date:
+            date_filter = "AND DATE(local_time) = :local_date"
+            params["local_date"] = local_date
+
+        query = text(f"""
+            SELECT
+                COALESCE(terminal_no, 'INCONNU') AS terminal_no,
+                action,
+                COUNT(*) AS transaction_count,
+                COALESCE(SUM({self._AMOUNT_EXPR}), 0) AS total_amount
+            FROM transact_power_card
+            WHERE processing_code = 'WITHDRAWAL'
+            {date_filter}
+            GROUP BY terminal_no, action
+            ORDER BY terminal_no, transaction_count DESC
+        """)
+
+        rows = conn.execute(query, params).mappings().all()
+        terminals = {}
+
+        for row in rows:
+            terminal = row["terminal_no"]
+            action = (row["action"] or "AUTRE").strip()
+            action_key = action.lower()
+            count = int(row["transaction_count"] or 0)
+            amount = float(row["total_amount"] or 0)
+
+            if terminal not in terminals:
+                terminals[terminal] = {
+                    "terminal_no": terminal,
+                    "total_transactions": 0,
+                    "approved_count": 0,
+                    "canceled_count": 0,
+                    "other_count": 0,
+                    "approved_amount": 0,
+                    "success_rate": 0,
+                    "other_actions": {}
+                }
+
+            stats = terminals[terminal]
+            stats["total_transactions"] += count
+
+            if action_key == "approved":
+                stats["approved_count"] += count
+                stats["approved_amount"] += amount
+
+            elif action_key == "canceled":
+                stats["canceled_count"] += count
+
+            else:
+                stats["other_count"] += count
+                stats["other_actions"][action] = (
+                    stats["other_actions"].get(action, 0) + count
+                )
+
+        result = []
+
+        for stats in terminals.values():
+            total = stats["total_transactions"]
+
+            stats["success_rate"] = round(
+                (stats["approved_count"] / total) * 100,
+                2
+            ) if total else 0
+
+            result.append(stats)
+
+        return result
+
+    def get_stats_by_terminal_all_date(self):
+        conn = None
+
+        try:
+            conn = self.db.connect()
+            data = self._get_terminal_stats(conn)
+
+            return {
+                "success": True,
+                "data": data,
+                "count": len(data)
+            }
+
+        except Exception as e:
+            return {
+                "success": False,
+                "error": str(e),
+                "data": []
+            }
+
+        finally:
+            if conn:
+                conn.close()
+
+    def get_stats_by_terminal_for_date(self, date):
+        conn = None
+
+        try:
+            conn = self.db.connect()
+            data = self._get_terminal_stats(conn, date)
+
+            return {
+                "success": True,
+                "data": data,
+                "count": len(data)
+            }
+
+        except Exception as e:
+            return {
+                "success": False,
+                "error": str(e),
+                "data": []
+            }
+
+        finally:
+            if conn:
+                conn.close()

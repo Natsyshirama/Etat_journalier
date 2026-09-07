@@ -61,6 +61,38 @@
             </v-btn>
           </v-col>
 
+          <v-col
+            cols="12"
+            sm="4"
+            md="2"
+            class="ml-auto d-flex justify-end"
+          >
+            <v-menu location="bottom" offset="8">
+              <template #activator="{ props }">
+                <v-btn
+                  v-bind="props"
+                  color="primary"
+                  icon="mdi-download"
+                  :disabled="!filteredTransactions.length"
+                  title="Télécharger les transactions"
+                  aria-label="Télécharger les transactions"
+                />
+              </template>
+
+              <v-list density="compact">
+                <v-list-item
+                  prepend-icon="mdi-file-delimited"
+                  title="CSV"
+                  @click="exportTransactions('csv')"
+                />
+                <v-list-item
+                  prepend-icon="mdi-file-excel"
+                  title="Excel"
+                  @click="exportTransactions('xlsx')"
+                />
+              </v-list>
+            </v-menu>
+          </v-col>
           
         </v-row>
         <v-row v-if="transactions.length" class="mb-2">
@@ -137,6 +169,7 @@
 <script setup>
 import { computed, onMounted, inject, ref } from 'vue'
 import { useTransactions } from '../../composables/useTransactions'
+import { exportTable } from '../../composables/exportTable'
 
 const api = inject('api')
 const {
@@ -222,6 +255,21 @@ const restoreCache = () => {
   } catch {
     sessionStorage.removeItem(CACHE_KEY)
   }
+}
+
+const exportColumns = headers.map(({ key, title }) => ({
+  key,
+  title
+}))
+
+const exportTransactions = (format) => {
+  exportTable({
+    rows: filteredTransactions.value,
+    columns: exportColumns,
+    filename: 'transactions_t24',
+    format,
+    sheetName: 'Transactions'
+  })
 }
 
 onMounted(() => {
