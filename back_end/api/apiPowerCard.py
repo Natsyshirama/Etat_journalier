@@ -239,6 +239,8 @@ async def get_stats_by_terminal_for_date(date: str):
         raise he
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
+
+
 @router.get("/powercard/transactions")
 async def get_transactions(
     start_date: str = Query(..., description="Date de début au format YYYY-MM-DD"),
