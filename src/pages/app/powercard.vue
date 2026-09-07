@@ -50,7 +50,7 @@ import { usePopupStore } from '../../stores'
 import PowerCardUpload from '../../components/powercard/PowerCardUpload.vue'
 import PowerCardStats from '../../components/powercard/PowerCardStats.vue'
 import PowerCardTransactions from '../../components/powercard/PowerCardTransactions.vue'
-import PowerProcessing from '../../components/powercard/PowerProcessing.vue'
+import PowerProcessing from '../../components/powercard/powerProcessing.vue'
 
 const activeTab = ref('transactions')
 const popupStore = usePopupStore()
