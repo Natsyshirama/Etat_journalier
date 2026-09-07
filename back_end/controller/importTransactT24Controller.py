@@ -65,15 +65,16 @@ class ImportTransactT24Controller:
             content = file.file.read().decode('utf-8', errors='replace')
 
             df = pd.read_csv(
-                io.StringIO(content),
-                sep=',',
-                quotechar='"',
-                dtype=str,
-                keep_default_na=False,
-                na_values=[''],
-                skipinitialspace=True
-            )
-
+                                io.StringIO(content),
+                                sep=None,
+                                engine='python',
+                                quotechar='"',
+                                dtype=str,
+                                keep_default_na=False,
+                                na_values=[''],
+                                skipinitialspace=True
+                            )
+                
             if df.empty:
                 return pd.DataFrame()
 
