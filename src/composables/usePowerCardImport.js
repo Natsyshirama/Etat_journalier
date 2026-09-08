@@ -240,6 +240,33 @@ const fetchStats = async (date = null) => {
     messageType.value = ''
   }
 
+  const fetchTerminalStats = async (date = null) => {
+    try {
+      const url = date
+        ? `${api.value}/api/powercard/stats/by-terminal/${date}`
+        : `${api.value}/api/powercard/stats/by-terminal`
+
+      const response = await fetch(url, {
+        headers: {
+          Authorization: `Bearer ${localStorage.getItem('access_token')}`
+        }
+      })
+
+      const data = await response.json()
+
+      if (!response.ok || data.status !== 'success') {
+        throw new Error(data.detail || 'Erreur lors du chargement des statistiques par terminal')
+      }
+
+      return data.data || []
+    } catch (error) {
+      console.error('Erreur fetchTerminalStats:', error)
+      messageType.value = 'error'
+      message.value = error.message
+      return []
+    }
+  }
+
   return {
     file,
     importDate,
@@ -255,7 +282,9 @@ const fetchStats = async (date = null) => {
     fetchStats,
     fetchTransactions,
     fetchLastLocalTime,   // <-- ajouter
+    fetchTerminalStats,
     lastLocalTime,    
     clearMessage
+    
   }
 }
