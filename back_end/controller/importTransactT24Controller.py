@@ -79,7 +79,9 @@ class ImportTransactT24Controller:
                 return pd.DataFrame()
 
             df.columns = [
-                str(col).strip()
+                str(col)
+                .replace('\ufeff', '')
+                .strip()
                 .replace('"', '')
                 .lower()
                 .replace(' ', '_')
@@ -91,6 +93,7 @@ class ImportTransactT24Controller:
                 df[col] = df[col].apply(self._clean_cell)
 
             print(f"[DEBUG] Colonnes trouvées: {list(df.columns)}")
+            print(f"[DEBUG] Première ligne: {df.iloc[0].to_dict()}")
             return df
 
         except Exception as e:
@@ -139,13 +142,42 @@ class ImportTransactT24Controller:
 
         for idx, row in df.iterrows():
             try:
-                account_number = row.get("creditaccountnumber") or row.get("num_compte_credit") or row.get("num_compte") or row.get("num_compte_credit")
-                credit_amount = row.get("creditamount") or row.get("credit_amount") or row.get("creditAmount")
-                processing_date_raw = row.get("processingdate") or row.get("processing_date")
-                pan = row.get("l_at_pan_no") or row.get("latpanno")
-                rrn = row.get("l_at_rrn") or row.get("latrrn")
-                compte_db_cions = row.get("compte_db_cions") or row.get("chargesacctno")
-                saisie_le = row.get("saisi_le") or row.get("datetime")
+                account_number = self._get_value(
+                    row,
+                    "creditaccountnumber",
+                    "num_compte_credit",
+                    "num_compte"
+                )
+                credit_amount = self._get_value(
+                    row,
+                    "creditamount",
+                    "credit_amount"
+                )
+                processing_date_raw = self._get_value(
+                    row,
+                    "processingdate",
+                    "processing_date"
+                )
+                pan = self._get_value(
+                    row,
+                    "l_at_pan_no",
+                    "latpanno"
+                )
+                rrn = self._get_value(
+                    row,
+                    "l_at_rrn",
+                    "latrrn"
+                )
+                compte_db_cions = self._get_value(
+                    row,
+                    "compte_db_cions",
+                    "chargesacctno"
+                )
+                saisie_le = self._get_value(
+                    row,
+                    "saisi_le",
+                    "datetime"
+                )
 
                 processing_date = self.convert_processing_date(processing_date_raw)
 
@@ -230,3 +262,10 @@ class ImportTransactT24Controller:
             "rows_inserted": rows_inserted,
             "error_count": len(errors)
         }
+
+    def _get_value(self, row, *names):
+        for name in names:
+            value = row.get(name)
+            if value is not None and str(value).strip() != "":
+                return value
+        return None
