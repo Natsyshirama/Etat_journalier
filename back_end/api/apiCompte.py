@@ -1,4 +1,4 @@
-from fastapi import APIRouter, HTTPException, Query,Request,Depends
+from fastapi import APIRouter, HTTPException, Query,Request,Depends,Form
 from fastapi.responses import JSONResponse, StreamingResponse, FileResponse
 from typing import List, Optional
 import json
@@ -308,3 +308,23 @@ async def create_batch_agences(agences_data: List[AgenceCreate]):
         print(f"[ERREUR route create_batch_agences] {e}")
         raise HTTPException(status_code=500, detail=str(e))
 api_router2 = router
+
+@router.post("/reset_user_password")
+def reset_user_password(
+    request: Request,
+    username: str = Form(...),
+    admin_password: str = Form(...)
+):
+    current_user = user.get_current_user(request)
+
+    if current_user.get("privillege") not in ["admin", "superadmin"]:
+        raise HTTPException(
+            status_code=403,
+            detail="Accès refusé"
+        )
+
+    return user.reset_user_password(
+        request,
+        username,
+        admin_password
+    )

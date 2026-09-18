@@ -79,7 +79,7 @@
 
               <v-list-item>
                 <template v-slot:prepend>
-                  <v-icon color="grey">mdi-car</v-icon>
+                  <v-icon color="grey"></v-icon>
                 </template>
                 <v-list-item-title class="font-weight-bold">Immatricule</v-list-item-title>
                 <v-list-item-subtitle class="text-value">{{ user.immatricule }}</v-list-item-subtitle>
@@ -135,7 +135,83 @@
             <v-icon start>mdi-block-helper</v-icon>
         {{ user.block_status ? "Debloquer" : "Valider" }} l'utilisateur
       </v-btn>
-          
+          <v-btn
+  v-if="user.validate_status && !loading"
+  color="warning"
+  size="large"
+  class="mt-4"
+  @click="showResetPasswordDialog = true"
+>
+  <v-icon start>mdi-lock-reset</v-icon>
+  Réinitialiser le mot de passe
+</v-btn>
+<v-dialog
+  v-model="showResetPasswordDialog"
+  max-width="450"
+>
+  <v-card>
+    <v-card-title>
+      Réinitialiser le mot de passe
+    </v-card-title>
+
+    <v-card-text>
+      <p>
+        Le mot de passe de
+        <strong>{{ user.username }}</strong>
+        sera remplacé par le mot de passe par défaut.
+      </p>
+
+      <v-alert
+        v-if="resetPasswordError"
+        type="error"
+        variant="tonal"
+        class="mt-4"
+      >
+        {{ resetPasswordError }}
+      </v-alert>
+
+      <v-alert
+        v-if="resetPasswordSuccess"
+        type="success"
+        variant="tonal"
+        class="mt-4"
+      >
+        {{ resetPasswordSuccess }}
+      </v-alert>
+
+      <v-text-field
+        v-model="resetAdminPassword"
+        type="password"
+        label="Mot de passe administrateur"
+        variant="outlined"
+        class="mt-4"
+        :disabled="resetPasswordLoading"
+        @keyup.enter="confirmResetPassword"
+      />
+    </v-card-text>
+
+    <v-card-actions>
+      <v-spacer />
+
+      <v-btn
+        variant="text"
+        :disabled="resetPasswordLoading"
+        @click="showResetPasswordDialog = false"
+      >
+        Annuler
+      </v-btn>
+
+      <v-btn
+        color="warning"
+        :loading="resetPasswordLoading"
+        @click="confirmResetPassword"
+      >
+        <v-icon start>mdi-lock-reset</v-icon>
+        Confirmer
+      </v-btn>
+    </v-card-actions>
+  </v-card>
+</v-dialog>
           <!-- MODALE DE VALIDATION -->
           <v-dialog v-model="showDialog" max-width="450">
             <v-card>
@@ -337,6 +413,11 @@ const adminPassword = ref('')
 
 const emit = defineEmits(['back', 'user-validated'])
 
+const showResetPasswordDialog = ref(false)
+const resetPasswordLoading = ref(false)
+const resetPasswordError = ref('')
+const resetPasswordSuccess = ref('')
+const resetAdminPassword = ref('')
 
 const confirmValidation = async () => {
   loading.value = true
@@ -364,7 +445,45 @@ const confirmValidation = async () => {
     loading.value = false
   }
 }
+const confirmResetPassword = async () => {
+  if (!resetAdminPassword.value) {
+    resetPasswordError.value = 'Veuillez saisir le mot de passe administrateur'
+    return
+  }
 
+  resetPasswordLoading.value = true
+  resetPasswordError.value = ''
+  resetPasswordSuccess.value = ''
+
+  try {
+    const formData = new FormData()
+    formData.append('username', user.value.username)
+    formData.append('admin_password', resetAdminPassword.value)
+
+    const response = await fetch(`${api}/api/reset_user_password`, {
+      method: 'POST',
+      headers: {
+        Authorization: `Bearer ${localStorage.getItem('access_token')}`
+      },
+      body: formData
+    })
+
+    const data = await response.json()
+
+    if (!response.ok) {
+      throw new Error(data.detail || 'Erreur lors de la réinitialisation')
+    }
+
+    resetPasswordSuccess.value =
+      'Mot de passe réinitialisé avec succès : sipem123*'
+
+    resetAdminPassword.value = ''
+  } catch (error) {
+    resetPasswordError.value = error.message
+  } finally {
+    resetPasswordLoading.value = false
+  }
+}
 const showRoleDialog = ref(false)
 const newRole = ref(user.value?.privillege || 'user')
 

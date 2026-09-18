@@ -370,3 +370,69 @@ class Users:
         finally:
             if conn:
                 conn.close()
+
+    def reset_user_password(self, request: Request, username: str, admin_password: str):
+        conn = None
+
+        try:
+            current_user = self.get_current_user(request)
+            admin_id = current_user.get("id")
+
+            if current_user.get("privillege") not in ["admin", "superadmin"]:
+                raise HTTPException(
+                    status_code=403,
+                    detail="Accès refusé : privilège insuffisant"
+                )
+
+            admin_data = self.getUserById(admin_id)["user"]
+
+            if not bcrypt.checkpw(
+                admin_password.encode("utf-8"),
+                admin_data["password"].encode("utf-8")
+            ):
+                raise HTTPException(
+                    status_code=401,
+                    detail="Mot de passe administrateur incorrect"
+                )
+
+            new_password = "sipem123*"
+            hashed_password = bcrypt.hashpw(
+                new_password.encode("utf-8"),
+                bcrypt.gensalt()
+            ).decode("utf-8")
+
+            conn = self.db.connect()
+
+            query = text("""
+                UPDATE users
+                SET password = :password
+                WHERE username = :username
+            """)
+
+            result = conn.execute(query, {
+                "username": username,
+                "password": hashed_password
+            })
+
+            conn.commit()
+
+            if result.rowcount == 0:
+                raise HTTPException(
+                    status_code=404,
+                    detail="Utilisateur introuvable"
+                )
+
+            return {
+                "message": f"Mot de passe de {username} réinitialisé avec succès"
+            }
+
+        except HTTPException:
+            raise
+        except Exception as error:
+            if conn:
+                conn.rollback()
+            raise HTTPException(status_code=500, detail=str(error))
+
+        finally:
+            if conn:
+                conn.close()
