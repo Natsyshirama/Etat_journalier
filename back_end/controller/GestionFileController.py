@@ -15,6 +15,10 @@ class GestionFileController:
             query = text("""
                 SELECT
                     DATE_FORMAT(import_date, '%Y-%m-%d') AS import_date,
+                    DATE_FORMAT(
+                        MIN(created_at),
+                        '%Y-%m-%d %H:%i:%s'
+                    ) AS created_at,
                     COUNT(*) AS row_count,
                     DATE_FORMAT(
                         MIN(
@@ -44,6 +48,7 @@ class GestionFileController:
             data = [
                 {
                     "import_date": row["import_date"],
+                    "created_at": row["created_at"],
                     "row_count": int(row["row_count"] or 0),
                     "start_datetime": row["start_datetime"],
                     "end_datetime": row["end_datetime"]
@@ -80,6 +85,10 @@ class GestionFileController:
                     DATE_FORMAT(import_date, '%Y-%m-%d') AS import_date,
                     COUNT(*) AS row_count,
                     DATE_FORMAT(
+                        MIN(created_at),
+                        '%Y-%m-%d %H:%i:%s'
+                    ) AS created_at,
+                    DATE_FORMAT(
                         MIN(local_time),
                         '%Y-%m-%d %H:%i:%s'
                     ) AS start_datetime,
@@ -97,6 +106,7 @@ class GestionFileController:
             data = [
                 {
                     "import_date": row["import_date"],
+                    "created_at": row["created_at"],
                     "row_count": int(row["row_count"] or 0),
                     "start_datetime": row["start_datetime"],
                     "end_datetime": row["end_datetime"]
