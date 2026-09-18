@@ -1,7 +1,10 @@
 from fastapi import APIRouter, HTTPException, Query
 from controller.transactionManyController import TransactionManyController
+from controller.GestionFileController import GestionFileController
+
 
 router = APIRouter()
+controller = GestionFileController()
 transaction_many_controller = TransactionManyController()
 
 @router.get("/t24/transactions/by_saisie_range")
@@ -49,5 +52,53 @@ async def get_t24_diff_many(
         raise he
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
+
+
+
+
+@router.get("/t24/import-dates")
+async def get_t24_import_dates():
+    try:
+        result = controller.getTransactByImportDateT24()
+
+        if not result.get("success", False):
+            raise HTTPException(
+                status_code=500,
+                detail=result.get("error", "Erreur statistiques T24")
+            )
+
+        return {
+            "status": "success",
+            "data": result["data"],
+            "count": result["count"]
+        }
+
+    except HTTPException:
+        raise
+    except Exception as error:
+        raise HTTPException(status_code=500, detail=str(error))
+
+
+@router.get("/powercard/import-dates")
+async def get_powercard_import_dates():
+    try:
+        result = controller.getTransactByImportDatePc()
+
+        if not result.get("success", False):
+            raise HTTPException(
+                status_code=500,
+                detail=result.get("error", "Erreur statistiques PowerCard")
+            )
+
+        return {
+            "status": "success",
+            "data": result["data"],
+            "count": result["count"]
+        }
+
+    except HTTPException:
+        raise
+    except Exception as error:
+        raise HTTPException(status_code=500, detail=str(error))
 
 api_router_transaction_many = router
