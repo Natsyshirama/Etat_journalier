@@ -1,10 +1,12 @@
-from fastapi import APIRouter, HTTPException, UploadFile, File, Query,Request
+from fastapi import APIRouter, HTTPException, UploadFile, File, Form, Query,Request
 from typing import Optional
 from controller.PowerCardController import PowerCardController
 from controller.importPowerCardController import ImportPowerCardController
 from controller.importTransactT24Controller import ImportTransactT24Controller
 from controller.Users import Users
 from datetime import datetime
+import bcrypt
+from controller.GestionFileController import GestionFileController
 router = APIRouter()
 power_card_controller = PowerCardController()
 import_power_card_controller = ImportPowerCardController()
@@ -422,5 +424,53 @@ async def get_t24_diff(
         raise he
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
+
+file_controller = GestionFileController()
+
+
+@router.delete("/imports/{source}/{date}")
+async def delete_import_by_date(
+    request: Request,
+    source: str,
+    date: str,
+    admin_password: str = Form(...)
+):
+    current_user = require_admin(request)
+
+    try:
+        datetime.strptime(date, "%Y-%m-%d")
+    except ValueError:
+        raise HTTPException(
+            status_code=400,
+            detail="Format de date invalide. Utilisez YYYY-MM-DD"
+        )
+
+    admin_data = user.getUserById(current_user["id"])["user"]
+
+    if not bcrypt.checkpw(
+        admin_password.encode("utf-8"),
+        admin_data["password"].encode("utf-8")
+    ):
+        raise HTTPException(
+            status_code=401,
+            detail="Mot de passe administrateur incorrect"
+        )
+
+    result = file_controller.deleteByimportDate(source, date)
+
+    if not result.get("success", False):
+        raise HTTPException(
+            status_code=400,
+            detail=result.get("error", "Erreur lors de la suppression")
+        )
+
+    return {
+        "status": "success",
+        "message": (
+            f"{result['deleted_count']} ligne(s) supprimée(s) "
+            f"pour {source} et la date {date}"
+        ),
+        "data": result
+    }    
 
 api_router_powercard = router

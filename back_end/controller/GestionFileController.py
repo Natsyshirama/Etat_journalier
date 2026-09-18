@@ -1,3 +1,4 @@
+from datetime import datetime
 from sqlalchemy import text
 from db.db import DB
 
@@ -5,6 +6,70 @@ from db.db import DB
 class GestionFileController:
     def __init__(self):
         self.db = DB()
+
+    def deleteByimportDate(self, source: str, date: str):
+        conn = None
+
+        tables = {
+            "t24": "transact_t24",
+            "powercard": "transact_power_card",
+            "pc": "transact_power_card"
+        }
+
+        normalized_source = source.strip().lower()
+
+        if normalized_source not in tables:
+            return {
+                "success": False,
+                "error": "Source invalide. Utilisez 't24' ou 'powercard'",
+                "deleted_count": 0
+            }
+
+        try:
+            datetime.strptime(date, "%Y-%m-%d")
+        except ValueError:
+            return {
+                "success": False,
+                "error": "Format de date invalide. Utilisez YYYY-MM-DD",
+                "deleted_count": 0
+            }
+
+        conn = self.db.connect()
+
+        try:
+            table_name = tables[normalized_source]
+
+            query = text(f"""
+                DELETE FROM {table_name}
+                WHERE import_date = :import_date
+            """)
+
+            result = conn.execute(query, {"import_date": date})
+            conn.commit()
+
+            return {
+                "success": True,
+                "source": normalized_source,
+                "import_date": date,
+                "deleted_count": result.rowcount
+            }
+
+        except Exception as error:
+            conn.rollback()
+
+            print(
+                f"[ERREUR] Suppression import {normalized_source} "
+                f"du {date}: {error}"
+            )
+
+            return {
+                "success": False,
+                "error": str(error),
+                "deleted_count": 0
+            }
+
+        finally:
+            conn.close()
 
     def getTransactByImportDateT24(self):
         conn = None

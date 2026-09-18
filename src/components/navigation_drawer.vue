@@ -79,7 +79,12 @@ const list_menu =[
     to: '/app/powercard', 
     access: 'all' 
   },
-  
+  {
+  icon: 'mdi-database-import',
+  title: 'Gestion des imports',
+  to: '/app/gestionImport',
+  access: 'all'
+},
   { 
     icon: 'mdi-shield-account',  // ou mdi-shield-crown
     title: 'Utilisateurs', 
