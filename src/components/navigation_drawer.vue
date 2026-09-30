@@ -83,7 +83,7 @@ const list_menu =[
   icon: 'mdi-file-import-outline',
   title: 'Gestion des imports',
   to: '/app/gestionImport',
-  access: 'all'
+  access: 'admin'
 },
   { 
     icon: 'mdi-shield-account',  // ou mdi-shield-crown
