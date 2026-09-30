@@ -80,7 +80,7 @@ const list_menu =[
     access: 'all' 
   },
    {
-  icon: 'mdi-database-import',
+  icon: 'mdi-file-import-outline',
   title: 'Gestion des imports',
   to: '/app/gestionImport',
   access: 'all'
