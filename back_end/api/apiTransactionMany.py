@@ -1,7 +1,10 @@
 from fastapi import APIRouter, HTTPException, Query
 from controller.transactionManyController import TransactionManyController
+from controller.GestionFileController import GestionFileController
+
 
 router = APIRouter()
+controller = GestionFileController()
 transaction_many_controller = TransactionManyController()
 
 @router.get("/t24/transactions/by_saisie_range")
