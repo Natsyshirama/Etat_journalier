@@ -50,4 +50,26 @@ async def get_t24_diff_many(
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
+
+@router.get("/t24/import-dates")
+async def get_t24_import_dates():
+    try:
+        result = controller.getTransactByImportDateT24()
+
+        if not result.get("success", False):
+            raise HTTPException(
+                status_code=500,
+                detail=result.get("error", "Erreur statistiques T24")
+            )
+
+        return {
+            "status": "success",
+            "data": result["data"],
+            "count": result["count"]
+        }
+
+    except HTTPException:
+        raise
+    except Exception as error:
+        raise HTTPException(status_code=500, detail=str(error))
 api_router_transaction_many = router
