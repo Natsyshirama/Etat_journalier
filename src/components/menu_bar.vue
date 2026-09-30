@@ -44,6 +44,8 @@ const isDepotAnalyse = computed(() => route.path === '/app/depotAnalyse')
 const isDepotDetail = computed(() => route.path === '/app/analyseDetails')
 const isDecDetal = computed(() => route.path === '/app/detailDecais')
 const isAgence =  computed(() => route.path === '/app/Agence')
+const isGestionImport = computed(() => route.path === '/app/gestionImport')
+
 const isPowerCard = computed(() => route.path === '/app/powercard')
 const ist24 = computed(() => route.path === '/app/t24')
 
@@ -60,6 +62,7 @@ const toolbarTitle = computed(() => {
   if (isDepotDetail.value) return 'Détail Dépôt'
   if (isDecDetal.value) return 'Détail Décaissement'
   if (isAgence.value) return 'Gestion des Agences'
+  if (isGestionImport.value) return 'Gestion des imports'
   if (isPowerCard.value) return 'Power Card'
   if (ist24.value) return 'Transaction GAB'
 
