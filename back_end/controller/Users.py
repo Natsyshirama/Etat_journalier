@@ -1,4 +1,5 @@
-import bcrypt, jwt, secrets
+import bcrypt, jwt
+import secrets
 from datetime import datetime, timedelta
 from fastapi import HTTPException, Response,Request
 from sqlalchemy import text 

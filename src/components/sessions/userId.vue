@@ -382,9 +382,10 @@ import { ref, onMounted, watch, inject } from 'vue'
 import axios from 'axios'
 const api = inject('api') 
 
-const resetGeneratedPassword = ref('')
+
+  const resetGeneratedPassword = ref('')
   const passwordCopied = ref(false)
-const props = defineProps({
+  const props = defineProps({
   userId: Number
 })
 
@@ -471,6 +472,7 @@ const confirmResetPassword = async () => {
   resetPasswordSuccess.value = ''
 
   try {
+  
     const formData = new FormData()
     formData.append('username', user.value.username)
     formData.append('admin_password', resetAdminPassword.value)
