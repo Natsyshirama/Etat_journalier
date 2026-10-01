@@ -20,7 +20,11 @@
         <h2>{{ activeTab === 'signIn' ? 'Connexion' : 'Inscription' }}</h2>
 
         <form @submit.prevent="handleSubmit">
-          <input type="text" placeholder="Votre nom d'utilisateur" v-model="username" />
+          <input v-if="activeTab === 'signIn'"
+              type="text"
+              placeholder="Votre matricule"
+              v-model="immatricule"
+              required />
           <div class="password-field">
             <input
               :type="showPassword ? 'text' : 'password'"
@@ -97,7 +101,7 @@ const handleSubmit = async () => {
     
     if (activeTab.value === "signIn") {
       const formData = new FormData();
-      formData.append("username", username.value);
+          formData.append('immatricule', immatricule.value)
       formData.append("password", password.value);
 
       response = await fetch(`${api}/api/signin`, {

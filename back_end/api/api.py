@@ -35,8 +35,9 @@ def signup(username: str = Form(...), password: str = Form(...), immatricule: st
 
 # --- SIGNIN ---
 @router.post("/signin")
-def signin(username: str = Form(...), password: str = Form(...)):
-    result = user.signin(username, password)
+def signin(immatricule: str = Form(...), password: str = Form(...)):
+    result = user.signin(immatricule, password)
+
 
     # Si connexion réussie, on ajoute les colonnes manquantes
     try:

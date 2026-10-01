@@ -1,4 +1,4 @@
-import bcrypt, jwt
+import bcrypt, jwt, secrets
 from datetime import datetime, timedelta
 from fastapi import HTTPException, Response,Request
 from sqlalchemy import text 
@@ -93,18 +93,18 @@ class Users:
 
     # --- SIGN IN ---
     
-    def signin(self, username: str, password: str):
+    def signin(self, immatricule: str, password: str):
         conn = None
         try:
             conn = self.db.connect()
 
             # Vérifier si l'utilisateur existe
-            query = text("SELECT * FROM users WHERE username = :username")
-            result = conn.execute(query, {"username": username})
+            query = text("SELECT * FROM users WHERE immatricule = :immatricule")
+            result = conn.execute(query, {"immatricule": immatricule})
             user = result.mappings().first()
 
             if not user:
-                raise HTTPException(status_code=401, detail="Utilisateur introuvable")
+                raise HTTPException(status_code=401, detail="immatricule introuvable")
 
             # Vérifier le mot de passe
             if not bcrypt.checkpw(password.encode("utf-8"), user["password"].encode("utf-8")):
@@ -115,7 +115,7 @@ class Users:
 
             # Générer le JWT
             token_data = {
-                "sub": username,
+                "sub": user["username"],
                 "id": user["id"],
 
                 "privillege": user["privillege"],
@@ -128,7 +128,7 @@ class Users:
                 "access_token": token,
                 "id": user["id"],
                 "token_type": "bearer",
-                "user": {"username": username},
+                "user": {"username": user["username"]},
                 "privilege": user["privillege"]
             }
 
@@ -395,7 +395,7 @@ class Users:
                     detail="Mot de passe administrateur incorrect"
                 )
 
-            new_password = "sipem123*"
+            new_password = f"{username}_{secrets.randbelow(10000):04d}"
             hashed_password = bcrypt.hashpw(
                 new_password.encode("utf-8"),
                 bcrypt.gensalt()
@@ -423,8 +423,9 @@ class Users:
                 )
 
             return {
-                "message": f"Mot de passe de {username} réinitialisé avec succès"
-            }
+            "message": f"Mot de passe de {username} réinitialisé avec succès",
+            "temporary_password": new_password
+        }
 
         except HTTPException:
             raise

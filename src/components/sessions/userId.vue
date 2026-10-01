@@ -176,7 +176,20 @@
         variant="tonal"
         class="mt-4"
       >
-        {{ resetPasswordSuccess }}
+        <div>{{ resetPasswordSuccess }}</div>
+
+        <div class="d-flex align-center ga-2 mt-2">
+          <code>{{ resetGeneratedPassword }}</code>
+
+          <v-btn
+            size="small"
+            variant="text"
+            :icon="passwordCopied ? 'mdi-check' : 'mdi-content-copy'"
+            :aria-label="passwordCopied ? 'Mot de passe copié' : 'Copier le mot de passe'"
+            :title="passwordCopied ? 'Mot de passe copié' : 'Copier le mot de passe'"
+            @click="copyGeneratedPassword"
+          />
+        </div>
       </v-alert>
 
       <v-text-field
@@ -369,6 +382,8 @@ import { ref, onMounted, watch, inject } from 'vue'
 import axios from 'axios'
 const api = inject('api') 
 
+const resetGeneratedPassword = ref('')
+  const passwordCopied = ref(false)
 const props = defineProps({
   userId: Number
 })
@@ -474,9 +489,9 @@ const confirmResetPassword = async () => {
       throw new Error(data.detail || 'Erreur lors de la réinitialisation')
     }
 
-    resetPasswordSuccess.value =
-      'Mot de passe réinitialisé avec succès : sipem123*'
-
+    resetPasswordSuccess.value = data.message
+    resetGeneratedPassword.value = data.temporary_password
+    passwordCopied.value = false
     resetAdminPassword.value = ''
   } catch (error) {
     resetPasswordError.value = error.message
@@ -484,6 +499,18 @@ const confirmResetPassword = async () => {
     resetPasswordLoading.value = false
   }
 }
+
+const copyGeneratedPassword = async () => {
+  try {
+    await navigator.clipboard.writeText(resetGeneratedPassword.value)
+    passwordCopied.value = true
+  } catch {
+    resetPasswordError.value =
+      'Impossible de copier le mot de passe. Copiez-le manuellement.'
+  }
+}
+
+
 const showRoleDialog = ref(false)
 const newRole = ref(user.value?.privillege || 'user')
 
